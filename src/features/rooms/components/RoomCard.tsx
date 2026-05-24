@@ -1,0 +1,154 @@
+import Image from 'next/image'
+import Link from 'next/link'
+
+import type { Room } from '@/features/rooms/types/room.types'
+
+const STATUS_CONFIG = {
+  open: {
+    label: 'Open',
+    bg: 'bg-green-50',
+    text: 'text-green-700',
+  },
+  partial: {
+    label: 'Partially Available',
+    bg: 'bg-yellow-50',
+    text: 'text-yellow-700',
+  },
+  booked: {
+    label: 'Booked',
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+  },
+  closed: {
+    label: 'Closed',
+    bg: 'bg-gray-100',
+    text: 'text-gray-600',
+  },
+} as const
+
+const AMENITIES = [
+  { key: 'wifi', icon: '📶', label: 'WiFi' },
+  { key: 'gas', icon: '🔥', label: 'Gas' },
+  { key: 'electricity', icon: '💡', label: 'Electricity' },
+] as const
+
+export default function RoomCard({ room }: { room: Room }) {
+  const status = STATUS_CONFIG[room.status] ?? STATUS_CONFIG.open
+  const isBooked = room.status === 'booked' || room.status === 'closed'
+
+  const availableDate = room.available_from
+    ? new Date(room.available_from).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      })
+    : null
+
+  const isAvailableNow = room.available_from
+    ? new Date(room.available_from) <= new Date()
+    : false
+
+  const initials =
+    room.profiles?.full_name
+      ?.split(' ')
+      .map((name) => name[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() ?? 'U'
+
+  return (
+    <div
+      className={`overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all hover:border-gray-300 hover:shadow-sm ${
+        isBooked ? 'opacity-60' : ''
+      }`}
+    >
+      <div className="relative flex h-40 items-center justify-center bg-gray-50">
+        {room.images?.[0] ? (
+          <Image
+            src={room.images[0]}
+            alt={room.title}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <span className="text-4xl">🏠</span>
+        )}
+
+        <span
+          className={`absolute left-2 top-2 rounded-full px-2.5 py-1 text-xs font-medium ${status.bg} ${status.text}`}
+        >
+          {status.label}
+        </span>
+
+        <span className="absolute right-2 top-2 rounded-full bg-blue-50 px-2.5 py-1 text-xs text-blue-700">
+          {room.gender_type === 'male'
+            ? 'Male'
+            : room.gender_type === 'female'
+              ? 'Female'
+              : 'Any'}
+        </span>
+      </div>
+
+      <div className="p-4">
+        <Link href={`/listings/${room.id}`}>
+          <h3 className="mb-1 line-clamp-1 font-medium text-gray-900 hover:text-blue-600">
+            {room.title}
+          </h3>
+        </Link>
+
+        <p className="mb-3 text-xs text-gray-400">
+          📍 {room.location_name || 'Location not added'} ·{' '}
+          {room.type === 'mess'
+            ? 'Mess'
+            : room.type === 'bachelor'
+              ? 'Bachelor'
+              : 'Sublet'}
+        </p>
+
+        <p className="text-lg font-semibold text-blue-600">
+          ৳{room.rent.toLocaleString('en-US')}
+          <span className="text-xs font-normal text-gray-400"> /month</span>
+        </p>
+
+        <p className="mt-1 text-xs text-gray-500">
+          {room.available_seats} of {room.total_seats} seats available
+        </p>
+
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {AMENITIES.filter((amenity) => room[amenity.key]).map((amenity) => (
+            <span
+              key={amenity.key}
+              className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+            >
+              {amenity.icon} {amenity.label}
+            </span>
+          ))}
+        </div>
+
+        {availableDate && (
+          <p className="mt-2 text-xs text-gray-400">
+            🗓 {isAvailableNow ? 'Available now' : `Available from ${availableDate}`}
+          </p>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between border-t border-gray-50 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700">
+            {initials}
+          </div>
+
+          <span className="text-xs text-gray-500">
+            {room.profiles?.full_name || 'Owner'}
+          </span>
+        </div>
+
+        <Link
+          href={`/listings/${room.id}`}
+          className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+        >
+          Details →
+        </Link>
+      </div>
+    </div>
+  )
+}

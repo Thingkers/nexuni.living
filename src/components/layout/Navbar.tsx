@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase'
 type Profile = {
   full_name: string | null
   avatar_url: string | null
+  role?: string | null
 }
 
 export default function Navbar() {
@@ -28,7 +29,7 @@ export default function Navbar() {
       if (data.user) {
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('full_name, avatar_url')
+          .select('full_name, avatar_url, role')
           .eq('id', data.user.id)
           .maybeSingle()
 
@@ -204,6 +205,16 @@ export default function Navbar() {
                     Booking Requests
                   </Link>
 
+                  {profile?.role === 'admin' && (
+                    <Link
+                      href="/admin/reports"
+                      className="block px-4 py-2 text-sm text-red-500 hover:bg-red-50"
+                      onClick={closeMenus}
+                    >
+                      Admin Reports
+                    </Link>
+                  )}
+
                   <button
                     onClick={handleLogout}
                     className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-gray-50"
@@ -307,6 +318,16 @@ export default function Navbar() {
                 >
                   Booking Requests
                 </Link>
+
+                {profile?.role === 'admin' && (
+                <Link
+                  href="/admin/reports"
+                  className="block px-4 py-2 text-sm text-red-500 hover:bg-red-50"
+                  onClick={closeMenus}
+                >
+                  Admin Reports
+                </Link>
+              )}
 
                 <button
                   onClick={handleLogout}

@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-
+import { useSaved } from '@/hooks/useSaved'
 import type { Room } from '@/features/rooms/types/room.types'
 
 const STATUS_CONFIG = {
@@ -35,6 +36,23 @@ const AMENITIES = [
 export default function RoomCard({ room }: { room: Room }) {
   const status = STATUS_CONFIG[room.status] ?? STATUS_CONFIG.open
   const isBooked = room.status === 'booked' || room.status === 'closed'
+  const { isSaved, toggleSaved } = useSaved(room.id)
+
+  const [activeImage, setActiveImage] = useState(0)
+  const images = room.images ?? []
+  const hasImages = images.length > 0
+
+  function nextImage(event: React.MouseEvent) {
+    event.preventDefault()
+    event.stopPropagation()
+    setActiveImage((prev) => (prev + 1) % images.length)
+  }
+
+  function prevImage(event: React.MouseEvent) {
+    event.preventDefault()
+    event.stopPropagation()
+    setActiveImage((prev) => (prev - 1 + images.length) % images.length)
+  }
 
   const availableDate = room.available_from
     ? new Date(room.available_from).toLocaleDateString('en-US', {
@@ -61,16 +79,53 @@ export default function RoomCard({ room }: { room: Room }) {
         isBooked ? 'opacity-60' : ''
       }`}
     >
-      <div className="relative flex h-40 items-center justify-center bg-gray-50">
-        {room.images?.[0] ? (
+      <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gray-50">
+        {hasImages ? (
           <Image
-            src={room.images[0]}
+            src={images[activeImage]}
             alt={room.title}
             fill
             className="object-cover"
           />
         ) : (
           <span className="text-4xl">🏠</span>
+        )}
+
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow hover:bg-white"
+            >
+              ‹
+            </button>
+
+            <button
+              type="button"
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow hover:bg-white"
+            >
+              ›
+            </button>
+
+            <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    setActiveImage(index)
+                  }}
+                  className={`h-1.5 rounded-full transition-all ${
+                    activeImage === index ? 'w-4 bg-white' : 'w-1.5 bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
+          </>
         )}
 
         <span
@@ -86,6 +141,18 @@ export default function RoomCard({ room }: { room: Room }) {
               ? 'Female'
               : 'Any'}
         </span>
+
+        <button
+          type="button"
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            toggleSaved()
+          }}
+          className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg shadow-sm hover:bg-white"
+        >
+          {isSaved ? '❤️' : '🤍'}
+        </button>
       </div>
 
       <div className="p-4">
@@ -126,7 +193,8 @@ export default function RoomCard({ room }: { room: Room }) {
 
         {availableDate && (
           <p className="mt-2 text-xs text-gray-400">
-            🗓 {isAvailableNow ? 'Available now' : `Available from ${availableDate}`}
+            🗓{' '}
+            {isAvailableNow ? 'Available now' : `Available from ${availableDate}`}
           </p>
         )}
       </div>

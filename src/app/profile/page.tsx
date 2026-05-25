@@ -6,8 +6,9 @@ import Link from 'next/link'
 
 import { supabase } from '@/lib/supabase'
 import type { Booking, Profile, Room } from '@/types'
+import RoomCard from '@/features/rooms/components/RoomCard'
 
-type Tab = 'info' | 'rooms' | 'bookings'
+type Tab = 'info' | 'rooms' | 'bookings' | 'saved'
 
 const BOOKING_STATUS: Record<string, { label: string; className: string }> = {
   pending: { label: 'Pending', className: 'bg-yellow-50 text-yellow-700' },
@@ -23,6 +24,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [myRooms, setMyRooms] = useState<Room[]>([])
   const [bookings, setBookings] = useState<any[]>([])
+  const [savedRooms, setSavedRooms] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
@@ -45,16 +47,25 @@ export default function ProfilePage() {
         { data: profileData, error: profileError },
         { data: roomData },
         { data: bookingData },
+        { data: savedData },
       ] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
+
         supabase
           .from('rooms')
           .select('*')
           .eq('owner_id', uid)
           .order('created_at', { ascending: false }),
+
         supabase
           .from('bookings')
           .select('*, rooms(title, rent, location_name)')
+          .eq('user_id', uid)
+          .order('created_at', { ascending: false }),
+
+        supabase
+          .from('saved_rooms')
+          .select('*, rooms(*, profiles(full_name, avatar_url))')
           .eq('user_id', uid)
           .order('created_at', { ascending: false }),
       ])
@@ -66,7 +77,9 @@ export default function ProfilePage() {
       }
 
       if (!profileData) {
-        setPageError('Profile data not found. Please register again or create a profile row.')
+        setPageError(
+          'Profile data not found. Please register again or create a profile row.',
+        )
         setLoading(false)
         return
       }
@@ -74,6 +87,7 @@ export default function ProfilePage() {
       setProfile(profileData as Profile)
       setMyRooms((roomData ?? []) as Room[])
       setBookings(bookingData ?? [])
+      setSavedRooms((savedData ?? []).map((item: any) => item.rooms))
       setLoading(false)
     }
 
@@ -171,6 +185,7 @@ export default function ProfilePage() {
           { key: 'info', label: 'Profile' },
           { key: 'rooms', label: `My Listings (${myRooms.length})` },
           { key: 'bookings', label: `Bookings (${bookings.length})` },
+          { key: 'saved', label: `Saved (${savedRooms.length})` },
         ].map((item) => (
           <button
             key={item.key}
@@ -229,7 +244,11 @@ export default function ProfilePage() {
             disabled={saving}
             className="rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {saving ? 'Saving...' : saved ? '✓ Saved successfully' : 'Save Changes'}
+            {saving
+              ? 'Saving...'
+              : saved
+                ? '✓ Saved successfully'
+                : 'Save Changes'}
           </button>
         </div>
       )}
@@ -349,7 +368,9 @@ export default function ProfilePage() {
                         {booking.move_in_date && (
                           <p className="mt-1 text-xs text-gray-400">
                             🗓 Move-in date:{' '}
-                            {new Date(booking.move_in_date).toLocaleDateString('en-US')}
+                            {new Date(
+                              booking.move_in_date,
+                            ).toLocaleDateString('en-US')}
                           </p>
                         )}
                       </div>
@@ -369,6 +390,23 @@ export default function ProfilePage() {
                   </div>
                 )
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'saved' && (
+        <div>
+          {savedRooms.length === 0 ? (
+            <div className="py-16 text-center text-gray-400">
+              <p className="mb-3 text-4xl">❤️</p>
+              <p className="text-sm">No saved rooms yet</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {savedRooms.map((room) => (
+                <RoomCard key={room.id} room={room} />
+              ))}
             </div>
           )}
         </div>

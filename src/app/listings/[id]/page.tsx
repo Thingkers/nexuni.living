@@ -5,11 +5,11 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-
+import ShareButton from '@/features/rooms/components/ShareButton'
 import { supabase } from '@/lib/supabase'
 import type { Room } from '@/features/rooms/types/room.types'
 import BookingModal from '@/features/bookings/components/BookingModal'
-
+import ReportListingButton from '@/features/rooms/components/ReportListingButton'
 const RoomMap = dynamic(
   () => import('@/features/map/components/RoomMap'),
   { ssr: false },
@@ -292,6 +292,16 @@ export default function ListingDetailsPage() {
                   📞 {room.profiles.phone}
                 </a>
               )}
+
+              <div className="mb-3">
+              <ShareButton
+                title={room.title}
+                rent={room.rent}
+                location={room.location_name}
+                roomId={room.id}
+              />
+              <ReportListingButton roomId={room.id} />
+            </div>
 
               {!isOwner && currentUser && (
                 <div className="flex flex-col gap-2">

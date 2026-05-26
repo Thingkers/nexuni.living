@@ -4,9 +4,11 @@ export type GenderType = 'male' | 'female' | 'any'
 
 export type RoomOwner = {
   full_name: string | null
+  email: string | null
   avatar_url?: string | null
   university?: string | null
   phone?: string | null
+  is_verified?: boolean | null
 }
 
 export type Room = {
@@ -21,13 +23,15 @@ export type Room = {
   status: RoomStatus
   available_from: string | null
   location_name: string | null
-  latitude?: number | null
-  longitude?: number | null
+  latitude: number | null
+  longitude: number | null
   wifi: boolean
   gas: boolean
   electricity: boolean
   images: string[] | null
   description?: string | null
   created_at?: string
+
+  // ✅ FIX: always single object, never array
   profiles?: RoomOwner | null
 }

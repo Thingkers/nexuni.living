@@ -10,6 +10,11 @@ import { supabase } from '@/lib/supabase'
 import type { Room } from '@/features/rooms/types/room.types'
 import BookingModal from '@/features/bookings/components/BookingModal'
 import ReportListingButton from '@/features/rooms/components/ReportListingButton'
+import ReviewBox from '@/features/reviews/components/ReviewBox'
+import RoomCard from '@/features/rooms/components/RoomCard'
+import { saveRecentlyViewed } from '@/lib/recentlyViewed'
+import AvailabilityCalendar from '@/features/rooms/components/AvailabilityCalendar'
+import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
 const RoomMap = dynamic(
   () => import('@/features/map/components/RoomMap'),
   { ssr: false },
@@ -42,27 +47,62 @@ export default function ListingDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [showBooking, setShowBooking] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
+  const [similarRooms, setSimilarRooms] = useState<Room[]>([])
 
   useEffect(() => {
-    async function loadRoomDetails() {
-      const [{ data: roomData }, { data: userData }] = await Promise.all([
-        supabase
-          .from('rooms')
-          .select('*, profiles(full_name, phone, avatar_url, university)')
-          .eq('id', params.id)
-          .single(),
-        supabase.auth.getUser(),
-      ])
+  async function loadRoomDetails() {
+    const [{ data: roomData }, { data: userData }] = await Promise.all([
+      supabase
+        .from('rooms')
+        .select('*, profiles(full_name, phone, avatar_url, university)')
+        .eq('id', params.id)
+        .single(),
 
-      setRoom(roomData as Room)
-      setCurrentUser(userData.user)
-      setLoading(false)
-    }
+      supabase.auth.getUser(),
+    ])
 
-    if (params.id) {
-      loadRoomDetails()
-    }
-  }, [params.id])
+    if (!roomData) return
+
+    setRoom(roomData as Room)
+    saveRecentlyViewed(roomData.id)
+
+    await supabase
+      .from('rooms')
+      .update({
+        views: (roomData.views ?? 0) + 1,
+      })
+      .eq('id', roomData.id)
+
+    loadSimilarRooms(roomData)
+
+    setCurrentUser(userData.user)
+    setLoading(false)
+  }
+
+  async function loadSimilarRooms(room: any) {
+    const minRent = room.rent - 2000
+    const maxRent = room.rent + 2000
+
+    const { data } = await supabase
+      .from('rooms')
+      .select(`
+        *,
+        profiles(full_name, avatar_url, is_verified)
+      `)
+      .neq('id', room.id)
+      .eq('type', room.type)
+      .eq('gender_type', room.gender_type)
+      .gte('rent', minRent)
+      .lte('rent', maxRent)
+      .limit(6)
+
+    setSimilarRooms((data ?? []) as Room[])
+  }
+
+  if (params.id) {
+    loadRoomDetails()
+  }
+}, [params.id])
 
   if (loading) {
     return (
@@ -86,6 +126,12 @@ export default function ListingDetailsPage() {
   const isBooked = room.status === 'booked' || room.status === 'closed'
   const status = STATUS_LABEL[room.status] ?? STATUS_LABEL.open
 
+  const availability =
+  getAvailabilityStatus({
+    availableSeats: room.available_seats,
+    totalSeats: room.total_seats,
+  })
+
   const initials =
     room.profiles?.full_name
       ?.split(' ')
@@ -105,6 +151,7 @@ export default function ListingDetailsPage() {
           },
         )}`
     : 'Availability not added'
+    
 
   return (
     <>
@@ -184,6 +231,13 @@ export default function ListingDetailsPage() {
                   : 'Any'}
             </p>
 
+            <div
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${availability.color}`}
+            >
+              <span>{availability.emoji}</span>
+              <span>{availability.label}</span>
+            </div>
+
             <div className="mb-5 flex flex-wrap items-end gap-6">
               <div>
                 <p className="text-xs text-gray-400">Monthly Rent</p>
@@ -249,6 +303,7 @@ export default function ListingDetailsPage() {
             )}
 
             <p className="text-sm text-gray-400">🗓 {availableText}</p>
+            <AvailabilityCalendar availableFrom={room.available_from} />
 
             {room.latitude && room.longitude && (
               <div className="mt-6">
@@ -294,14 +349,14 @@ export default function ListingDetailsPage() {
               )}
 
               <div className="mb-3">
-              <ShareButton
-                title={room.title}
-                rent={room.rent}
-                location={room.location_name}
-                roomId={room.id}
-              />
-              <ReportListingButton roomId={room.id} />
-            </div>
+                <ShareButton
+                  title={room.title}
+                  rent={room.rent}
+                  location={room.location_name}
+                  roomId={room.id}
+                />
+                <ReportListingButton roomId={room.id} />
+              </div>
 
               {!isOwner && currentUser && (
                 <div className="flex flex-col gap-2">
@@ -348,6 +403,34 @@ export default function ListingDetailsPage() {
             </div>
           </div>
         </div>
+
+        <ReviewBox
+          roomId={room.id}
+          ownerId={room.owner_id}
+        />
+
+        {similarRooms.length > 0 && (
+          <section className="mt-10">
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Similar Rooms
+              </h2>
+
+              <p className="text-sm text-gray-400">
+                You may also like
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {similarRooms.map((room) => (
+                <RoomCard
+                  key={room.id}
+                  room={room}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       {showBooking && currentUser && (

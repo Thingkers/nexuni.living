@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-
+import { newMessageTemplate } from '@/lib/email/templates'
 import { supabase } from '@/lib/supabase'
 
 export default function ChatPage() {
@@ -120,6 +120,41 @@ export default function ChatPage() {
       content: text,
       is_read: false,
     })
+
+    if (!error) {
+  const [{ data: receiver }, { data: sender }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', otherUserId)
+      .single(),
+
+    supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', myId)
+      .single(),
+  ])
+
+      if (receiver?.email) {
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: receiver.email,
+            subject: 'New message on Student Hostel',
+            html: newMessageTemplate({
+              receiverName: receiver.full_name,
+              senderName: sender?.full_name,
+              message: text,
+              inboxUrl: `${window.location.origin}/inbox/${myId}`,
+            }),
+          }),
+        })
+      }
+    }
 
     setSending(false)
 

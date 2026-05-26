@@ -1,10 +1,10 @@
 'use client'
+
 import { toast } from 'sonner'
 import { useState } from 'react'
-
+import { bookingConfirmedTemplate } from '@/lib/email/templates'
 import { supabase } from '@/lib/supabase'
 import type { Room } from '@/features/rooms/types/room.types'
-
 type Props = {
   room: Room
   userId: string
@@ -12,7 +12,12 @@ type Props = {
   onSuccess?: () => void
 }
 
-export default function BookingModal({ room, userId, onClose, onSuccess }: Props) {
+export default function BookingModal({
+  room,
+  userId,
+  onClose,
+  onSuccess,
+}: Props) {
   const [moveInDate, setMoveInDate] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -28,13 +33,14 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
 
     setLoading(true)
 
+    // check duplicate booking
     const { data: existingBooking } = await supabase
-    .from('bookings')
-    .select('id, status')
-    .eq('room_id', room.id)
-    .eq('user_id', userId)
-    .eq('status', 'pending')
-    .maybeSingle()
+      .from('bookings')
+      .select('id, status')
+      .eq('room_id', room.id)
+      .eq('user_id', userId)
+      .eq('status', 'pending')
+      .maybeSingle()
 
     if (existingBooking) {
       setError('You already have a pending booking request for this room')
@@ -42,12 +48,14 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
       return
     }
 
+    // insert booking
     const { error } = await supabase.from('bookings').insert({
       room_id: room.id,
       user_id: userId,
       move_in_date: moveInDate,
       message,
       status: 'pending',
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     })
 
     setLoading(false)
@@ -57,8 +65,29 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
       return
     }
 
+    // close modal first
     onSuccess?.()
     onClose()
+
+    // ✅ SEND EMAIL (FIXED)
+    await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: room.profiles?.email,
+
+        subject: 'Booking Request Received 🎉',
+
+        html: bookingConfirmedTemplate({
+          userName: room.profiles?.full_name,
+          roomTitle: room.title,
+          roomLocation: room.location_name,
+        }),
+      }),
+    })
+
     toast.success('Booking request sent successfully')
   }
 
@@ -69,9 +98,7 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
           Request Booking
         </h2>
 
-        <p className="mt-1 text-sm text-gray-500">
-          {room.title}
-        </p>
+        <p className="mt-1 text-sm text-gray-500">{room.title}</p>
 
         {error && (
           <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -88,7 +115,7 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
             <input
               type="date"
               value={moveInDate}
-              onChange={(event) => setMoveInDate(event.target.value)}
+              onChange={(e) => setMoveInDate(e.target.value)}
               className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
             />
           </div>
@@ -101,8 +128,8 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
             <textarea
               rows={4}
               value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder="Write a short message to the owner..."
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Write a short message..."
               className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
             />
           </div>

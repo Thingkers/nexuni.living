@@ -7,6 +7,10 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import RoomCard from '@/features/rooms/components/RoomCard'
 import type { Room } from '@/features/rooms/types/room.types'
+import RecentlyViewedRooms from '@/features/rooms/components/RecentlyViewedRooms'
+import SearchSuggestions from '@/features/search/components/SearchSuggestions'
+import PopularLocations from '@/features/search/components/PopularLocations'
+import TrendingRooms from '@/features/rooms/components/TrendingRooms'
 
 const HOW_IT_WORKS = [
   {
@@ -27,6 +31,7 @@ const HOW_IT_WORKS = [
 ]
 
 export default function HomePage() {
+
   const router = useRouter()
 
   const [search, setSearch] = useState('')
@@ -35,6 +40,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'all' | 'male' | 'female'>('all')
 
   useEffect(() => {
+
     async function loadHomeData() {
       let query = supabase
         .from('rooms')
@@ -56,6 +62,7 @@ export default function HomePage() {
         ])
 
       setFeaturedRooms((rooms ?? []) as Room[])
+      
       setStats({
         rooms: roomCount ?? 0,
         users: userCount ?? 0,
@@ -77,8 +84,11 @@ export default function HomePage() {
 
   return (
     <main>
+
       <section className="bg-gradient-to-br from-blue-50 via-white to-slate-50 px-4 py-16 text-center">
+
         <div className="mx-auto max-w-2xl">
+
           <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
             Built for university students
           </span>
@@ -93,15 +103,24 @@ export default function HomePage() {
             and sublets without messy social media posts.
           </p>
 
-          <div className="mx-auto mb-4 flex max-w-md gap-2">
-            <input
-              type="text"
-              placeholder="Search by area or university..."
-              className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              onKeyDown={(event) => event.key === 'Enter' && handleSearch()}
-            />
+          <div className="relative mx-auto mb-4 flex max-w-md gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search by area or university..."
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                onKeyDown={(event) => event.key === 'Enter' && handleSearch()}
+              />
+              <SearchSuggestions
+                query={search}
+                onSelect={(value) => {
+                  setSearch(value)
+                  router.push(`/listings?q=${encodeURIComponent(value)}`)
+                }}
+              />
+            </div>
 
             <button
               onClick={handleSearch}
@@ -190,9 +209,13 @@ export default function HomePage() {
             {featuredRooms.map((room) => (
               <RoomCard key={room.id} room={room} />
             ))}
+            
           </div>
         )}
       </section>
+      <RecentlyViewedRooms />
+      <PopularLocations />
+      <TrendingRooms />
 
       <section className="bg-gray-50 py-12">
         <div className="mx-auto max-w-3xl px-4">

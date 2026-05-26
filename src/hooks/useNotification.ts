@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { supabase } from '@/lib/supabase'
+import { pushNotification } from '@/lib/notifications/pushNotification'
 
 export type ToastType = 'message' | 'booking' | 'success' | 'error'
 
@@ -53,6 +54,9 @@ export function useNotification() {
   useEffect(() => {
     if (!userId) return
 
+    // =========================
+    // MESSAGE NOTIFICATION
+    // =========================
     const messageChannel = supabase
       .channel(`notify-message-${userId}`)
       .on(
@@ -81,10 +85,19 @@ export function useNotification() {
             body: `${sender?.full_name ?? 'Someone'}: ${message.content.slice(0, 60)}`,
             href: `/inbox/${message.sender_id}`,
           })
+
+          // ✅ ADDED pushNotification
+          pushNotification({
+            title: 'New Message',
+            body: `${sender?.full_name ?? 'Someone'} sent you a message`,
+          })
         },
       )
       .subscribe()
 
+    // =========================
+    // BOOKING NOTIFICATION
+    // =========================
     const bookingChannel = supabase
       .channel(`notify-booking-${userId}`)
       .on(
@@ -96,16 +109,15 @@ export function useNotification() {
           filter: `user_id=eq.${userId}`,
         },
         async (payload) => {
-          const oldBooking = payload.old as {
-            status: string
-          }
-
+          const oldBooking = payload.old as { status: string }
           const newBooking = payload.new as {
             status: string
             room_id: string
           }
 
           if (newBooking.status === oldBooking.status) return
+
+          const isConfirmed = newBooking.status === 'confirmed'
 
           const { data: room } = await supabase
             .from('rooms')
@@ -115,12 +127,19 @@ export function useNotification() {
 
           push({
             type: 'booking',
-            title:
-              newBooking.status === 'confirmed'
-                ? 'Booking confirmed 🎉'
-                : 'Booking status updated',
+            title: isConfirmed
+              ? 'Booking confirmed 🎉'
+              : 'Booking cancelled',
             body: room?.title ?? 'Your booking request has been updated',
             href: '/profile',
+          })
+
+          // ✅ ADDED pushNotification
+          pushNotification({
+            title: isConfirmed
+              ? 'Booking Confirmed 🎉'
+              : 'Booking Cancelled',
+            body: room?.title ?? 'Room update',
           })
         },
       )

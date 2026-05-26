@@ -3,6 +3,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useSaved } from '@/hooks/useSaved'
 import type { Room } from '@/features/rooms/types/room.types'
+import {
+  toggleCompareRoom,
+  isCompared,
+} from '@/lib/compareRooms'
+
+import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
 
 const STATUS_CONFIG = {
   open: {
@@ -34,6 +40,7 @@ const AMENITIES = [
 ] as const
 
 export default function RoomCard({ room }: { room: Room }) {
+
   const status = STATUS_CONFIG[room.status] ?? STATUS_CONFIG.open
   const isBooked = room.status === 'booked' || room.status === 'closed'
   const { isSaved, toggleSaved } = useSaved(room.id)
@@ -41,6 +48,13 @@ export default function RoomCard({ room }: { room: Room }) {
   const [activeImage, setActiveImage] = useState(0)
   const images = room.images ?? []
   const hasImages = images.length > 0
+  const [compared, setCompared] = useState(isCompared(room.id))
+
+  const availability =
+  getAvailabilityStatus({
+    availableSeats: room.available_seats,
+    totalSeats: room.total_seats,
+  })
 
   function nextImage(event: React.MouseEvent) {
     event.preventDefault()
@@ -91,12 +105,59 @@ export default function RoomCard({ room }: { room: Room }) {
           <span className="text-4xl">🏠</span>
         )}
 
+        {/* Top-left: Status badge */}
+        <span
+          className={`absolute left-2 top-2 z-10 rounded-full px-2.5 py-1 text-xs font-medium ${status.bg} ${status.text}`}
+        >
+          {status.label}
+        </span>
+
+        {/* Top-right: Gender badge */}
+        <span className="absolute right-2 top-2 z-10 rounded-full bg-blue-50 px-2.5 py-1 text-xs text-blue-700">
+          {room.gender_type === 'male'
+            ? 'Male'
+            : room.gender_type === 'female'
+              ? 'Female'
+              : 'Any'}
+        </span>
+
+        {/* Bottom-left: Save button */}
+        <button
+          type="button"
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            toggleSaved()
+          }}
+          className="absolute bottom-2 left-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-base shadow-sm hover:bg-white"
+        >
+          {isSaved ? '❤️' : '🤍'}
+        </button>
+
+        {/* Bottom-right: Compare button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            const updated = toggleCompareRoom(room.id)
+            setCompared(updated.includes(room.id))
+          }}
+          className={`absolute bottom-2 right-2 z-10 rounded-full px-2.5 py-1 text-xs font-medium shadow-sm transition-colors ${
+            compared
+              ? 'bg-blue-600 text-white'
+              : 'bg-white/90 text-gray-700 hover:bg-white'
+          }`}
+        >
+          {compared ? '✓ Compare' : '⊕ Compare'}
+        </button>
+
         {images.length > 1 && (
           <>
             <button
               type="button"
               onClick={prevImage}
-              className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow hover:bg-white"
+              className="absolute left-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow hover:bg-white"
             >
               ‹
             </button>
@@ -104,12 +165,12 @@ export default function RoomCard({ room }: { room: Room }) {
             <button
               type="button"
               onClick={nextImage}
-              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow hover:bg-white"
+              className="absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow hover:bg-white"
             >
               ›
             </button>
 
-            <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1">
+            <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1">
               {images.map((_, index) => (
                 <button
                   key={index}
@@ -127,32 +188,6 @@ export default function RoomCard({ room }: { room: Room }) {
             </div>
           </>
         )}
-
-        <span
-          className={`absolute left-2 top-2 rounded-full px-2.5 py-1 text-xs font-medium ${status.bg} ${status.text}`}
-        >
-          {status.label}
-        </span>
-
-        <span className="absolute right-2 top-2 rounded-full bg-blue-50 px-2.5 py-1 text-xs text-blue-700">
-          {room.gender_type === 'male'
-            ? 'Male'
-            : room.gender_type === 'female'
-              ? 'Female'
-              : 'Any'}
-        </span>
-
-        <button
-          type="button"
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            toggleSaved()
-          }}
-          className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg shadow-sm hover:bg-white"
-        >
-          {isSaved ? '❤️' : '🤍'}
-        </button>
       </div>
 
       <div className="p-4">
@@ -176,9 +211,14 @@ export default function RoomCard({ room }: { room: Room }) {
           <span className="text-xs font-normal text-gray-400"> /month</span>
         </p>
 
-        <p className="mt-1 text-xs text-gray-500">
-          {room.available_seats} of {room.total_seats} seats available
-        </p>
+        <div className="mt-1 flex items-center gap-2">
+          <p className="text-xs text-gray-500">
+            {room.available_seats} of {room.total_seats} seats available
+          </p>
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
+            {availability.emoji} {availability.label}
+          </span>
+        </div>
 
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {AMENITIES.filter((amenity) => room[amenity.key]).map((amenity) => (
@@ -206,7 +246,17 @@ export default function RoomCard({ room }: { room: Room }) {
           </div>
 
           <span className="text-xs text-gray-500">
-            {room.profiles?.full_name || 'Owner'}
+            <div className="flex items-center gap-1">
+              <span>{room.profiles?.full_name}</span>
+              {room.profiles?.is_verified && (
+                <span
+                  title="Verified Owner"
+                  className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white"
+                >
+                  ✓
+                </span>
+              )}
+            </div>
           </span>
         </div>
 

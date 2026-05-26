@@ -7,6 +7,8 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import type { Booking, Profile, Room } from '@/types'
 import RoomCard from '@/features/rooms/components/RoomCard'
+import BookingTimeline from '@/features/bookings/components/BookingTimeline'
+import BookingCountdown from '@/features/bookings/components/BookingCountdown'
 
 type Tab = 'info' | 'rooms' | 'bookings' | 'saved'
 
@@ -19,7 +21,7 @@ const BOOKING_STATUS: Record<string, { label: string; className: string }> = {
 
 export default function ProfilePage() {
   const router = useRouter()
-
+ 
   const [tab, setTab] = useState<Tab>('info')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [myRooms, setMyRooms] = useState<Room[]>([])
@@ -59,7 +61,7 @@ export default function ProfilePage() {
 
         supabase
           .from('bookings')
-          .select('*, rooms(title, rent, location_name)')
+          .select('*, rooms(title, rent, location_name, owner_id)')
           .eq('user_id', uid)
           .order('created_at', { ascending: false }),
 
@@ -381,6 +383,20 @@ export default function ProfilePage() {
                         {status.label}
                       </span>
                     </div>
+
+                    <BookingTimeline bookingId={booking.id} />
+
+                    {booking.status === 'confirmed' && booking.expires_at && (
+                        <>
+                          <BookingCountdown expiresAt={booking.expires_at} />
+                          <Link
+                            href={`/inbox/${booking.rooms?.owner_id}`}
+                            className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                          >
+                            💬 Message Owner
+                          </Link>
+                        </>
+                      )}
 
                     {booking.message && (
                       <p className="mt-2 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-400">

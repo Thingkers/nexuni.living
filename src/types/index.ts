@@ -34,4 +34,5 @@ export type Booking = {
   status: string
   move_in_date?: string
   message?: string
+  expires_at?: string
 }

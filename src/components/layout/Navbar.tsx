@@ -121,6 +121,7 @@ export default function Navbar() {
           Student Hostel
         </Link>
 
+        {/* Desktop nav links */}
         <div className="hidden items-center gap-6 text-sm text-gray-500 md:flex">
           <Link href="/listings" className="hover:text-gray-900">
             All Listings
@@ -132,6 +133,10 @@ export default function Navbar() {
 
           <Link href="/listings?type=bachelor" className="hover:text-gray-900">
             Bachelor
+          </Link>
+
+          <Link href="/compare" className="hover:text-gray-900">
+            Compare
           </Link>
         </div>
 
@@ -189,7 +194,6 @@ export default function Navbar() {
                     onClick={closeMenus}
                   >
                     <span>Inbox</span>
-
                     {unreadCount > 0 && (
                       <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
                         {unreadCount}
@@ -212,6 +216,26 @@ export default function Navbar() {
                       onClick={closeMenus}
                     >
                       Admin Reports
+                    </Link>
+                  )}
+
+                  {profile?.role === 'admin' && (
+                    <Link
+                      href="/admin/users"
+                      className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
+                      onClick={closeMenus}
+                    >
+                      Admin Users
+                    </Link>
+                  )}
+
+                  {profile?.role === 'admin' && (
+                    <Link
+                      href="/admin/rooms"
+                      className="block px-4 py-2 text-sm text-green-600 hover:bg-green-50"
+                      onClick={closeMenus}
+                    >
+                      Admin Rooms
                     </Link>
                   )}
 
@@ -244,6 +268,7 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Mobile menu */}
       {mobileOpen && (
         <div className="border-t border-gray-100 px-4 py-3 md:hidden">
           <div className="flex flex-col gap-1">
@@ -269,6 +294,15 @@ export default function Navbar() {
               onClick={closeMenus}
             >
               Bachelor
+            </Link>
+
+            {/* ✅ Fixed: Compare link with proper styling and onClick */}
+            <Link
+              href="/compare"
+              className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              onClick={closeMenus}
+            >
+              Compare ⚖️
             </Link>
 
             {user ? (
@@ -303,7 +337,6 @@ export default function Navbar() {
                   onClick={closeMenus}
                 >
                   <span>Inbox</span>
-
                   {unreadCount > 0 && (
                     <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
                       {unreadCount}
@@ -320,14 +353,34 @@ export default function Navbar() {
                 </Link>
 
                 {profile?.role === 'admin' && (
-                <Link
-                  href="/admin/reports"
-                  className="block px-4 py-2 text-sm text-red-500 hover:bg-red-50"
-                  onClick={closeMenus}
-                >
-                  Admin Reports
-                </Link>
-              )}
+                  <Link
+                    href="/admin/reports"
+                    className="block rounded-xl px-3 py-2 text-sm text-red-500 hover:bg-red-50"
+                    onClick={closeMenus}
+                  >
+                    Admin Reports
+                  </Link>
+                )}
+
+                {profile?.role === 'admin' && (
+                  <Link
+                    href="/admin/users"
+                    className="rounded-xl px-3 py-2 text-sm text-blue-600 hover:bg-blue-50"
+                    onClick={closeMenus}
+                  >
+                    Admin Users
+                  </Link>
+                )}
+
+                {profile?.role === 'admin' && (
+                  <Link
+                    href="/admin/rooms"
+                    className="block rounded-xl px-3 py-2 text-sm text-green-600 hover:bg-green-50"
+                    onClick={closeMenus}
+                  >
+                    Admin Rooms
+                  </Link>
+                )}
 
                 <button
                   onClick={handleLogout}

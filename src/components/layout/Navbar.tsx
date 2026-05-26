@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-
+import ThemeToggle from '@/components/ui/ThemeToggle'
 import { supabase } from '@/lib/supabase'
 
 type Profile = {
@@ -110,7 +110,9 @@ export default function Navbar() {
       ?.toUpperCase() ?? 'U'
 
   return (
+
     <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white">
+
       <div className="flex items-center justify-between px-4 py-3 md:px-6">
         <Link
           href="/"
@@ -141,6 +143,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
+           <ThemeToggle />
           {user && (
             <Link
               href="/post-room"
@@ -208,6 +211,16 @@ export default function Navbar() {
                   >
                     Booking Requests
                   </Link>
+
+                  {profile?.role === 'admin' && (
+                  <Link
+                    href="/dashboard/analytics"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    onClick={closeMenus}
+                  >
+                    Analytics 📊
+                  </Link>
+                )}
 
                   {profile?.role === 'admin' && (
                     <Link
@@ -359,6 +372,16 @@ export default function Navbar() {
                     onClick={closeMenus}
                   >
                     Admin Reports
+                  </Link>
+                )}
+
+                {profile?.role === 'admin' && (
+                  <Link
+                    href="/dashboard/analytics"
+                   className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    onClick={closeMenus}
+                  >
+                    Analytics 📊
                   </Link>
                 )}
 

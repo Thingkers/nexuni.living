@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 
 import Navbar from '@/components/layout/Navbar'
 import NotificationProvider from '@/components/providers/NotificationProvider'
+import ThemeProvider from '@/components/providers/ThemeProvider'
 
 import './globals.css'
 
@@ -19,7 +20,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Student Hostel',
-  description: 'Find hostel, mess & sublet easily',
+  description: 'Find hostel, mess and bachelor rooms easily',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/icon-192.png',
+  },
 }
 
 export default function RootLayout({
@@ -30,21 +36,24 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-gray-50">
-        <Navbar />
+      <body className="min-h-full flex flex-col bg-white text-gray-900 transition-colors dark:bg-gray-950 dark:text-gray-100">
+        <ThemeProvider>
+          <Navbar />
 
-        <main className="flex-1">
-          {children}
-        </main>
+          <main className="flex-1">
+            {children}
+          </main>
 
-        <NotificationProvider />
+          <NotificationProvider />
 
-        <Toaster
-          position="top-right"
-          richColors
-        />
+          <Toaster
+            position="top-right"
+            richColors
+          />
+        </ThemeProvider>
       </body>
     </html>
   )

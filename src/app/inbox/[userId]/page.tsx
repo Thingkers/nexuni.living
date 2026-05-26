@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { newMessageTemplate } from '@/lib/email/templates'
 import { supabase } from '@/lib/supabase'
+import { useTypingIndicator } from '@/hooks/useTypingIndicator'
 
 export default function ChatPage() {
   const params = useParams<{ userId: string }>()
@@ -14,11 +15,17 @@ export default function ChatPage() {
   const otherUserId = params.userId
 
   const [myId, setMyId] = useState('')
+  const [profile, setProfile] = useState<any>(null)
   const [otherUser, setOtherUser] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+
+  const { typingUsers, sendTyping } = useTypingIndicator({
+    roomId: otherUserId ?? '',
+    currentUserId: myId ?? '',
+  })
 
   useEffect(() => {
     async function loadChat() {
@@ -32,13 +39,23 @@ export default function ChatPage() {
       const currentUserId = authData.user.id
       setMyId(currentUserId)
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id, full_name, university')
-        .eq('id', otherUserId)
-        .single()
+      const [{ data: profileData }, { data: otherProfileData }] =
+        await Promise.all([
+          supabase
+            .from('profiles')
+            .select('id, full_name, university')
+            .eq('id', currentUserId)
+            .single(),
 
-      setOtherUser(profileData)
+          supabase
+            .from('profiles')
+            .select('id, full_name, university')
+            .eq('id', otherUserId)
+            .single(),
+        ])
+
+      setProfile(profileData)
+      setOtherUser(otherProfileData)
 
       const { data: messageData } = await supabase
         .from('messages')
@@ -121,39 +138,21 @@ export default function ChatPage() {
       is_read: false,
     })
 
-    if (!error) {
-  const [{ data: receiver }, { data: sender }] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('email, full_name')
-      .eq('id', otherUserId)
-      .single(),
-
-    supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('id', myId)
-      .single(),
-  ])
-
-      if (receiver?.email) {
-        await fetch('/api/send-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to: receiver.email,
-            subject: 'New message on Student Hostel',
-            html: newMessageTemplate({
-              receiverName: receiver.full_name,
-              senderName: sender?.full_name,
-              message: text,
-              inboxUrl: `${window.location.origin}/inbox/${myId}`,
-            }),
+    if (!error && otherUser?.email) {
+      await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: otherUser.email,
+          subject: 'New message on Student Hostel',
+          html: newMessageTemplate({
+            receiverName: otherUser.full_name,
+            senderName: profile?.full_name,
+            message: text,
+            inboxUrl: `${window.location.origin}/inbox/${myId}`,
           }),
-        })
-      }
+        }),
+      })
     }
 
     setSending(false)
@@ -171,7 +170,10 @@ export default function ChatPage() {
   return (
     <main className="mx-auto flex h-[calc(100vh-80px)] max-w-2xl flex-col px-4 py-6">
       <div className="mb-4 flex items-center gap-3 border-b border-gray-100 pb-4">
-        <Link href="/inbox" className="text-sm text-gray-400 hover:text-gray-700">
+        <Link
+          href="/inbox"
+          className="text-sm text-gray-400 hover:text-gray-700"
+        >
           ← Inbox
         </Link>
 
@@ -223,13 +225,22 @@ export default function ChatPage() {
           })
         )}
 
+        {typingUsers.length > 0 && (
+          <div className="px-3 py-1 text-xs text-gray-400 italic">
+            {typingUsers.join(', ')} is typing...
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
       <div className="mt-4 flex gap-2">
         <input
           value={content}
-          onChange={(event) => setContent(event.target.value)}
+          onChange={(event) => {
+            setContent(event.target.value)
+            sendTyping(profile?.full_name || 'Someone')
+          }}
           onKeyDown={(event) => event.key === 'Enter' && sendMessage()}
           placeholder="Write a message..."
           className="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-500"

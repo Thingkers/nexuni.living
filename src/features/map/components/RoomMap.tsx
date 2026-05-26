@@ -33,32 +33,42 @@ export default function RoomMap({
   const position: [number, number] = [latitude, longitude]
 
   return (
-    <div className="h-72 overflow-hidden rounded-2xl border border-gray-100">
-      <MapContainer
-        key={`${latitude}-${longitude}`}
-        center={position}
-        zoom={16}
-        scrollWheelZoom={true}
-        className="h-full w-full z-0"
-      >
-        <ResizeMap />
+    <div className="overflow-hidden rounded-2xl border border-gray-100">
+      {/* Mobile hint */}
+      <p className="block sm:hidden text-xs text-center text-gray-400 py-1 bg-gray-50">
+        দুই আঙুল দিয়ে map scroll করুন
+      </p>
 
-        <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
-          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+      <div className="h-64 sm:h-72">
+        <MapContainer
+          key={`${latitude}-${longitude}`}
+          center={position}
+          zoom={16}
+          scrollWheelZoom={false}
+          dragging={true}
+          touchZoom={true}
+          doubleClickZoom={true}
+          className="h-full w-full z-0"
+        >
+          <ResizeMap />
 
-        <Marker position={position}>
-          <Popup>
-            <div>
-              <p className="font-medium">{title}</p>
-              {locationName && (
-                <p className="text-sm text-gray-500">{locationName}</p>
-              )}
-            </div>
-          </Popup>
-        </Marker>
-      </MapContainer>
+          <TileLayer
+            attribution="&copy; OpenStreetMap contributors"
+            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <Marker position={position}>
+            <Popup>
+              <div>
+                <p className="font-medium">{title}</p>
+                {locationName && (
+                  <p className="text-sm text-gray-500">{locationName}</p>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        </MapContainer>
+      </div>
     </div>
   )
 }

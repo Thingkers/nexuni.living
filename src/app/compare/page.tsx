@@ -148,6 +148,7 @@ export default function ComparePage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
+      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Compare Rooms</h1>
@@ -163,18 +164,19 @@ export default function ComparePage() {
         </Link>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
+      {/* ───────────────────────────────────────────
+          DESKTOP TABLE (md and above)
+      ─────────────────────────────────────────── */}
+      <div className="hidden md:block overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
         <table className="min-w-full">
           <thead>
             <tr className="border-b border-gray-100">
-              {/* Label column header */}
               <th className="w-36 p-4 text-left text-xs font-medium uppercase tracking-wide text-gray-400">
                 Feature
               </th>
 
               {rooms.map((room) => (
                 <th key={room.id} className="min-w-[220px] p-4 text-left">
-                  {/* Room image */}
                   <div className="relative mb-3 h-36 w-full overflow-hidden rounded-xl bg-gray-100">
                     {room.images?.[0] ? (
                       <Image
@@ -184,13 +186,10 @@ export default function ComparePage() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-3xl">
-                        🏠
-                      </div>
+                      <div className="flex h-full items-center justify-center text-3xl">🏠</div>
                     )}
                   </div>
 
-                  {/* Room title */}
                   <Link
                     href={`/listings/${room.id}`}
                     className="line-clamp-1 text-sm font-semibold text-gray-900 hover:text-blue-600"
@@ -198,7 +197,6 @@ export default function ComparePage() {
                     {room.title}
                   </Link>
 
-                  {/* Owner */}
                   <p className="mt-1 text-xs text-gray-400">
                     by {room.profiles?.full_name || 'Owner'}
                     {room.profiles?.is_verified && (
@@ -208,7 +206,6 @@ export default function ComparePage() {
                     )}
                   </p>
 
-                  {/* Remove button */}
                   <button
                     onClick={() => handleRemove(room.id)}
                     className="mt-2 text-xs text-red-400 hover:text-red-600"
@@ -224,14 +221,9 @@ export default function ComparePage() {
             {ROWS.map((row, idx) => (
               <tr
                 key={row.label}
-                className={`border-b border-gray-50 ${
-                  idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                }`}
+                className={`border-b border-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
               >
-                <td className="p-4 text-xs font-medium text-gray-500">
-                  {row.label}
-                </td>
-
+                <td className="p-4 text-xs font-medium text-gray-500">{row.label}</td>
                 {rooms.map((room) => (
                   <td key={room.id} className="p-4 text-sm text-gray-700">
                     {row.render(room)}
@@ -240,7 +232,6 @@ export default function ComparePage() {
               </tr>
             ))}
 
-            {/* View details row */}
             <tr>
               <td className="p-4" />
               {rooms.map((room) => (
@@ -256,6 +247,87 @@ export default function ComparePage() {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      {/* ───────────────────────────────────────────
+          MOBILE CARDS (below md)
+      ─────────────────────────────────────────── */}
+      <div className="md:hidden space-y-4">
+        {rooms.map((room) => (
+          <div
+            key={room.id}
+            className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden"
+          >
+            {/* Room image */}
+            <div className="relative h-44 w-full bg-gray-100">
+              {room.images?.[0] ? (
+                <Image
+                  src={room.images[0]}
+                  alt={room.title}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-4xl">🏠</div>
+              )}
+            </div>
+
+            {/* Room header info */}
+            <div className="flex items-start justify-between px-4 pt-4 pb-2">
+              <div className="flex-1 min-w-0">
+                <Link
+                  href={`/listings/${room.id}`}
+                  className="line-clamp-1 text-base font-semibold text-gray-900 hover:text-blue-600"
+                >
+                  {room.title}
+                </Link>
+                <p className="mt-0.5 text-xs text-gray-400">
+                  by {room.profiles?.full_name || 'Owner'}
+                  {room.profiles?.is_verified && (
+                    <span className="ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-600 text-[9px] text-white">
+                      ✓
+                    </span>
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={() => handleRemove(room.id)}
+                className="ml-3 shrink-0 text-xs text-red-400 hover:text-red-600"
+              >
+                ✕ Remove
+              </button>
+            </div>
+
+            {/* Feature rows */}
+            <div className="px-4 pb-2">
+              {ROWS.map((row, idx) => (
+                <div
+                  key={row.label}
+                  className={`flex items-center justify-between py-2.5 ${
+                    idx !== ROWS.length - 1 ? 'border-b border-gray-50' : ''
+                  }`}
+                >
+                  <span className="text-xs font-medium text-gray-400 w-32 shrink-0">
+                    {row.label}
+                  </span>
+                  <span className="text-sm text-gray-700 text-right">
+                    {row.render(room)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div className="px-4 pb-4 pt-2">
+              <Link
+                href={`/listings/${room.id}`}
+                className="block w-full rounded-xl bg-blue-600 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700"
+              >
+                View Listing →
+              </Link>
+            </div>
+          </div>
+        ))}
       </div>
     </main>
   )

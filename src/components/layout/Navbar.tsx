@@ -110,10 +110,9 @@ export default function Navbar() {
       ?.toUpperCase() ?? 'U'
 
   return (
-
     <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white">
-
       <div className="flex items-center justify-between px-4 py-3 md:px-6">
+        {/* Logo */}
         <Link
           href="/"
           className="flex items-center gap-2 font-semibold text-gray-900"
@@ -125,25 +124,16 @@ export default function Navbar() {
 
         {/* Desktop nav links */}
         <div className="hidden items-center gap-6 text-sm text-gray-500 md:flex">
-          <Link href="/listings" className="hover:text-gray-900">
-            All Listings
-          </Link>
-
-          <Link href="/listings?type=mess" className="hover:text-gray-900">
-            Mess
-          </Link>
-
-          <Link href="/listings?type=bachelor" className="hover:text-gray-900">
-            Bachelor
-          </Link>
-
-          <Link href="/compare" className="hover:text-gray-900">
-            Compare
-          </Link>
+          <Link href="/listings" className="hover:text-gray-900">All Listings</Link>
+          <Link href="/listings?type=mess" className="hover:text-gray-900">Mess</Link>
+          <Link href="/listings?type=bachelor" className="hover:text-gray-900">Bachelor</Link>
+          <Link href="/compare" className="hover:text-gray-900">Compare</Link>
         </div>
 
-        <div className="flex items-center gap-3">
-           <ThemeToggle />
+        {/* Right side */}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+
           {user && (
             <Link
               href="/post-room"
@@ -153,13 +143,24 @@ export default function Navbar() {
             </Link>
           )}
 
+          {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen((prev) => !prev)}
-            className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-700 md:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-700 md:hidden"
+            aria-label="Toggle menu"
           >
-            Menu
+            {mobileOpen ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </button>
 
+          {/* Desktop user avatar */}
           {user ? (
             <div className="relative hidden md:block">
               <button
@@ -175,87 +176,30 @@ export default function Navbar() {
                     {profile?.full_name || user.email}
                   </div>
 
-                  <Link
-                    href="/profile"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={closeMenus}
-                  >
-                    My Profile
-                  </Link>
-
-                  <Link
-                    href="/dashboard"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={closeMenus}
-                  >
-                    Dashboard
-                  </Link>
-
-                  <Link
-                    href="/inbox"
-                    className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={closeMenus}
-                  >
+                  <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>My Profile</Link>
+                  <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>Dashboard</Link>
+                  <Link href="/inbox" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
                     <span>Inbox</span>
                     {unreadCount > 0 && (
-                      <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
-                        {unreadCount}
-                      </span>
+                      <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
                     )}
                   </Link>
-
-                  <Link
-                    href="/dashboard/bookings"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={closeMenus}
-                  >
-                    Booking Requests
-                  </Link>
+                  <Link href="/dashboard/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>Booking Requests</Link>
 
                   {profile?.role === 'admin' && (
-                  <Link
-                    href="/dashboard/analytics"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={closeMenus}
-                  >
-                    Analytics 📊
-                  </Link>
-                )}
-
+                    <Link href="/dashboard/analytics" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>Analytics 📊</Link>
+                  )}
                   {profile?.role === 'admin' && (
-                    <Link
-                      href="/admin/reports"
-                      className="block px-4 py-2 text-sm text-red-500 hover:bg-red-50"
-                      onClick={closeMenus}
-                    >
-                      Admin Reports
-                    </Link>
+                    <Link href="/admin/reports" className="block px-4 py-2 text-sm text-red-500 hover:bg-red-50" onClick={closeMenus}>Admin Reports</Link>
+                  )}
+                  {profile?.role === 'admin' && (
+                    <Link href="/admin/users" className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50" onClick={closeMenus}>Admin Users</Link>
+                  )}
+                  {profile?.role === 'admin' && (
+                    <Link href="/admin/rooms" className="block px-4 py-2 text-sm text-green-600 hover:bg-green-50" onClick={closeMenus}>Admin Rooms</Link>
                   )}
 
-                  {profile?.role === 'admin' && (
-                    <Link
-                      href="/admin/users"
-                      className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
-                      onClick={closeMenus}
-                    >
-                      Admin Users
-                    </Link>
-                  )}
-
-                  {profile?.role === 'admin' && (
-                    <Link
-                      href="/admin/rooms"
-                      className="block px-4 py-2 text-sm text-green-600 hover:bg-green-50"
-                      onClick={closeMenus}
-                    >
-                      Admin Rooms
-                    </Link>
-                  )}
-
-                  <button
-                    onClick={handleLogout}
-                    className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-gray-50"
-                  >
+                  <button onClick={handleLogout} className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-gray-50">
                     Logout
                   </button>
                 </div>
@@ -263,174 +207,116 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="hidden items-center gap-3 md:flex">
-              <Link
-                href="/auth/login"
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Login
-              </Link>
-
-              <Link
-                href="/auth/register"
-                className="rounded-xl bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
-              >
-                Register
-              </Link>
+              <Link href="/auth/login" className="text-sm text-gray-600 hover:text-gray-900">Login</Link>
+              <Link href="/auth/register" className="rounded-xl bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">Register</Link>
             </div>
           )}
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* ── MOBILE MENU ── */}
       {mobileOpen && (
-        <div className="border-t border-gray-100 px-4 py-3 md:hidden">
-          <div className="flex flex-col gap-1">
-            <Link
-              href="/listings"
-              className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              onClick={closeMenus}
-            >
-              All Listings
-            </Link>
+        <div className="border-t border-gray-100 md:hidden">
+          {/* Scrollable container so nothing gets cut off */}
+          <div className="max-h-[75vh] overflow-y-auto px-4 py-3">
+            <div className="flex flex-col gap-0.5">
 
-            <Link
-              href="/listings?type=mess"
-              className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              onClick={closeMenus}
-            >
-              Mess
-            </Link>
+              {/* Always-visible links */}
+              <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                Browse
+              </p>
+              <Link href="/listings" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                All Listings
+              </Link>
+              <Link href="/listings?type=mess" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                Mess
+              </Link>
+              <Link href="/listings?type=bachelor" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                Bachelor
+              </Link>
+              <Link href="/compare" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                Compare ⚖️
+              </Link>
 
-            <Link
-              href="/listings?type=bachelor"
-              className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              onClick={closeMenus}
-            >
-              Bachelor
-            </Link>
+              {/* Divider */}
+              <div className="my-2 border-t border-gray-100" />
 
-            {/* ✅ Fixed: Compare link with proper styling and onClick */}
-            <Link
-              href="/compare"
-              className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              onClick={closeMenus}
-            >
-              Compare ⚖️
-            </Link>
-
-            {user ? (
-              <>
-                <Link
-                  href="/post-room"
-                  className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  onClick={closeMenus}
-                >
-                  Post Room
-                </Link>
-
-                <Link
-                  href="/profile"
-                  className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  onClick={closeMenus}
-                >
-                  My Profile
-                </Link>
-
-                <Link
-                  href="/dashboard"
-                  className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  onClick={closeMenus}
-                >
-                  Dashboard
-                </Link>
-
-                <Link
-                  href="/inbox"
-                  className="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  onClick={closeMenus}
-                >
-                  <span>Inbox</span>
-                  {unreadCount > 0 && (
-                    <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
-                      {unreadCount}
+              {user ? (
+                <>
+                  {/* User info */}
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
+                      {initials}
+                    </div>
+                    <span className="truncate text-xs text-gray-500">
+                      {profile?.full_name || user.email}
                     </span>
+                  </div>
+
+                  <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                    Account
+                  </p>
+
+                  <Link href="/post-room" className="rounded-xl px-3 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50" onClick={closeMenus}>
+                    + Post Room
+                  </Link>
+                  <Link href="/profile" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                    My Profile
+                  </Link>
+                  <Link href="/dashboard" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                    Dashboard
+                  </Link>
+                  <Link href="/inbox" className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                    <span>Inbox</span>
+                    {unreadCount > 0 && (
+                      <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
+                    )}
+                  </Link>
+                  <Link href="/dashboard/bookings" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                    Booking Requests
+                  </Link>
+
+                  {/* Admin section */}
+                  {profile?.role === 'admin' && (
+                    <>
+                      <div className="my-2 border-t border-gray-100" />
+                      <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                        Admin
+                      </p>
+                      <Link href="/dashboard/analytics" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                        Analytics 📊
+                      </Link>
+                      <Link href="/admin/reports" className="rounded-xl px-3 py-2.5 text-sm text-red-500 hover:bg-red-50" onClick={closeMenus}>
+                        Admin Reports
+                      </Link>
+                      <Link href="/admin/users" className="rounded-xl px-3 py-2.5 text-sm text-blue-600 hover:bg-blue-50" onClick={closeMenus}>
+                        Admin Users
+                      </Link>
+                      <Link href="/admin/rooms" className="rounded-xl px-3 py-2.5 text-sm text-green-600 hover:bg-green-50" onClick={closeMenus}>
+                        Admin Rooms
+                      </Link>
+                    </>
                   )}
-                </Link>
 
-                <Link
-                  href="/dashboard/bookings"
-                  className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  onClick={closeMenus}
-                >
-                  Booking Requests
-                </Link>
-
-                {profile?.role === 'admin' && (
-                  <Link
-                    href="/admin/reports"
-                    className="block rounded-xl px-3 py-2 text-sm text-red-500 hover:bg-red-50"
-                    onClick={closeMenus}
+                  <div className="my-2 border-t border-gray-100" />
+                  <button
+                    onClick={handleLogout}
+                    className="rounded-xl px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-50"
                   >
-                    Admin Reports
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                    Login
                   </Link>
-                )}
-
-                {profile?.role === 'admin' && (
-                  <Link
-                    href="/dashboard/analytics"
-                   className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    onClick={closeMenus}
-                  >
-                    Analytics 📊
+                  <Link href="/auth/register" className="rounded-xl bg-blue-600 px-3 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700" onClick={closeMenus}>
+                    Register
                   </Link>
-                )}
-
-                {profile?.role === 'admin' && (
-                  <Link
-                    href="/admin/users"
-                    className="rounded-xl px-3 py-2 text-sm text-blue-600 hover:bg-blue-50"
-                    onClick={closeMenus}
-                  >
-                    Admin Users
-                  </Link>
-                )}
-
-                {profile?.role === 'admin' && (
-                  <Link
-                    href="/admin/rooms"
-                    className="block rounded-xl px-3 py-2 text-sm text-green-600 hover:bg-green-50"
-                    onClick={closeMenus}
-                  >
-                    Admin Rooms
-                  </Link>
-                )}
-
-                <button
-                  onClick={handleLogout}
-                  className="rounded-xl px-3 py-2 text-left text-sm text-red-500 hover:bg-gray-50"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/auth/login"
-                  className="rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  onClick={closeMenus}
-                >
-                  Login
-                </Link>
-
-                <Link
-                  href="/auth/register"
-                  className="rounded-xl bg-blue-600 px-3 py-2 text-sm text-white"
-                  onClick={closeMenus}
-                >
-                  Register
-                </Link>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -7,10 +7,8 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import RoomCard from '@/features/rooms/components/RoomCard'
 import type { Room } from '@/features/rooms/types/room.types'
-import RecentlyViewedRooms from '@/features/rooms/components/RecentlyViewedRooms'
 import SearchSuggestions from '@/features/search/components/SearchSuggestions'
-import PopularLocations from '@/features/search/components/PopularLocations'
-import TrendingRooms from '@/features/rooms/components/TrendingRooms'
+
 
 const HOW_IT_WORKS = [
   {
@@ -213,9 +211,6 @@ export default function HomePage() {
           </div>
         )}
       </section>
-      <RecentlyViewedRooms />
-      <PopularLocations />
-      <TrendingRooms />
 
       <section className="bg-gray-50 py-12">
         <div className="mx-auto max-w-3xl px-4">

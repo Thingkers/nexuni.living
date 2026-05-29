@@ -13,19 +13,6 @@ const RoomsMap = dynamic(
   { ssr: false },
 )
 
-const GENDER_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-]
-
-const TYPE_OPTIONS = [
-  { value: '', label: 'All Types' },
-  { value: 'mess', label: 'Mess' },
-  { value: 'bachelor', label: 'Bachelor' },
-  { value: 'sublet', label: 'Sublet' },
-]
-
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
   { value: 'price_asc', label: 'Lowest Rent' },
@@ -68,7 +55,6 @@ function ListingsContent() {
   const fetchRooms = useCallback(async () => {
     setLoading(true)
 
-    // ✅ FIX: profiles relation always OBJECT (NOT array)
     let queryBuilder = supabase.from('rooms').select(`
       *,
       profiles(full_name, phone, avatar_url, is_verified)
@@ -93,9 +79,7 @@ function ListingsContent() {
     } else if (sort === 'price_desc') {
       queryBuilder = queryBuilder.order('rent', { ascending: false })
     } else {
-      queryBuilder = queryBuilder.order('created_at', {
-        ascending: false,
-      })
+      queryBuilder = queryBuilder.order('created_at', { ascending: false })
     }
 
     const { data, error } = await queryBuilder
@@ -135,16 +119,13 @@ function ListingsContent() {
     router.replace('/listings', { scroll: false })
   }
 
-  const hasFilter =
-    query || gender || type || maxRent || sort !== 'newest'
+  const hasFilter = query || gender || type || maxRent || sort !== 'newest'
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
       {/* HEADER */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          All Listings
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900">All Listings</h1>
       </div>
 
       {/* SEARCH */}
@@ -153,12 +134,9 @@ function ListingsContent() {
           className="flex-1 rounded-xl border px-4 py-2"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) =>
-            e.key === 'Enter' && handleSearch()
-          }
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           placeholder="Search..."
         />
-
         <button
           onClick={handleSearch}
           className="rounded-xl bg-blue-600 px-5 text-white"
@@ -189,20 +167,15 @@ function ListingsContent() {
         </button>
 
         {hasFilter && (
-          <button
-            onClick={clearAll}
-            className="text-sm text-red-500"
-          >
+          <button onClick={clearAll} className="text-sm text-red-500">
             Clear
           </button>
         )}
       </div>
 
-      {/* RESULTS */}
+      {/* RESULTS COUNT */}
       <p className="mb-4 text-sm text-gray-500">
-        {loading
-          ? 'Loading...'
-          : `${rooms.length} rooms found`}
+        {loading ? 'Loading...' : `${rooms.length} rooms found`}
       </p>
 
       {/* GRID + MAP */}
@@ -210,25 +183,24 @@ function ListingsContent() {
         <div>Loading...</div>
       ) : rooms.length === 0 ? (
         <p>No rooms found</p>
-      ) : (
+      ) : showMap ? (
+        // ✅ Map mode: side-by-side layout
         <div className="grid gap-5 lg:grid-cols-[380px_1fr]">
-          {/* MAP */}
-          {showMap && (
-            <div className="lg:sticky lg:top-24 h-fit">
-              <RoomsMap rooms={rooms} />
-            </div>
-          )}
-
-          {/* GRID */}
-          <div
-            className={`grid grid-cols-1 md:grid-cols-2 ${
-              showMap ? '' : 'lg:grid-cols-3'
-            } gap-4`}
-          >
+          <div className="lg:sticky lg:top-24 h-fit">
+            <RoomsMap rooms={rooms} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {rooms.map((room) => (
               <RoomCard key={room.id} room={room} />
             ))}
           </div>
+        </div>
+      ) : (
+        // ✅ Normal mode: same 3-col grid as homepage
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {rooms.map((room) => (
+            <RoomCard key={room.id} room={room} />
+          ))}
         </div>
       )}
     </main>
@@ -237,9 +209,7 @@ function ListingsContent() {
 
 export default function ListingsPage() {
   return (
-    <Suspense
-      fallback={<p className="p-10">Loading...</p>}
-    >
+    <Suspense fallback={<p className="p-10">Loading...</p>}>
       <ListingsContent />
     </Suspense>
   )

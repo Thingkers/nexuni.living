@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import ThemeToggle from '@/components/ui/ThemeToggle'
 import { supabase } from '@/lib/supabase'
 
 type Profile = {
@@ -127,12 +126,11 @@ export default function Navbar() {
           <Link href="/listings" className="hover:text-gray-900">All Listings</Link>
           <Link href="/listings?type=mess" className="hover:text-gray-900">Mess</Link>
           <Link href="/listings?type=bachelor" className="hover:text-gray-900">Bachelor</Link>
-          <Link href="/compare" className="hover:text-gray-900">Compare</Link>
         </div>
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          <ThemeToggle />
+         
 
           {user && (
             <Link
@@ -233,9 +231,6 @@ export default function Navbar() {
               </Link>
               <Link href="/listings?type=bachelor" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
                 Bachelor
-              </Link>
-              <Link href="/compare" className="rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
-                Compare ⚖️
               </Link>
 
               {/* Divider */}

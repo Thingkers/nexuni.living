@@ -12,7 +12,6 @@ import BookingModal from '@/features/bookings/components/BookingModal'
 import ReportListingButton from '@/features/rooms/components/ReportListingButton'
 import ReviewBox from '@/features/reviews/components/ReviewBox'
 import RoomCard from '@/features/rooms/components/RoomCard'
-import { saveRecentlyViewed } from '@/lib/recentlyViewed'
 import AvailabilityCalendar from '@/features/rooms/components/AvailabilityCalendar'
 import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
 const RoomMap = dynamic(
@@ -64,7 +63,7 @@ export default function ListingDetailsPage() {
     if (!roomData) return
 
     setRoom(roomData as Room)
-    saveRecentlyViewed(roomData.id)
+  
 
     await supabase
       .from('rooms')

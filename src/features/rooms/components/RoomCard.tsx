@@ -3,34 +3,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useSaved } from '@/hooks/useSaved'
 import type { Room } from '@/features/rooms/types/room.types'
-import {
-  toggleCompareRoom,
-  isCompared,
-} from '@/lib/compareRooms'
-
 import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
 
 const STATUS_CONFIG = {
-  open: {
-    label: 'Open',
-    bg: 'bg-green-50',
-    text: 'text-green-700',
-  },
-  partial: {
-    label: 'Partially Available',
-    bg: 'bg-yellow-50',
-    text: 'text-yellow-700',
-  },
-  booked: {
-    label: 'Booked',
-    bg: 'bg-red-50',
-    text: 'text-red-700',
-  },
-  closed: {
-    label: 'Closed',
-    bg: 'bg-gray-100',
-    text: 'text-gray-600',
-  },
+  open: { label: 'Open', bg: 'bg-green-50', text: 'text-green-700' },
+  partial: { label: 'Partially Available', bg: 'bg-yellow-50', text: 'text-yellow-700' },
+  booked: { label: 'Booked', bg: 'bg-red-50', text: 'text-red-700' },
+  closed: { label: 'Closed', bg: 'bg-gray-100', text: 'text-gray-600' },
 } as const
 
 const AMENITIES = [
@@ -40,7 +19,6 @@ const AMENITIES = [
 ] as const
 
 export default function RoomCard({ room }: { room: Room }) {
-
   const status = STATUS_CONFIG[room.status] ?? STATUS_CONFIG.open
   const isBooked = room.status === 'booked' || room.status === 'closed'
   const { isSaved, toggleSaved } = useSaved(room.id)
@@ -48,10 +26,8 @@ export default function RoomCard({ room }: { room: Room }) {
   const [activeImage, setActiveImage] = useState(0)
   const images = room.images ?? []
   const hasImages = images.length > 0
-  const [compared, setCompared] = useState(isCompared(room.id))
 
-  const availability =
-  getAvailabilityStatus({
+  const availability = getAvailabilityStatus({
     availableSeats: room.available_seats,
     totalSeats: room.total_seats,
   })
@@ -95,33 +71,22 @@ export default function RoomCard({ room }: { room: Room }) {
     >
       <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gray-50">
         {hasImages ? (
-          <Image
-            src={images[activeImage]}
-            alt={room.title}
-            fill
-            className="object-cover"
-          />
+          <Image src={images[activeImage]} alt={room.title} fill className="object-cover" />
         ) : (
           <span className="text-4xl">🏠</span>
         )}
 
-        {/* Top-left: Status badge */}
-        <span
-          className={`absolute left-2 top-2 z-10 rounded-full px-2.5 py-1 text-xs font-medium ${status.bg} ${status.text}`}
-        >
+        {/* Status badge */}
+        <span className={`absolute left-2 top-2 z-10 rounded-full px-2.5 py-1 text-xs font-medium ${status.bg} ${status.text}`}>
           {status.label}
         </span>
 
-        {/* Top-right: Gender badge */}
+        {/* Gender badge */}
         <span className="absolute right-2 top-2 z-10 rounded-full bg-blue-50 px-2.5 py-1 text-xs text-blue-700">
-          {room.gender_type === 'male'
-            ? 'Male'
-            : room.gender_type === 'female'
-              ? 'Female'
-              : 'Any'}
+          {room.gender_type === 'male' ? 'Male' : room.gender_type === 'female' ? 'Female' : 'Any'}
         </span>
 
-        {/* Bottom-left: Save button */}
+        {/* Save button */}
         <button
           type="button"
           onClick={(event) => {
@@ -132,24 +97,6 @@ export default function RoomCard({ room }: { room: Room }) {
           className="absolute bottom-2 left-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-base shadow-sm hover:bg-white"
         >
           {isSaved ? '❤️' : '🤍'}
-        </button>
-
-        {/* Bottom-right: Compare button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            const updated = toggleCompareRoom(room.id)
-            setCompared(updated.includes(room.id))
-          }}
-          className={`absolute bottom-2 right-2 z-10 rounded-full px-2.5 py-1 text-xs font-medium shadow-sm transition-colors ${
-            compared
-              ? 'bg-blue-600 text-white'
-              : 'bg-white/90 text-gray-700 hover:bg-white'
-          }`}
-        >
-          {compared ? '✓ Compare' : '⊕ Compare'}
         </button>
 
         {images.length > 1 && (
@@ -199,11 +146,7 @@ export default function RoomCard({ room }: { room: Room }) {
 
         <p className="mb-3 text-xs text-gray-400">
           📍 {room.location_name || 'Location not added'} ·{' '}
-          {room.type === 'mess'
-            ? 'Mess'
-            : room.type === 'bachelor'
-              ? 'Bachelor'
-              : 'Sublet'}
+          {room.type === 'mess' ? 'Mess' : room.type === 'bachelor' ? 'Bachelor' : 'Sublet'}
         </p>
 
         <p className="text-lg font-semibold text-blue-600">
@@ -222,10 +165,7 @@ export default function RoomCard({ room }: { room: Room }) {
 
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {AMENITIES.filter((amenity) => room[amenity.key]).map((amenity) => (
-            <span
-              key={amenity.key}
-              className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
-            >
+            <span key={amenity.key} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
               {amenity.icon} {amenity.label}
             </span>
           ))}
@@ -233,8 +173,7 @@ export default function RoomCard({ room }: { room: Room }) {
 
         {availableDate && (
           <p className="mt-2 text-xs text-gray-400">
-            🗓{' '}
-            {isAvailableNow ? 'Available now' : `Available from ${availableDate}`}
+            🗓 {isAvailableNow ? 'Available now' : `Available from ${availableDate}`}
           </p>
         )}
       </div>
@@ -244,15 +183,11 @@ export default function RoomCard({ room }: { room: Room }) {
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700">
             {initials}
           </div>
-
           <span className="text-xs text-gray-500">
             <div className="flex items-center gap-1">
               <span>{room.profiles?.full_name}</span>
               {room.profiles?.is_verified && (
-                <span
-                  title="Verified Owner"
-                  className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white"
-                >
+                <span title="Verified Owner" className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">
                   ✓
                 </span>
               )}

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase/'
 
 export default function LoginPage() {
@@ -89,9 +89,17 @@ export default function LoginPage() {
 
         {/* Header */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-2xl">
-            🎓
-          </div>
+
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center">
+          <Image
+            src="/aiub_logo.png"
+            alt="AIUB Logo"
+            width={80}
+            height={80}
+            className="mx-auto"
+          />
+        </div>
+          
           <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
           <p className="mt-1 text-sm text-gray-500">AIUB Student Hostel System</p>
         </div>

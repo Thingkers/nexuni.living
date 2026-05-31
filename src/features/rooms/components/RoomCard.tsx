@@ -65,8 +65,8 @@ export default function RoomCard({ room }: { room: Room }) {
 
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all hover:border-gray-300 hover:shadow-sm ${
-        isBooked ? 'opacity-60' : ''
+      className={`overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_4px_24px_rgba(59,130,246,0.08)] transition-all hover:shadow-[0_8px_32px_rgba(59,130,246,0.18)] hover:border-blue-100 hover:-translate-y-0.5 ${
+            isBooked ? 'opacity-60' : ''
       }`}
     >
       <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gray-50">

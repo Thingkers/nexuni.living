@@ -31,8 +31,6 @@ function ListingsContent() {
 
   const [rooms, setRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
-  const [showMap, setShowMap] = useState(false)
-
   const [inputValue, setInputValue] = useState(
     searchParams.get('search') ?? '',
   )
@@ -159,12 +157,6 @@ function ListingsContent() {
           ))}
         </select>
 
-        <button
-          onClick={() => setShowMap((prev) => !prev)}
-          className="rounded-xl border px-4 py-2 text-sm"
-        >
-          {showMap ? 'Hide Map' : 'Show Map'}
-        </button>
 
         {hasFilter && (
           <button onClick={clearAll} className="text-sm text-red-500">
@@ -183,20 +175,7 @@ function ListingsContent() {
         <div>Loading...</div>
       ) : rooms.length === 0 ? (
         <p>No rooms found</p>
-      ) : showMap ? (
-        // ✅ Map mode: side-by-side layout
-        <div className="grid gap-5 lg:grid-cols-[380px_1fr]">
-          <div className="lg:sticky lg:top-24 h-fit">
-            <RoomsMap rooms={rooms} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {rooms.map((room) => (
-              <RoomCard key={room.id} room={room} />
-            ))}
-          </div>
-        </div>
       ) : (
-        // ✅ Normal mode: same 3-col grid as homepage
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => (
             <RoomCard key={room.id} room={room} />

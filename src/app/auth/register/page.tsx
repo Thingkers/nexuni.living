@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 import { supabase } from '@/lib/supabase/'
 
@@ -13,8 +14,7 @@ const INITIAL_FORM = {
   password: '',
   confirm_password: '',
   gender: 'male',
-  university: '',
-  role: 'student',
+  student_id: '',
 }
 
 export default function RegisterPage() {
@@ -24,15 +24,55 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const [idCardFile, setIdCardFile] = useState<File | null>(null)
+  const [idCardPreview, setIdCardPreview] = useState<string | null>(null)
+
   function updateField(key: string, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function handleIdCardChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIdCardFile(file)
+    setIdCardPreview(URL.createObjectURL(file))
+  }
+
+  async function uploadIdCard(userId: string): Promise<string | null> {
+    if (!idCardFile) return null
+
+    const ext = idCardFile.name.split('.').pop()
+    const path = `${userId}/id-card.${ext}`
+
+    const { error } = await supabase.storage
+      .from('student-id-cards')
+      .upload(path, idCardFile, { upsert: true })
+
+    if (error) throw new Error(error.message)
+
+    const { data } = supabase.storage
+      .from('student-id-cards')
+      .getPublicUrl(path)
+
+    return data.publicUrl
   }
 
   async function handleRegister() {
     setError('')
 
-    if (!form.full_name || !form.email || !form.password || !form.university) {
+    // ✅ AIUB email validation
+    if (!form.email.endsWith('@student.aiub.edu')) {
+      setError('Only AIUB students can register. Please use your xx-xxxxx-x@student.aiub.edu email.')
+      return
+    }
+
+    if (!form.full_name || !form.email || !form.password || !form.student_id) {
       setError('Please fill in all required fields')
+      return
+    }
+
+    if (!idCardFile) {
+      setError('Please upload your AIUB Student ID card')
       return
     }
 
@@ -48,6 +88,7 @@ export default function RegisterPage() {
 
     setLoading(true)
 
+    // 1. Create auth user
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -59,15 +100,29 @@ export default function RegisterPage() {
       return
     }
 
+    // 2. Upload ID card
+    let idCardUrl: string | null = null
+    try {
+      idCardUrl = await uploadIdCard(data.user.id)
+    } catch (err: any) {
+      setError('ID card upload failed: ' + err.message)
+      setLoading(false)
+      return
+    }
+
+    // 3. Create profile
     const { error: profileError } = await supabase.from('profiles').insert({
       id: data.user.id,
       full_name: form.full_name,
       email: form.email,
       phone: form.phone,
       gender: form.gender,
-      university: form.university,
-      role: form.role,
+      university: 'AIUB',
+      student_id: form.student_id,
+      student_id_card_url: idCardUrl,
+      role: 'student',
       verification_status: 'pending',
+      is_verified: false,
     })
 
     setLoading(false)
@@ -77,19 +132,27 @@ export default function RegisterPage() {
       return
     }
 
-    router.push('/auth/login')
+    router.push('/auth/pending')
   }
 
-  return (
-    <main className="min-h-screen bg-gray-100 px-4 py-10">
-      <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="mb-2 text-3xl font-bold text-gray-900">
-          Create Account
-        </h1>
+  const inputClass =
+    'rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500'
 
-        <p className="mb-6 text-sm text-gray-500">
-          Register to find or post student rooms
-        </p>
+  return (
+
+    <main className="min-h-screen bg-gray-50 px-4 py-10">
+
+      <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+
+        <div className="mb-6 text-center">
+
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-2xl">
+            🎓
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">AIUB Student Register</h1>
+          <p className="mt-1 text-sm text-gray-500">Only xx-xxxxx-x@student.aiub.edu email is accepted</p>
+
+        </div>
 
         {error && (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -98,77 +161,143 @@ export default function RegisterPage() {
         )}
 
         <div className="flex flex-col gap-4">
-          <input
-            placeholder="Full Name *"
-            className="rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.full_name}
-            onChange={(e) => updateField('full_name', e.target.value)}
-          />
 
-          <input
-            type="email"
-            placeholder="Email Address *"
-            className="rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.email}
-            onChange={(e) => updateField('email', e.target.value)}
-          />
+          {/* Full Name */}
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">Full Name *</label>
+            <input
+              placeholder="Your full name"
+              className={inputClass + ' w-full'}
+              value={form.full_name}
+              onChange={(e) => updateField('full_name', e.target.value)}
+            />
+          </div>
 
-          <input
-            placeholder="Phone Number"
-            className="rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.phone}
-            onChange={(e) => updateField('phone', e.target.value)}
-          />
+          {/* AIUB Email */}
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">AIUB Email *</label>
+            <input
+              type="email"
+              placeholder="xx-xxxxx-x@student.aiub.edu"
+              className={inputClass + ' w-full'}
+              value={form.email}
+              onChange={(e) => updateField('email', e.target.value)}
+            />
+            {form.email && !form.email.endsWith('@student.aiub.edu') && (
+              <p className="mt-1 text-xs text-red-500">Must be xx-xxxxx-x@student.aiub.edu email</p>
+            )}
+            {form.email && form.email.endsWith('@student.aiub.edu') && (
+              <p className="mt-1 text-xs text-green-600">✓ Valid AIUB email</p>
+            )}
+          </div>
 
-          <input
-            placeholder="University Name *"
-            className="rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.university}
-            onChange={(e) => updateField('university', e.target.value)}
-          />
+          {/* Student ID */}
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">Student ID *</label>
+            <input
+              placeholder="e.g. xx-xxxxx-x"
+              className={inputClass + ' w-full'}
+              value={form.student_id}
+              onChange={(e) => updateField('student_id', e.target.value)}
+            />
+          </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Phone */}
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">Phone Number</label>
+            <input
+              placeholder="01XXXXXXXXX"
+              className={inputClass + ' w-full'}
+              value={form.phone}
+              onChange={(e) => updateField('phone', e.target.value)}
+            />
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">Gender</label>
             <select
-              className="rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputClass + ' w-full'}
               value={form.gender}
               onChange={(e) => updateField('gender', e.target.value)}
             >
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
-
-            <select
-              className="rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              value={form.role}
-              onChange={(e) => updateField('role', e.target.value)}
-            >
-              <option value="student">Student</option>
-              <option value="owner">Owner</option>
-            </select>
           </div>
 
-          <input
-            type="password"
-            placeholder="Password *"
-            className="rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.password}
-            onChange={(e) => updateField('password', e.target.value)}
-          />
+          {/* ID Card Upload */}
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">
+              Student ID Card * <span className="text-gray-400">(photo/scan)</span>
+            </label>
 
-          <input
-            type="password"
-            placeholder="Confirm Password *"
-            className="rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.confirm_password}
-            onChange={(e) => updateField('confirm_password', e.target.value)}
-          />
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-5 text-center hover:border-blue-400 hover:bg-blue-50">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleIdCardChange}
+              />
+              {idCardPreview ? (
+                <div className="relative h-32 w-full overflow-hidden rounded-lg">
+                  <Image src={idCardPreview} alt="ID Card" fill className="object-contain" />
+                </div>
+              ) : (
+                <>
+                  <span className="text-2xl">🪪</span>
+                  <span className="mt-2 text-sm font-medium text-gray-600">Upload ID Card</span>
+                  <span className="text-xs text-gray-400">JPG or PNG</span>
+                </>
+              )}
+            </label>
+
+            {idCardPreview && (
+              <button
+                type="button"
+                onClick={() => { setIdCardFile(null); setIdCardPreview(null) }}
+                className="mt-1 text-xs text-red-400 hover:text-red-600"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">Password *</label>
+            <input
+              type="password"
+              placeholder="Min 6 characters"
+              className={inputClass + ' w-full'}
+              value={form.password}
+              onChange={(e) => updateField('password', e.target.value)}
+            />
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">Confirm Password *</label>
+            <input
+              type="password"
+              placeholder="Repeat password"
+              className={inputClass + ' w-full'}
+              value={form.confirm_password}
+              onChange={(e) => updateField('confirm_password', e.target.value)}
+            />
+          </div>
+
+          {/* Notice */}
+          <div className="rounded-xl bg-yellow-50 px-4 py-3 text-xs text-yellow-700">
+            ⏳ After registering, your account will be reviewed by admin. You'll get access once verified.
+          </div>
 
           <button
             onClick={handleRegister}
             disabled={loading}
             className="rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? 'Creating account...' : 'Register'}
+            {loading ? 'Creating account...' : 'Register →'}
           </button>
         </div>
 

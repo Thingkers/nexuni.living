@@ -1,6 +1,5 @@
 'use client'
 
-import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
@@ -11,13 +10,6 @@ import type { Room } from '@/features/rooms/types/room.types'
 import BookingModal from '@/features/bookings/components/BookingModal'
 import ReportListingButton from '@/features/rooms/components/ReportListingButton'
 import ReviewBox from '@/features/reviews/components/ReviewBox'
-import AvailabilityCalendar from '@/features/rooms/components/AvailabilityCalendar'
-import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
-
-const RoomMap = dynamic(
-  () => import('@/features/map/components/RoomMap'),
-  { ssr: false },
-)
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   open:    { label: 'Open',                className: 'bg-green-50 text-green-700' },
@@ -82,10 +74,14 @@ export default function ListingDetailsPage() {
   const isBooked = room.status === 'booked' || room.status === 'closed'
   const status   = STATUS_LABEL[room.status] ?? STATUS_LABEL.open
 
-  const availability = getAvailabilityStatus({
-    availableSeats: room.available_seats,
-    totalSeats: room.total_seats,
-  })
+  const availableSeats = room.available_seats ?? 0
+  const totalSeats     = room.total_seats ?? 0
+  const seatsLabel =
+    availableSeats === 0
+      ? '🔴 No seats available'
+      : availableSeats === totalSeats
+        ? '🟢 All seats available'
+        : `🟡 ${availableSeats} of ${totalSeats} seats available`
 
   const initials =
     room.profiles?.full_name
@@ -158,10 +154,8 @@ export default function ListingDetailsPage() {
               {room.gender_type === 'male' ? 'Male' : room.gender_type === 'female' ? 'Female' : 'Any'}
             </p>
 
-            <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${availability.color}`}>
-              <span>{availability.emoji}</span>
-              <span>{availability.label}</span>
-            </div>
+            {/* SEATS */}
+            <p className="mb-5 text-sm text-gray-600">{seatsLabel}</p>
 
             <div className="mb-5 flex flex-wrap items-end gap-6">
               <div>
@@ -211,20 +205,6 @@ export default function ListingDetailsPage() {
             )}
 
             <p className="text-sm text-gray-400">🗓 {availableText}</p>
-            <AvailabilityCalendar availableFrom={room.available_from} />
-
-            {/* MAP — DistancePanel is built into RoomMap */}
-            {room.latitude && room.longitude && (
-              <div className="mt-6">
-                <p className="mb-2 text-sm font-medium text-gray-700">Location Map</p>
-                <RoomMap
-                  latitude={room.latitude}
-                  longitude={room.longitude}
-                  title={room.title}
-                  locationName={room.location_name}
-                />
-              </div>
-            )}
           </div>
 
           {/* RIGHT COLUMN - OWNER CARD */}

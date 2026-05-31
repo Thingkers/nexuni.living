@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 
 import { supabase } from '@/lib/supabase'
+
+const LocationPicker = dynamic(
+  () => import('@/features/map/components/LocationPicker'),
+  { ssr: false },
+)
 
 export default function EditListingPage() {
   const params = useParams<{ id: string }>()
@@ -17,6 +23,7 @@ export default function EditListingPage() {
   const [error, setError] = useState('')
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [showMap, setShowMap] = useState(false)
 
   useEffect(() => {
     async function loadRoom() {
@@ -168,7 +175,7 @@ export default function EditListingPage() {
           <input
             className={inputClass}
             value={form.title ?? ''}
-            onChange={(event) => updateField('title', event.target.value)}
+            onChange={(e) => updateField('title', e.target.value)}
           />
         </div>
 
@@ -178,7 +185,7 @@ export default function EditListingPage() {
             <select
               className={inputClass}
               value={form.type ?? 'mess'}
-              onChange={(event) => updateField('type', event.target.value)}
+              onChange={(e) => updateField('type', e.target.value)}
             >
               <option value="mess">Mess</option>
               <option value="bachelor">Bachelor</option>
@@ -191,7 +198,7 @@ export default function EditListingPage() {
             <select
               className={inputClass}
               value={form.gender_type ?? 'male'}
-              onChange={(event) => updateField('gender_type', event.target.value)}
+              onChange={(e) => updateField('gender_type', e.target.value)}
             >
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -202,43 +209,35 @@ export default function EditListingPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs text-gray-500">
-              Monthly Rent *
-            </label>
+            <label className="mb-1 block text-xs text-gray-500">Monthly Rent *</label>
             <input
               type="number"
               className={inputClass}
               value={form.rent ?? ''}
-              onChange={(event) => updateField('rent', event.target.value)}
+              onChange={(e) => updateField('rent', e.target.value)}
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-500">
-              Total Seats
-            </label>
+            <label className="mb-1 block text-xs text-gray-500">Total Seats</label>
             <input
               type="number"
               min={1}
               className={inputClass}
               value={form.total_seats ?? 1}
-              onChange={(event) => updateField('total_seats', event.target.value)}
+              onChange={(e) => updateField('total_seats', e.target.value)}
             />
           </div>
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-500">
-            Available Seats
-          </label>
+          <label className="mb-1 block text-xs text-gray-500">Available Seats</label>
           <input
             type="number"
             min={0}
             className={inputClass}
             value={form.available_seats ?? 0}
-            onChange={(event) =>
-              updateField('available_seats', event.target.value)
-            }
+            onChange={(e) => updateField('available_seats', e.target.value)}
           />
         </div>
 
@@ -247,56 +246,74 @@ export default function EditListingPage() {
           <input
             className={inputClass}
             value={form.location_name ?? ''}
-            onChange={(event) => updateField('location_name', event.target.value)}
+            onChange={(e) => updateField('location_name', e.target.value)}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1 block text-xs text-gray-500">Latitude</label>
-            <input
-              type="number"
-              step="any"
-              className={inputClass}
-              value={form.latitude ?? ''}
-              onChange={(event) => updateField('latitude', event.target.value)}
-            />
+        {/* MAP LOCATION PICKER */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-xs text-gray-500">
+              Map Location{' '}
+              {form.latitude && form.longitude && (
+                <span className="ml-1 text-green-600">✓ Set</span>
+              )}
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowMap((prev) => !prev)}
+              className="text-xs text-blue-600 hover:text-blue-700"
+            >
+              {showMap ? 'Hide Map' : 'Pick on Map'}
+            </button>
           </div>
 
-          <div>
-            <label className="mb-1 block text-xs text-gray-500">Longitude</label>
-            <input
-              type="number"
-              step="any"
-              className={inputClass}
-              value={form.longitude ?? ''}
-              onChange={(event) => updateField('longitude', event.target.value)}
-            />
-          </div>
+          {showMap && (
+            <div className="rounded-2xl overflow-hidden border border-gray-200">
+              <LocationPicker
+                latitude={form.latitude ?? null}
+                longitude={form.longitude ?? null}
+                onChange={(lat, lng) => {
+                  updateField('latitude', lat)
+                  updateField('longitude', lng)
+                }}
+              />
+            </div>
+          )}
+
+          {form.latitude && form.longitude && (
+            <p className="mt-1.5 text-xs text-gray-400">
+              📍 {Number(form.latitude).toFixed(5)}, {Number(form.longitude).toFixed(5)}
+              <button
+                type="button"
+                onClick={() => {
+                  updateField('latitude', null)
+                  updateField('longitude', null)
+                }}
+                className="ml-2 text-red-400 hover:text-red-600"
+              >
+                Remove
+              </button>
+            </p>
+          )}
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-500">
-            Available From
-          </label>
+          <label className="mb-1 block text-xs text-gray-500">Available From</label>
           <input
             type="date"
             className={inputClass}
             value={form.available_from?.split('T')[0] ?? ''}
-            onChange={(event) =>
-              updateField('available_from', event.target.value)
-            }
+            onChange={(e) => updateField('available_from', e.target.value)}
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-500">
-            Current Status
-          </label>
+          <label className="mb-1 block text-xs text-gray-500">Current Status</label>
           <select
             className={inputClass}
             value={form.status ?? 'open'}
-            onChange={(event) => updateField('status', event.target.value)}
+            onChange={(e) => updateField('status', e.target.value)}
           >
             <option value="open">Open</option>
             <option value="partial">Partially Available</option>
@@ -307,7 +324,6 @@ export default function EditListingPage() {
 
         <div>
           <label className="mb-2 block text-xs text-gray-500">Amenities</label>
-
           <div className="grid grid-cols-3 gap-2">
             {[
               { key: 'wifi', icon: '📶', label: 'WiFi' },
@@ -337,24 +353,19 @@ export default function EditListingPage() {
             rows={4}
             className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
             value={form.description ?? ''}
-            onChange={(event) => updateField('description', event.target.value)}
+            onChange={(e) => updateField('description', e.target.value)}
           />
         </div>
 
         <div>
-          <label className="mb-2 block text-xs text-gray-500">
-            Replace Images
-          </label>
+          <label className="mb-2 block text-xs text-gray-500">Replace Images</label>
 
           <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-6 text-center hover:border-blue-400 hover:bg-blue-50">
             <span className="mb-1 text-3xl">📷</span>
-            <span className="text-sm font-medium text-gray-700">
-              Upload new images
-            </span>
+            <span className="text-sm font-medium text-gray-700">Upload new images</span>
             <span className="mt-1 text-xs text-gray-400">
               Selecting new images will replace old images
             </span>
-
             <input
               type="file"
               accept="image/*"
@@ -367,16 +378,8 @@ export default function EditListingPage() {
           {imagePreviews.length > 0 ? (
             <div className="mt-3 grid grid-cols-4 gap-2">
               {imagePreviews.map((preview, index) => (
-                <div
-                  key={preview}
-                  className="relative aspect-square overflow-hidden rounded-xl bg-gray-100"
-                >
-                  <img
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
-                    className="h-full w-full object-cover"
-                  />
-
+                <div key={preview} className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
+                  <img src={preview} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
@@ -390,15 +393,8 @@ export default function EditListingPage() {
           ) : form.images?.length > 0 ? (
             <div className="mt-3 grid grid-cols-4 gap-2">
               {form.images.map((image: string) => (
-                <div
-                  key={image}
-                  className="relative aspect-square overflow-hidden rounded-xl bg-gray-100"
-                >
-                  <img
-                    src={image}
-                    alt="Current room"
-                    className="h-full w-full object-cover"
-                  />
+                <div key={image} className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
+                  <img src={image} alt="Current room" className="h-full w-full object-cover" />
                 </div>
               ))}
             </div>

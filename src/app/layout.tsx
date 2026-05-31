@@ -4,7 +4,6 @@ import { Geist, Geist_Mono } from 'next/font/google'
 
 import Navbar from '@/components/layout/Navbar'
 import NotificationProvider from '@/components/providers/NotificationProvider'
-import ThemeProvider from '@/components/providers/ThemeProvider'
 
 import './globals.css'
 
@@ -40,7 +39,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white text-gray-900 transition-colors dark:bg-gray-950 dark:text-gray-100">
-        <ThemeProvider>
+
+      
           <Navbar />
 
           <main className="flex-1">
@@ -53,7 +53,7 @@ export default function RootLayout({
             position="top-right"
             richColors
           />
-        </ThemeProvider>
+       
       </body>
     </html>
   )

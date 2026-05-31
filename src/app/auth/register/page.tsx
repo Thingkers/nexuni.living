@@ -146,9 +146,16 @@ export default function RegisterPage() {
 
         <div className="mb-6 text-center">
 
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-2xl">
-            🎓
-          </div>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center">
+          <Image
+            src="/aiub_logo.png"
+            alt="AIUB Logo"
+            width={80}
+            height={80}
+            className="mx-auto"
+          />
+        </div>
+
           <h1 className="text-2xl font-bold text-gray-900">AIUB Student Register</h1>
           <p className="mt-1 text-sm text-gray-500">Only xx-xxxxx-x@student.aiub.edu email is accepted</p>
 

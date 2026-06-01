@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-
+import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase'
 
 const LocationPicker = dynamic(
@@ -67,14 +67,18 @@ export default function PostRoomPage() {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []).slice(0, 4)
+  async function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+  const files = Array.from(event.target.files ?? []).slice(0, 4)
 
-    previews.forEach((url) => URL.revokeObjectURL(url))
+  previews.forEach((url) => URL.revokeObjectURL(url))
 
-    setImages(files)
-    setPreviews(files.map((file) => URL.createObjectURL(file)))
-  }
+  const compressed = await Promise.all(
+    files.map((file) => compressImage(file))
+  )
+
+  setImages(compressed)
+  setPreviews(compressed.map((file) => URL.createObjectURL(file)))
+}
 
   function removeImage(index: number) {
     URL.revokeObjectURL(previews[index])

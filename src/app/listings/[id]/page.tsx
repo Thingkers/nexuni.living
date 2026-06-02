@@ -23,6 +23,7 @@ export default function ListingDetailsPage() {
 
   const [room, setRoom]               = useState<Room | null>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
   const [loading, setLoading]         = useState(true)
   const [showBooking, setShowBooking] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
@@ -48,6 +49,17 @@ export default function ListingDetailsPage() {
         .eq('id', roomData.id)
 
       setCurrentUser(userData.user)
+
+      // ✅ Load current user's profile for verification check
+      if (userData.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('verification_status, role')
+          .eq('id', userData.user.id)
+          .single()
+        setUserProfile(profile)
+      }
+
       setLoading(false)
     }
 
@@ -65,14 +77,14 @@ export default function ListingDetailsPage() {
   }
 
   if (!room) {
-    return (
-      <div className="py-20 text-center text-gray-400">Listing not found</div>
-    )
+    return <div className="py-20 text-center text-gray-400">Listing not found</div>
   }
 
-  const isOwner  = currentUser?.id === room.owner_id
-  const isBooked = room.status === 'booked' || room.status === 'closed'
-  const status   = STATUS_LABEL[room.status] ?? STATUS_LABEL.open
+  const isOwner    = currentUser?.id === room.owner_id
+  const isBooked   = room.status === 'booked' || room.status === 'closed'
+  const status     = STATUS_LABEL[room.status] ?? STATUS_LABEL.open
+  // ✅ Verified check
+  const isVerified = userProfile?.verification_status === 'approved'
 
   const availableSeats = room.available_seats ?? 0
   const totalSeats     = room.total_seats ?? 0
@@ -94,19 +106,13 @@ export default function ListingDetailsPage() {
   const availableText = room.available_from
     ? new Date(room.available_from) <= new Date()
       ? 'Available now'
-      : `Available from ${new Date(room.available_from).toLocaleDateString('en-US', {
-          month: 'long',
-          year: 'numeric',
-        })}`
+      : `Available from ${new Date(room.available_from).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
     : 'Availability not added'
 
   return (
     <>
       <main className="mx-auto max-w-4xl px-4 py-6">
-        <Link
-          href="/listings"
-          className="mb-4 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700"
-        >
+        <Link href="/listings" className="mb-4 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700">
           ← All Listings
         </Link>
 
@@ -154,7 +160,6 @@ export default function ListingDetailsPage() {
               {room.gender_type === 'male' ? 'Male' : room.gender_type === 'female' ? 'Female' : 'Any'}
             </p>
 
-            {/* SEATS */}
             <p className="mb-5 text-sm text-gray-600">{seatsLabel}</p>
 
             <div className="mb-5 flex flex-wrap items-end gap-6">
@@ -215,16 +220,13 @@ export default function ListingDetailsPage() {
                   {initials}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {room.profiles?.full_name || 'Owner'}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {room.profiles?.university || 'University not added'}
-                  </p>
+                  <p className="text-sm font-medium text-gray-900">{room.profiles?.full_name || 'Owner'}</p>
+                  <p className="text-xs text-gray-400">{room.profiles?.university || 'University not added'}</p>
                 </div>
               </div>
 
-              {room.profiles?.phone && (
+              {/* ✅ Phone only for verified users */}
+              {room.profiles?.phone && isVerified && (
                 <a
                   href={`tel:${room.profiles.phone}`}
                   className="mb-3 flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100"
@@ -238,7 +240,15 @@ export default function ListingDetailsPage() {
                 <ReportListingButton roomId={room.id} />
               </div>
 
-              {!isOwner && currentUser && (
+              {/* ✅ Unverified logged-in user */}
+              {currentUser && !isVerified && !isOwner && (
+                <div className="rounded-xl bg-yellow-50 px-4 py-3 text-center text-xs text-yellow-700">
+                  ⏳ আপনার account verify হলে booking ও contact করতে পারবেন
+                </div>
+              )}
+
+              {/* ✅ Verified user — not owner */}
+              {!isOwner && currentUser && isVerified && (
                 <div className="flex flex-col gap-2">
                   <button
                     disabled={isBooked}
@@ -256,6 +266,7 @@ export default function ListingDetailsPage() {
                 </div>
               )}
 
+              {/* Owner */}
               {isOwner && (
                 <div className="flex flex-col gap-2">
                   <Link
@@ -268,6 +279,7 @@ export default function ListingDetailsPage() {
                 </div>
               )}
 
+              {/* Not logged in */}
               {!currentUser && (
                 <Link
                   href="/auth/login"
@@ -283,7 +295,7 @@ export default function ListingDetailsPage() {
         <ReviewBox roomId={room.id} ownerId={room.owner_id} />
       </main>
 
-      {showBooking && currentUser && (
+      {showBooking && currentUser && isVerified && (
         <BookingModal room={room} userId={currentUser.id} onClose={() => setShowBooking(false)} />
       )}
     </>

@@ -9,6 +9,7 @@ type Profile = {
   full_name: string | null
   avatar_url: string | null
   role?: string | null
+  verification_status?: string | null
 }
 
 export default function Navbar() {
@@ -28,7 +29,7 @@ export default function Navbar() {
       if (data.user) {
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('full_name, avatar_url, role')
+          .select('full_name, avatar_url, role, verification_status')
           .eq('id', data.user.id)
           .maybeSingle()
 
@@ -46,11 +47,8 @@ export default function Navbar() {
 
     loadUser()
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
-
       if (!session) {
         setProfile(null)
         setUnreadCount(0)
@@ -59,27 +57,16 @@ export default function Navbar() {
 
     const messageChannel = supabase
       .channel('navbar-unread-messages')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-        },
-        async () => {
-          const { data } = await supabase.auth.getUser()
-
-          if (!data.user) return
-
-          const { count } = await supabase
-            .from('messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('receiver_id', data.user.id)
-            .eq('is_read', false)
-
-          setUnreadCount(count ?? 0)
-        },
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, async () => {
+        const { data } = await supabase.auth.getUser()
+        if (!data.user) return
+        const { count } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('receiver_id', data.user.id)
+          .eq('is_read', false)
+        setUnreadCount(count ?? 0)
+      })
       .subscribe()
 
     return () => {
@@ -108,15 +95,14 @@ export default function Navbar() {
       ?.slice(0, 2)
       ?.toUpperCase() ?? 'U'
 
+  // ✅ Verified check
+  const isVerified = profile?.verification_status === 'approved'
+
   return (
     <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white">
       <div className="flex items-center justify-between px-4 py-3 md:px-6">
         {/* Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 font-semibold text-gray-900"
-          onClick={closeMenus}
-        >
+        <Link href="/" className="flex items-center gap-2 font-semibold text-gray-900" onClick={closeMenus}>
           <span className="h-2 w-2 rounded-full bg-blue-600" />
           Student Hostel
         </Link>
@@ -130,7 +116,8 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          {user && (
+          {/* ✅ Only verified users can post */}
+          {user && isVerified && (
             <Link
               href="/post-room"
               className="hidden rounded-xl bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 md:block"
@@ -170,16 +157,23 @@ export default function Navbar() {
                 <div className="absolute right-0 top-10 z-50 w-56 rounded-xl border border-gray-100 bg-white py-1 shadow-lg">
                   <div className="border-b border-gray-100 px-4 py-2 text-xs text-gray-400">
                     {profile?.full_name || user.email}
+                    {!isVerified && (
+                      <span className="ml-1 rounded-full bg-yellow-100 px-1.5 py-0.5 text-xs text-yellow-600">Pending</span>
+                    )}
                   </div>
                   <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>My Profile</Link>
                   <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>Dashboard</Link>
-                  <Link href="/inbox" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
-                    <span>Inbox</span>
-                    {unreadCount > 0 && (
-                      <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
-                    )}
-                  </Link>
-                  <Link href="/dashboard/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>Booking Requests</Link>
+                  {isVerified && (
+                    <Link href="/inbox" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>
+                      <span>Inbox</span>
+                      {unreadCount > 0 && (
+                        <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
+                      )}
+                    </Link>
+                  )}
+                  {isVerified && (
+                    <Link href="/dashboard/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>Booking Requests</Link>
+                  )}
                   {profile?.role === 'admin' && (
                     <Link href="/dashboard/analytics" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={closeMenus}>Analytics 📊</Link>
                   )}
@@ -207,101 +201,77 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ── MOBILE MENU ── */}
+      {/* MOBILE MENU */}
       {mobileOpen && (
         <div className="border-t border-gray-100 md:hidden">
           <div className="max-h-[75vh] overflow-y-auto px-4 py-3">
             <div className="flex flex-col gap-1.5">
-
-              {/* Browse section */}
-              <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                Browse
-              </p>
-              <Link href="/listings" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>
-                🏠 All Listings
-              </Link>
-              <Link href="/listings?type=mess" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>
-                🍳 Mess
-              </Link>
-              <Link href="/listings?type=bachelor" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>
-                🛋 Bachelor
-              </Link>
+              <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Browse</p>
+              <Link href="/listings" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>🏠 All Listings</Link>
+              <Link href="/listings?type=mess" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>🍳 Mess</Link>
+              <Link href="/listings?type=bachelor" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>🛋 Bachelor</Link>
 
               <div className="my-1 border-t border-gray-100" />
 
               {user ? (
                 <>
-                  {/* User info */}
                   <div className="flex items-center gap-2 rounded-xl bg-blue-50 px-3 py-2">
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
                       {initials}
                     </div>
-                    <span className="truncate text-xs text-gray-500">
-                      {profile?.full_name || user.email}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="truncate text-xs text-gray-500">{profile?.full_name || user.email}</span>
+                      {!isVerified && (
+                        <span className="text-[10px] text-yellow-600">⏳ Verification Pending</span>
+                      )}
+                    </div>
                   </div>
 
-                  <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                    Account
-                  </p>
+                  <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Account</p>
 
-                  <Link href="/post-room" className="rounded-xl bg-blue-50 px-3 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-100" onClick={closeMenus}>
-                    ➕ Post Room
-                  </Link>
-                  <Link href="/profile" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>
-                    👤 My Profile
-                  </Link>
-                  <Link href="/dashboard" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>
-                    🗂 Dashboard
-                  </Link>
-                  <Link href="/inbox" className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>
-                    <span>💬 Inbox</span>
-                    {unreadCount > 0 && (
-                      <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
-                    )}
-                  </Link>
-                  <Link href="/dashboard/bookings" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>
-                    📋 Booking Requests
-                  </Link>
+                  {/* ✅ Only verified users see Post Room */}
+                  {isVerified && (
+                    <Link href="/post-room" className="rounded-xl bg-blue-50 px-3 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-100" onClick={closeMenus}>
+                      ➕ Post Room
+                    </Link>
+                  )}
 
-                  {/* Admin section */}
+                  <Link href="/profile" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>👤 My Profile</Link>
+                  <Link href="/dashboard" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>🗂 Dashboard</Link>
+
+                  {/* ✅ Only verified users see Inbox & Bookings */}
+                  {isVerified && (
+                    <>
+                      <Link href="/inbox" className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>
+                        <span>💬 Inbox</span>
+                        {unreadCount > 0 && (
+                          <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
+                        )}
+                      </Link>
+                      <Link href="/dashboard/bookings" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>📋 Booking Requests</Link>
+                    </>
+                  )}
+
                   {profile?.role === 'admin' && (
                     <>
                       <div className="my-1 border-t border-gray-100" />
-                      <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                        Admin
-                      </p>
-                      <Link href="/dashboard/analytics" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>
-                        Analytics 📊
-                      </Link>
-                      <Link href="/admin/reports" className="rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-500 hover:bg-red-100" onClick={closeMenus}>
-                        Admin Reports
-                      </Link>
-                      <Link href="/admin/users" className="rounded-xl bg-blue-50 px-3 py-2.5 text-sm text-blue-600 hover:bg-blue-100" onClick={closeMenus}>
-                        Admin Users
-                      </Link>
-                      <Link href="/admin/rooms" className="rounded-xl bg-green-50 px-3 py-2.5 text-sm text-green-600 hover:bg-green-100" onClick={closeMenus}>
-                        Admin Rooms
-                      </Link>
+                      <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Admin</p>
+                      <Link href="/dashboard/analytics" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>Analytics 📊</Link>
+                      <Link href="/admin/reports" className="rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-500 hover:bg-red-100" onClick={closeMenus}>Admin Reports</Link>
+                      <Link href="/admin/users" className="rounded-xl bg-blue-50 px-3 py-2.5 text-sm text-blue-600 hover:bg-blue-100" onClick={closeMenus}>Admin Users</Link>
+                      <Link href="/admin/rooms" className="rounded-xl bg-green-50 px-3 py-2.5 text-sm text-green-600 hover:bg-green-100" onClick={closeMenus}>Admin Rooms</Link>
                     </>
                   )}
 
                   <div className="my-1 border-t border-gray-100" />
-                  <button
-                    onClick={handleLogout}
-                    className="rounded-xl bg-red-50 px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-100"
-                  >
+                  <button onClick={handleLogout} className="rounded-xl bg-red-50 px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-100">
                     🚪 Logout
                   </button>
                 </>
               ) : (
                 <>
-                  <Link href="/auth/login" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>
-                    Login
-                  </Link>
-                  <Link href="/auth/register" className="rounded-xl bg-blue-600 px-3 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700" onClick={closeMenus}>
-                    Register
-                  </Link>
+                  <Link href="/auth/login" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>Login</Link>
+                  <Link href="/auth/register" className="rounded-xl bg-blue-600 px-3 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700" onClick={closeMenus}>Register</Link>
                 </>
               )}
             </div>

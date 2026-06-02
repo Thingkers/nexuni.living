@@ -64,12 +64,6 @@ export default function RegisterPage() {
   async function handleRegister() {
     setError('')
 
-    // ✅ AIUB email validation
-    if (!form.email.endsWith('@student.aiub.edu')) {
-      setError('Only AIUB students can register. Please use your xx-xxxxx-x@student.aiub.edu email.')
-      return
-    }
-
     if (!form.full_name || !form.email || !form.password || !form.student_id) {
       setError('Please fill in all required fields')
       return
@@ -161,7 +155,7 @@ export default function RegisterPage() {
         </div>
 
           <h1 className="text-2xl font-bold text-gray-900">AIUB Student Register</h1>
-          <p className="mt-1 text-sm text-gray-500">Only xx-xxxxx-x@student.aiub.edu email is accepted</p>
+          
 
         </div>
 
@@ -186,27 +180,21 @@ export default function RegisterPage() {
 
           {/* AIUB Email */}
           <div>
-            <label className="mb-1 block text-xs text-gray-500">AIUB Email *</label>
+            <label className="mb-1 block text-xs text-gray-500"> Email *</label>
             <input
               type="email"
-              placeholder="xx-xxxxx-x@student.aiub.edu"
+              placeholder="your@gmail.com"
               className={inputClass + ' w-full'}
               value={form.email}
               onChange={(e) => updateField('email', e.target.value)}
             />
-            {form.email && !form.email.endsWith('@student.aiub.edu') && (
-              <p className="mt-1 text-xs text-red-500">Must be xx-xxxxx-x@student.aiub.edu email</p>
-            )}
-            {form.email && form.email.endsWith('@student.aiub.edu') && (
-              <p className="mt-1 text-xs text-green-600">✓ Valid AIUB email</p>
-            )}
           </div>
 
           {/* Student ID */}
           <div>
             <label className="mb-1 block text-xs text-gray-500">Student ID *</label>
             <input
-              placeholder="e.g. xx-xxxxx-x"
+              placeholder="xx-xxxxx-x"
               className={inputClass + ' w-full'}
               value={form.student_id}
               onChange={(e) => updateField('student_id', e.target.value)}

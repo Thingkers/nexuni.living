@@ -24,10 +24,7 @@ export default function LoginPage() {
         setError('Please enter email and password')
         return
       }
-      if (!email.endsWith('@student.aiub.edu')) {
-        setError('Only AIUB email (@aiub.edu.bd) is accepted.')
-        return
-      }
+      
     } else {
       if (!studentId || !password) {
         setError('Please enter Student ID and password')
@@ -102,7 +99,7 @@ export default function LoginPage() {
         </div>
           
           <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="mt-1 text-sm text-gray-500">AIUB Student Hostel System</p>
+          <p className="mt-1 text-sm text-gray-500">AIUB Student Home</p>
         </div>
 
         {/* Login Type Toggle */}
@@ -115,7 +112,7 @@ export default function LoginPage() {
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            📧 AIUB Email
+            📧 Email
           </button>
           <button
             onClick={() => { setLoginType('id'); setError('') }}
@@ -142,7 +139,7 @@ export default function LoginPage() {
               <label className="mb-1 block text-xs text-gray-500">AIUB Email</label>
               <input
                 type="email"
-                placeholder="xx-xxxxx-x@student.aiub.edu"
+                placeholder="your@gmail.com"
                 className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -206,6 +203,15 @@ export default function LoginPage() {
               Forgot password?
             </Link>
           </div>
+
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="rounded-xl bg-blue-600 py-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? 'Logging in...' : 'Login →'}
+          </button>
+
           
         </div>
 

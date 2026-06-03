@@ -85,6 +85,22 @@ export default function RegisterPage() {
     }
 
     setLoading(true)
+    
+    // ✅ Student ID duplicate check
+    const { data: existingStudent } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('student_id', form.student_id)
+      .single()
+
+    if (existingStudent) {
+      setError('This Student ID is already registered.')
+      setLoading(false)
+      return
+    }
+
+
+
 
     // 1. Create auth user
     const { data, error: signUpError } = await supabase.auth.signUp({

@@ -146,12 +146,18 @@ export default function Navbar() {
           {/* Desktop user avatar */}
           {user ? (
             <div className="relative hidden md:block">
+
               <button
                 onClick={() => setMenuOpen((prev) => !prev)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700 hover:ring-2 hover:ring-blue-300"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700 hover:ring-2 hover:ring-blue-300 overflow-hidden"
               >
-                {initials}
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover rounded-full" />
+                ) : (
+                  initials
+                )}
               </button>
+
 
               {menuOpen && (
                 <div className="absolute right-0 top-10 z-50 w-56 rounded-xl border border-gray-100 bg-white py-1 shadow-lg">
@@ -201,11 +207,18 @@ export default function Navbar() {
         </div>
       </div>
 
+
+
+
       {/* MOBILE MENU */}
       {mobileOpen && (
+
         <div className="border-t border-gray-100 md:hidden">
+
           <div className="max-h-[75vh] overflow-y-auto px-4 py-3">
+
             <div className="flex flex-col gap-1.5">
+
               <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Browse</p>
               <Link href="/listings" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>🏠 All Listings</Link>
               <Link href="/listings?type=mess" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>🍳 Mess</Link>
@@ -214,18 +227,33 @@ export default function Navbar() {
               <div className="my-1 border-t border-gray-100" />
 
               {user ? (
+
                 <>
-                  <div className="flex items-center gap-2 rounded-xl bg-blue-50 px-3 py-2">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
-                      {initials}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="truncate text-xs text-gray-500">{profile?.full_name || user.email}</span>
-                      {!isVerified && (
-                        <span className="text-[10px] text-yellow-600">⏳ Verification Pending</span>
-                      )}
-                    </div>
+
+
+
+                  {/* Mobile user section - এই div replace করো */}
+                <div className="flex items-center gap-2 rounded-xl bg-blue-50 px-3 py-2">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700 overflow-hidden">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover rounded-full" />
+                    ) : (
+                      initials
+                    )}
                   </div>
+                  <div className="flex flex-col">
+                    <span className="truncate text-xs text-gray-500">{profile?.full_name || user.email}</span>
+                    {!isVerified && (
+                      <span className="text-[10px] text-yellow-600">⏳ Verification Pending</span>
+                    )}
+                  </div>
+                </div>
+
+
+
+
+
+
 
                   <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Account</p>
 
@@ -273,10 +301,15 @@ export default function Navbar() {
                   <Link href="/auth/login" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100" onClick={closeMenus}>Login</Link>
                   <Link href="/auth/register" className="rounded-xl bg-blue-600 px-3 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700" onClick={closeMenus}>Register</Link>
                 </>
+
               )}
+
             </div>
+
           </div>
+
         </div>
+
       )}
     </nav>
   )

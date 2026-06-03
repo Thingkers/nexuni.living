@@ -179,10 +179,16 @@ export default function RoomCard({ room }: { room: Room }) {
       </div>
 
       <div className="flex items-center justify-between border-t border-gray-50 px-4 py-3">
+
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700">
-            {initials}
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700 overflow-hidden">
+            {room.profiles?.avatar_url ? (
+              <img src={room.profiles.avatar_url} alt="Avatar" className="h-full w-full object-cover rounded-full" />
+            ) : (
+              initials
+            )}
           </div>
+
           <span className="text-xs text-gray-500">
             <div className="flex items-center gap-1">
               <span>{room.profiles?.full_name}</span>
@@ -201,7 +207,9 @@ export default function RoomCard({ room }: { room: Room }) {
         >
           Details →
         </Link>
+
       </div>
+
     </div>
   )
 }

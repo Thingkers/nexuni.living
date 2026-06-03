@@ -29,29 +29,29 @@ export default function AdminUsersPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   useEffect(() => {
-    async function loadUsers() {
-      const { data: authData } = await supabase.auth.getUser()
-      if (!authData.user) { router.push('/auth/login'); return }
+  async function loadUsers() {
+    const { data: authData } = await supabase.auth.getUser()
+    if (!authData.user) { router.push('/auth/login'); return }
 
-      const { data: me } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', authData.user.id)
-        .single()
+    const { data: me } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', authData.user.id)
+      .single()
 
-      if (me?.role !== 'admin') { router.push('/'); return }
+    if (me?.role !== 'admin') { router.push('/'); return }
 
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, university, role, is_verified, verification_status, student_id, student_id_card_url, created_at')
-        .order('created_at', { ascending: false })
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, university, role, is_verified, verification_status, student_id, student_id_card_url, created_at')
+      .order('created_at', { ascending: false })
 
-      setUsers((data ?? []) as UserProfile[])
-      setLoading(false)
-    }
+    setUsers((data ?? []) as UserProfile[])
+    setLoading(false)
+  }
 
-    loadUsers()
-  }, [router])
+  loadUsers()
+}, [router])
 
   async function approveUser(userId: string) {
     setActionLoading(userId)
@@ -121,6 +121,30 @@ export default function AdminUsersPage() {
       )
     }
   }
+
+  async function deleteUser(userId: string) {
+    const confirmed = confirm('This will permanently delete the user. They will be able to register again with correct info.')
+    if (!confirmed) return
+
+    setActionLoading(userId)
+
+    const res = await fetch('/api/admin/delete-user', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    })
+
+    if (res.ok) {
+      setUsers((prev) => prev.filter((u) => u.id !== userId))
+    } else {
+      const data = await res.json()
+      alert(data.error || 'Delete failed')
+    }
+
+    setActionLoading(null)
+  }
+
+
 
   const pendingUsers = users.filter((u) => u.verification_status === 'pending')
   const allUsers     = users
@@ -269,8 +293,18 @@ export default function AdminUsersPage() {
                     >
                       {actionLoading === user.id ? '...' : '✕ Reject'}
                     </button>
+                    <button
+                      onClick={() => deleteUser(user.id)}
+                      disabled={actionLoading === user.id}
+                      className="rounded-xl bg-red-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                    >
+                      🗑
+                    </button>
                   </div>
+
+
                 </div>
+
               ))}
             </div>
           )}
@@ -328,7 +362,9 @@ export default function AdminUsersPage() {
                     </td>
 
                     <td className="px-4 py-4">
+
                       <div className="flex justify-end gap-2">
+
                         {user.student_id_card_url && (
                           <button
                             onClick={() => setPreviewUrl(user.student_id_card_url!)}
@@ -337,24 +373,43 @@ export default function AdminUsersPage() {
                             🪪 ID
                           </button>
                         )}
+
                         <button
                           onClick={() => toggleVerify(user.id, !!user.is_verified)}
                           className="rounded-xl border border-blue-200 px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50"
                         >
                           {user.is_verified ? 'Unverify' : 'Verify'}
                         </button>
+
                         <button
                           onClick={() => toggleAdmin(user.id, user.role)}
                           className="rounded-xl border border-red-200 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50"
                         >
                           {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
                         </button>
+
+                        {user.verification_status === 'rejected' && (
+                          <button
+                            onClick={() => deleteUser(user.id)}
+                            disabled={actionLoading === user.id}
+                            className="rounded-xl bg-red-600 px-3 py-1.5 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                          >
+                            {actionLoading === user.id ? '...' : 'Delete'}
+                          </button>
+                        )} 
+
                       </div>
+
                     </td>
+
                   </tr>
+
                 ))}
+
               </tbody>
+
             </table>
+
           </div>
         </div>
       )}

@@ -73,12 +73,19 @@ export default function LoginPage() {
 
     setLoading(false)
 
+    if (profile?.verification_status === 'rejected') {
+      await supabase.auth.signOut()
+      setError('Your account has been rejected by admin. Please contact support.')
+      return
+    }
+
     if (profile?.verification_status === 'pending') {
       router.push('/auth/pending')
       return
     }
 
     router.push('/listings')
+
   }
 
   return (
@@ -149,7 +156,7 @@ export default function LoginPage() {
             <div>
               <label className="mb-1 block text-xs text-gray-500">Student ID</label>
               <input
-                placeholder="e.g. 22-46000-1"
+                placeholder="xx-xxxxx-x"
                 className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}

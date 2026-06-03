@@ -235,25 +235,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="px-4 py-14 text-center">
-        <div className="mx-auto max-w-md">
-          <h2 className="mb-2 text-xl font-semibold text-gray-900">
-            Have an available room?
-          </h2>
-
-          <p className="mb-6 text-sm text-gray-400">
-            Post it for free and reach students looking for rooms nearby.
-          </p>
-
-          <Link
-            href="/post-room"
-            className="inline-block rounded-xl bg-blue-600 px-8 py-3 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Post a Room →
-          </Link>
-        </div>
-      </section>
-
       <footer className="border-t border-gray-100 py-6 text-center">
         <p className="text-xs text-gray-400">
           © 2026 Student Hostel · Built for university students

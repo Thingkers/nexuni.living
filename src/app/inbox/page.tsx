@@ -3,21 +3,19 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
 import { supabase } from '@/lib/supabase'
 
 type Thread = {
   otherId: string
   otherName: string
+  otherAvatar?: string | null
   lastMessage: string
   lastTime: string
-  roomTitle?: string | null
   unread: number
 }
 
 export default function InboxPage() {
   const router = useRouter()
-
   const [threads, setThreads] = useState<Thread[]>([])
   const [loading, setLoading] = useState(true)
   const [pageError, setPageError] = useState('')
@@ -25,11 +23,7 @@ export default function InboxPage() {
   useEffect(() => {
     async function loadInbox() {
       const { data: authData, error: authError } = await supabase.auth.getUser()
-
-      if (authError || !authData.user) {
-        router.push('/auth/login')
-        return
-      }
+      if (authError || !authData.user) { router.push('/auth/login'); return }
 
       const userId = authData.user.id
 
@@ -37,43 +31,32 @@ export default function InboxPage() {
         .from('messages')
         .select(`
           *,
-          sender:profiles!messages_sender_id_fkey(id, full_name),
-          receiver:profiles!messages_receiver_id_fkey(id, full_name),
-          rooms(title)
+          sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url),
+          receiver:profiles!messages_receiver_id_fkey(id, full_name, avatar_url)
         `)
         .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
         .order('created_at', { ascending: false })
 
-      if (error) {
-        setPageError(error.message)
-        setLoading(false)
-        return
-      }
+      if (error) { setPageError(error.message); setLoading(false); return }
 
       const threadMap = new Map<string, Thread>()
 
       for (const message of messages ?? []) {
-        const otherId =
-          message.sender_id === userId ? message.receiver_id : message.sender_id
-
-        const other =
-          message.sender_id === userId ? message.receiver : message.sender
-
+        const otherId = message.sender_id === userId ? message.receiver_id : message.sender_id
+        const other = message.sender_id === userId ? message.receiver : message.sender
         const key = [userId, otherId].sort().join('-')
 
         if (!threadMap.has(key)) {
           threadMap.set(key, {
             otherId,
-            otherName: other?.full_name ?? 'Unknown User',
+            otherName: other?.full_name ?? 'Unknown',
+            otherAvatar: other?.avatar_url ?? null,
             lastMessage: message.content,
             lastTime: message.created_at,
-            roomTitle: message.rooms?.title,
-            unread:
-              !message.is_read && message.receiver_id === userId ? 1 : 0,
+            unread: !message.is_read && message.receiver_id === userId ? 1 : 0,
           })
         } else {
           const thread = threadMap.get(key)
-
           if (thread && !message.is_read && message.receiver_id === userId) {
             thread.unread += 1
           }
@@ -89,9 +72,16 @@ export default function InboxPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-10 animate-pulse">
-        {[...Array(4)].map((_, index) => (
-          <div key={index} className="mb-3 h-16 rounded-2xl bg-gray-100" />
+      <div className="mx-auto max-w-md px-4 py-6">
+        <div className="mb-6 h-7 w-24 rounded-lg bg-gray-100 animate-pulse" />
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="mb-2 flex items-center gap-3 p-3">
+            <div className="h-12 w-12 rounded-full bg-gray-100 animate-pulse" />
+            <div className="flex-1">
+              <div className="mb-1.5 h-4 w-1/3 rounded bg-gray-100 animate-pulse" />
+              <div className="h-3 w-2/3 rounded bg-gray-100 animate-pulse" />
+            </div>
+          </div>
         ))}
       </div>
     )
@@ -99,76 +89,79 @@ export default function InboxPage() {
 
   if (pageError) {
     return (
-      <main className="mx-auto max-w-lg px-4 py-10">
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-          {pageError}
-        </div>
+      <main className="mx-auto max-w-md px-4 py-10">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">{pageError}</div>
       </main>
     )
   }
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-8">
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">
-        Inbox
-      </h1>
+    <main className="mx-auto max-w-md px-0 sm:px-4 py-0 sm:py-6">
+      {/* Header */}
+      <div className="sticky top-0 z-10 border-b border-gray-100 bg-white px-4 py-4 sm:rounded-t-2xl">
+        <h1 className="text-xl font-bold text-gray-900">Messages</h1>
+        {threads.length > 0 && (
+          <p className="text-xs text-gray-400">{threads.length} conversation{threads.length > 1 ? 's' : ''}</p>
+        )}
+      </div>
 
       {threads.length === 0 ? (
-        <div className="py-16 text-center text-gray-400">
-          <p className="mb-3 text-4xl">💬</p>
-          <p className="text-sm">No messages yet</p>
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-gray-700">No messages yet</p>
+          <p className="mt-1 text-xs text-gray-400">Start a conversation from a listing</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-1">
-          {threads.map((thread) => (
-            <Link
-              key={thread.otherId}
-              href={`/inbox/${thread.otherId}`}
-              className="flex items-center gap-3 rounded-2xl p-4 transition-colors hover:bg-gray-50"
-            >
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-medium text-blue-700">
-                {thread.otherName[0]?.toUpperCase() || 'U'}
-              </div>
+        <div className="divide-y divide-gray-50">
+          {threads.map((thread) => {
+            const initials = thread.otherName[0]?.toUpperCase() || 'U'
+            const timeStr = new Date(thread.lastTime).toLocaleDateString('en-US', {
+              day: 'numeric', month: 'short',
+            })
 
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between">
-                  <p
-                    className={`text-sm ${
-                      thread.unread > 0
-                        ? 'font-semibold text-gray-900'
-                        : 'font-medium text-gray-800'
-                    }`}
-                  >
-                    {thread.otherName}
-                  </p>
-
-                  <p className="text-xs text-gray-400">
-                    {new Date(thread.lastTime).toLocaleDateString('en-US', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </p>
-                </div>
-
-                <div className="mt-0.5 flex items-center justify-between">
-                  <p className="truncate text-xs text-gray-400">
-                    {thread.roomTitle && (
-                      <span className="text-blue-600">
-                        🏠 {thread.roomTitle} ·{' '}
-                      </span>
+            return (
+              <Link
+                key={thread.otherId}
+                href={`/inbox/${thread.otherId}`}
+                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 active:bg-gray-100"
+              >
+                {/* Avatar */}
+                <div className="relative shrink-0">
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-base font-semibold text-white shadow-sm">
+                    {thread.otherAvatar ? (
+                      <img src={thread.otherAvatar} alt={thread.otherName} className="h-full w-full object-cover" />
+                    ) : (
+                      initials
                     )}
-                    {thread.lastMessage}
-                  </p>
-
+                  </div>
                   {thread.unread > 0 && (
-                    <span className="ml-2 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
-                      {thread.unread}
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white ring-2 ring-white">
+                      {thread.unread > 9 ? '9+' : thread.unread}
                     </span>
                   )}
                 </div>
-              </div>
-            </Link>
-          ))}
+
+                {/* Content */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className={`truncate text-sm ${thread.unread > 0 ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'}`}>
+                      {thread.otherName}
+                    </p>
+                    <p className={`shrink-0 text-[11px] ${thread.unread > 0 ? 'font-medium text-blue-600' : 'text-gray-400'}`}>
+                      {timeStr}
+                    </p>
+                  </div>
+                  <p className={`mt-0.5 truncate text-xs ${thread.unread > 0 ? 'font-medium text-gray-700' : 'text-gray-400'}`}>
+                    {thread.lastMessage}
+                  </p>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       )}
     </main>

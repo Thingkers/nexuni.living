@@ -148,24 +148,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-gray-100 py-6">
-        <div className="mx-auto grid max-w-4xl grid-cols-3 gap-4 px-4 text-center">
-          {[
-            { value: stats.rooms, label: 'Room Listings' },
-            { value: stats.users, label: 'Users' },
-            { value: '100%', label: 'Free Service' },
-          ].map((stat, index) => (
-            <div key={index}>
-              <p className="text-2xl font-bold text-blue-600">
-                {stat.value}
-                {typeof stat.value === 'number' ? '+' : ''}
-              </p>
-              <p className="mt-0.5 text-xs text-gray-400">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       <section className="mx-auto max-w-6xl px-4 py-10">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">

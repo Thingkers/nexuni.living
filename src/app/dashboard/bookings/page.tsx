@@ -50,7 +50,7 @@ export default function BookingRequestsPage() {
         .select(`
           *,
           rooms!inner(id, title, rent, location_name, owner_id),
-          profiles(full_name, phone, university, gender)
+          profiles(id, full_name, phone, university, gender)
         `)
         .eq('rooms.owner_id', authData.user.id)
         .order('created_at', { ascending: false })
@@ -207,20 +207,33 @@ export default function BookingRequestsPage() {
                 </div>
 
                 <div className="mb-3 rounded-xl bg-gray-50 p-3">
+
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700">
-                      {booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
-                    </div>
+
+                    <Link href={`/users/${booking.profiles?.id}`}>
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700 cursor-pointer hover:ring-2 hover:ring-blue-300">
+                        {booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
+                      </div>
+                    </Link>
+
+
 
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        {booking.profiles?.full_name || 'User'}
-                      </p>
+
+                      <Link href={`/users/${booking.profiles?.id}`}>
+                        <p className="text-sm font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
+                          {booking.profiles?.full_name || 'User'}
+                        </p>
+                      </Link>
+
+
+
 
                       <p className="text-xs text-gray-400">
                         {booking.profiles?.university || 'University not added'} ·{' '}
                         {booking.profiles?.gender === 'male' ? 'Male' : 'Female'}
                       </p>
+
                     </div>
 
                     {booking.profiles?.phone && (

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSaved } from '@/hooks/useSaved'
@@ -6,15 +6,15 @@ import type { Room } from '@/features/rooms/types/room.types'
 import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
 
 const STATUS_CONFIG = {
-  open: { label: 'Open', bg: 'bg-green-50', text: 'text-green-700' },
-  partial: { label: 'Partially Available', bg: 'bg-yellow-50', text: 'text-yellow-700' },
-  booked: { label: 'Booked', bg: 'bg-red-50', text: 'text-red-700' },
-  closed: { label: 'Closed', bg: 'bg-gray-100', text: 'text-gray-600' },
+  open:    { label: 'Open',                bg: 'bg-green-500',  text: 'text-white' },
+  partial: { label: 'Partially Available', bg: 'bg-yellow-400', text: 'text-white' },
+  booked:  { label: 'Booked',              bg: 'bg-red-500',    text: 'text-white' },
+  closed:  { label: 'Closed',              bg: 'bg-gray-400',   text: 'text-white' },
 } as const
 
 const AMENITIES = [
-  { key: 'wifi', icon: '📶', label: 'WiFi' },
-  { key: 'gas', icon: '🔥', label: 'Gas' },
+  { key: 'wifi',        icon: '📶', label: 'WiFi' },
+  { key: 'gas',         icon: '🔥', label: 'Gas' },
   { key: 'electricity', icon: '💡', label: 'Electricity' },
 ] as const
 
@@ -24,31 +24,26 @@ export default function RoomCard({ room }: { room: Room }) {
   const { isSaved, toggleSaved } = useSaved(room.id)
 
   const [activeImage, setActiveImage] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
   const images = room.images ?? []
   const hasImages = images.length > 0
+
+  // Auto slideshow
+  useEffect(() => {
+    if (images.length <= 1) return
+    const interval = setInterval(() => {
+      setActiveImage((prev) => (prev + 1) % images.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [images.length])
 
   const availability = getAvailabilityStatus({
     availableSeats: room.available_seats,
     totalSeats: room.total_seats,
   })
 
-  function nextImage(event: React.MouseEvent) {
-    event.preventDefault()
-    event.stopPropagation()
-    setActiveImage((prev) => (prev + 1) % images.length)
-  }
-
-  function prevImage(event: React.MouseEvent) {
-    event.preventDefault()
-    event.stopPropagation()
-    setActiveImage((prev) => (prev - 1 + images.length) % images.length)
-  }
-
   const availableDate = room.available_from
-    ? new Date(room.available_from).toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      })
+    ? new Date(room.available_from).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : null
 
   const isAvailableNow = room.available_from
@@ -63,73 +58,89 @@ export default function RoomCard({ room }: { room: Room }) {
       .slice(0, 2)
       .toUpperCase() ?? 'U'
 
+  const shortDesc = room.description
+    ? room.description.length > 80
+      ? room.description.slice(0, 80) + '...'
+      : room.description
+    : null
+
+  function nextImage(e: React.MouseEvent) {
+    e.preventDefault(); e.stopPropagation()
+    setActiveImage((prev) => (prev + 1) % images.length)
+  }
+
+  function prevImage(e: React.MouseEvent) {
+    e.preventDefault(); e.stopPropagation()
+    setActiveImage((prev) => (prev - 1 + images.length) % images.length)
+  }
+
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_4px_24px_rgba(59,130,246,0.08)] transition-all hover:shadow-[0_8px_32px_rgba(59,130,246,0.18)] hover:border-blue-100 hover:-translate-y-0.5 ${
-            isBooked ? 'opacity-60' : ''
-      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-blue-100 ${isBooked ? 'opacity-60' : ''}`}
     >
-      <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gray-50">
+      {/* Image */}
+      <div className="relative h-44 overflow-hidden bg-gray-100">
         {hasImages ? (
-          <Image src={images[activeImage]} alt={room.title} fill className="object-cover" />
+          <>
+            {images.map((src, index) => (
+              <div
+                key={src}
+                className={`absolute inset-0 transition-opacity duration-700 ${index === activeImage ? 'opacity-100' : 'opacity-0'}`}
+              >
+                <Image src={src} alt={room.title} fill className="object-cover" />
+              </div>
+            ))}
+          </>
         ) : (
-          <span className="text-4xl">🏠</span>
+          <div className="flex h-full items-center justify-center text-5xl">🏠</div>
         )}
 
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+
         {/* Status badge */}
-        <span className={`absolute left-2 top-2 z-10 rounded-full px-2.5 py-1 text-xs font-medium ${status.bg} ${status.text}`}>
+        <span className={`absolute left-2.5 top-2.5 z-10 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm ${status.bg} ${status.text}`}>
           {status.label}
         </span>
 
         {/* Gender badge */}
-        <span className="absolute right-2 top-2 z-10 rounded-full bg-blue-50 px-2.5 py-1 text-xs text-blue-700">
-          {room.gender_type === 'male' ? 'Male' : room.gender_type === 'female' ? 'Female' : 'Any'}
+        <span className="absolute right-2.5 top-2.5 z-10 rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-gray-700 shadow-sm backdrop-blur-sm">
+          {room.gender_type === 'male' ? '👨 Male' : room.gender_type === 'female' ? '👩 Female' : '👥 Any'}
         </span>
 
         {/* Save button */}
         <button
           type="button"
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            toggleSaved()
-          }}
-          className="absolute bottom-2 left-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-base shadow-sm hover:bg-white"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSaved() }}
+          className="absolute bottom-2.5 left-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-base shadow-sm transition-transform hover:scale-110 hover:bg-white"
         >
           {isSaved ? '❤️' : '🤍'}
         </button>
 
+        {/* Nav arrows — show on hover */}
         {images.length > 1 && (
           <>
             <button
               type="button"
               onClick={prevImage}
-              className="absolute left-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow hover:bg-white"
-            >
-              ‹
-            </button>
-
+              className={`absolute left-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+            >‹</button>
             <button
               type="button"
               onClick={nextImage}
-              className="absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow hover:bg-white"
-            >
-              ›
-            </button>
+              className={`absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+            >›</button>
 
-            <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1">
+            {/* Dots */}
+            <div className="absolute bottom-2.5 left-1/2 z-10 flex -translate-x-1/2 gap-1">
               {images.map((_, index) => (
                 <button
                   key={index}
                   type="button"
-                  onClick={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    setActiveImage(index)
-                  }}
-                  className={`h-1.5 rounded-full transition-all ${
-                    activeImage === index ? 'w-4 bg-white' : 'w-1.5 bg-white/60'
-                  }`}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveImage(index) }}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${activeImage === index ? 'w-4 bg-white' : 'w-1.5 bg-white/50'}`}
                 />
               ))}
             </div>
@@ -137,79 +148,90 @@ export default function RoomCard({ room }: { room: Room }) {
         )}
       </div>
 
+      {/* Content */}
       <div className="p-4">
-        <Link href={`/listings/${room.id}`}>
-          <h3 className="mb-1 line-clamp-1 font-medium text-gray-900 hover:text-blue-600">
-            {room.title}
-          </h3>
-        </Link>
+        <div className="mb-1 flex items-start justify-between gap-2">
+          <Link href={`/listings/${room.id}`}>
+            <h3 className="line-clamp-1 font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+              {room.title}
+            </h3>
+          </Link>
+        </div>
 
-        <p className="mb-3 text-xs text-gray-400">
-          📍 {room.location_name || 'Location not added'} ·{' '}
-          {room.type === 'mess' ? 'Mess' : room.type === 'bachelor' ? 'Bachelor' : 'Sublet'}
-        </p>
+        {/* Location + Type */}
+        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+          <span className="flex items-center gap-1 text-xs text-gray-500">
+            📍 {room.location_name || 'Location not added'}
+          </span>
+          <span className="text-gray-300">·</span>
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+            {room.type === 'mess' ? '🍳 Mess' : room.type === 'bachelor' ? '🛋 Bachelor' : '🔑 Sublet'}
+          </span>
+        </div>
 
-        <p className="text-lg font-semibold text-blue-600">
+        {/* Short description */}
+        {shortDesc && (
+          <p className="mb-2.5 line-clamp-2 text-xs leading-relaxed text-gray-400">
+            {shortDesc}
+          </p>
+        )}
+
+        {/* Rent */}
+        <p className="text-xl font-bold text-blue-600">
           ৳{room.rent.toLocaleString('en-US')}
           <span className="text-xs font-normal text-gray-400"> /month</span>
         </p>
 
+        {/* Seats */}
         <div className="mt-1 flex items-center gap-2">
           <p className="text-xs text-gray-500">
-            {room.available_seats} of {room.total_seats} seats available
+            {room.available_seats} of {room.total_seats} seats
           </p>
           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
             {availability.emoji} {availability.label}
           </span>
         </div>
 
+        {/* Amenities */}
         <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {AMENITIES.filter((amenity) => room[amenity.key]).map((amenity) => (
-            <span key={amenity.key} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-              {amenity.icon} {amenity.label}
+          {AMENITIES.filter((a) => room[a.key]).map((a) => (
+            <span key={a.key} className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+              {a.icon} {a.label}
             </span>
           ))}
         </div>
 
+        {/* Available date */}
         {availableDate && (
           <p className="mt-2 text-xs text-gray-400">
-            🗓 {isAvailableNow ? 'Available now' : `Available from ${availableDate}`}
+            🗓 {isAvailableNow ? 'Available now' : `From ${availableDate}`}
           </p>
         )}
       </div>
 
+      {/* Footer */}
       <div className="flex items-center justify-between border-t border-gray-50 px-4 py-3">
-
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700 overflow-hidden">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xs font-medium text-blue-700">
             {room.profiles?.avatar_url ? (
-              <img src={room.profiles.avatar_url} alt="Avatar" className="h-full w-full object-cover rounded-full" />
-            ) : (
-              initials
+              <img src={room.profiles.avatar_url} alt="" className="h-full w-full object-cover rounded-full" />
+            ) : initials}
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-gray-600">{room.profiles?.full_name}</span>
+            {room.profiles?.is_verified && (
+              <span title="Verified" className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">✓</span>
             )}
           </div>
-
-          <span className="text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <span>{room.profiles?.full_name}</span>
-              {room.profiles?.is_verified && (
-                <span title="Verified Owner" className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">
-                  ✓
-                </span>
-              )}
-            </div>
-          </span>
         </div>
 
         <Link
           href={`/listings/${room.id}`}
-          className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
         >
           Details →
         </Link>
-
       </div>
-
     </div>
   )
 }

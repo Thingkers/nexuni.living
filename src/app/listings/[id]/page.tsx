@@ -66,9 +66,9 @@ export default function ListingDetailsPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10 animate-pulse">
-        <div className="mb-6 h-80 rounded-2xl bg-gray-100" />
-        <div className="mb-3 h-6 w-2/3 rounded bg-gray-100" />
-        <div className="h-4 w-1/3 rounded bg-gray-100" />
+        <div className="mb-6 h-80 rounded-2xl bg-gray-100 dark:bg-gray-800" />
+        <div className="mb-3 h-6 w-2/3 rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="h-4 w-1/3 rounded bg-gray-100 dark:bg-gray-800" />
       </div>
     )
   }
@@ -172,7 +172,7 @@ export default function ListingDetailsPage() {
           {/* LEFT */}
           <div className="flex-1">
             <div className="mb-3 flex items-start justify-between gap-4">
-              <h1 className="text-2xl font-bold text-gray-900">{room.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{room.title}</h1>
               <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}>
                 {status.label}
               </span>
@@ -192,8 +192,8 @@ export default function ListingDetailsPage() {
             </div>
 
             {/* Seats */}
-            <div className="mb-5 rounded-xl bg-gray-50 px-4 py-3">
-              <p className="text-sm font-medium text-gray-700">
+            <div className="mb-5 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-800">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {availableSeats === 0
                   ? '🔴 No seats available'
                   : availableSeats === totalSeats
@@ -244,9 +244,9 @@ export default function ListingDetailsPage() {
 
             {/* Description */}
             {room.description && (
-              <div className="mb-5 rounded-xl bg-gray-50 px-4 py-4">
-                <p className="mb-2 text-sm font-semibold text-gray-700">Description</p>
-                <p className="text-sm leading-relaxed text-gray-500">{room.description}</p>
+              <div className="mb-5 rounded-xl bg-gray-50 px-4 py-4 dark:bg-gray-800">
+                <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">Description</p>
+                <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">{room.description}</p>
               </div>
             )}
 
@@ -257,7 +257,7 @@ export default function ListingDetailsPage() {
 
           {/* RIGHT — Owner card */}
           <div className="w-full shrink-0 md:w-72">
-            <div className="sticky top-20 rounded-2xl border border-gray-100 p-5 shadow-sm">
+            <div className="sticky top-20 rounded-2xl border border-gray-100 p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 font-semibold text-blue-700">
                   {room.profiles?.avatar_url ? (
@@ -265,8 +265,8 @@ export default function ListingDetailsPage() {
                   ) : initials}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{room.profiles?.full_name || 'Owner'}</p>
-                  <p className="text-xs text-gray-400">{room.profiles?.university || 'AIUB'}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{room.profiles?.full_name || 'Owner'}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{room.profiles?.university || 'AIUB'}</p>
                 </div>
               </div>
 
@@ -281,7 +281,7 @@ export default function ListingDetailsPage() {
 
               <div className="mb-3 flex flex-col gap-2">
                 <ShareButton title={room.title} rent={room.rent} location={room.location_name} roomId={room.id} />
-                <ReportListingButton roomId={room.id} />
+                {!isOwner && <ReportListingButton roomId={room.id} />}
               </div>
 
               {currentUser && !isVerified && !isOwner && (

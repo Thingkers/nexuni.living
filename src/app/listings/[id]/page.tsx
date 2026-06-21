@@ -11,6 +11,7 @@ import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.type
 import BookingModal from '@/features/bookings/components/BookingModal'
 import ReportListingButton from '@/features/rooms/components/ReportListingButton'
 import ReviewBox from '@/features/reviews/components/ReviewBox'
+import SimilarRooms from '@/features/rooms/components/SimilarRooms'
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   open:    { label: 'Open',                className: 'bg-green-500 text-white' },
@@ -28,6 +29,7 @@ export default function ListingDetailsPage() {
   const [loading, setLoading]         = useState(true)
   const [showBooking, setShowBooking] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
+  const [descExpanded, setDescExpanded] = useState(false)
 
   useEffect(() => {
     async function loadRoomDetails() {
@@ -298,14 +300,24 @@ export default function ListingDetailsPage() {
 
             {/* Description */}
             {room.description && (
-              <div className="mb-5 rounded-xl bg-gray-50 px-4 py-4 dark:bg-gray-800">
-                <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">Description</p>
-                <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">{room.description}</p>
+              <div className="mb-5 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-4 dark:border-gray-700 dark:bg-gray-800">
+                <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">📝 Description</p>
+                <p className={`text-sm leading-relaxed text-gray-600 dark:text-gray-400 ${!descExpanded && room.description.length > 200 ? 'line-clamp-4' : ''}`}>
+                  {room.description}
+                </p>
+                {room.description.length > 200 && (
+                  <button
+                    onClick={() => setDescExpanded((p) => !p)}
+                    className="mt-2 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                  >
+                    {descExpanded ? '▲ Show less' : '▼ Read more'}
+                  </button>
+                )}
               </div>
             )}
 
             {availableText && (
-              <p className="text-sm text-gray-400">🗓 {availableText}</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">🗓 {availableText}</p>
             )}
           </div>
 
@@ -387,6 +399,13 @@ export default function ListingDetailsPage() {
         </div>
 
         <ReviewBox roomId={room.id} ownerId={room.owner_id} />
+
+        <SimilarRooms
+          currentRoomId={room.id}
+          type={room.type}
+          locationName={room.location_name}
+          genderType={room.gender_type}
+        />
       </main>
 
       {showBooking && currentUser && isVerified && (

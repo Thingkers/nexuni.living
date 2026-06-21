@@ -8,6 +8,11 @@ import { supabase } from '@/lib/supabase'
 
 type FilterStatus = 'all' | 'pending' | 'confirmed' | 'cancelled' | 'rejected'
 
+function isExpired(expiresAt: string | null | undefined): boolean {
+  if (!expiresAt) return false
+  return new Date(expiresAt) < new Date()
+}
+
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   pending: {
     label: 'Pending',
@@ -86,6 +91,27 @@ export default function BookingRequestsPage() {
           booking.id === bookingId
             ? { ...booking, status: action }
             : booking,
+        ),
+      )
+    }
+
+    setActing(null)
+  }
+
+  async function reactivateRoom(bookingId: string, roomId: string) {
+    setActing(bookingId)
+
+    const [{ error: bookingError }, { error: roomError }] = await Promise.all([
+      supabase.from('bookings').update({ status: 'cancelled' }).eq('id', bookingId),
+      supabase.from('rooms').update({ status: 'open' }).eq('id', roomId),
+    ])
+
+    if (bookingError || roomError) {
+      alert(bookingError?.message ?? roomError?.message)
+    } else {
+      setBookings((previous) =>
+        previous.map((booking) =>
+          booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking,
         ),
       )
     }
@@ -297,6 +323,21 @@ export default function BookingRequestsPage() {
                       className="flex-1 rounded-xl border border-red-200 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 disabled:opacity-50"
                     >
                       {isActing ? 'Processing...' : '✕ Cancel'}
+                    </button>
+                  </div>
+                )}
+
+                {booking.status === 'confirmed' && isExpired(booking.expires_at) && (
+                  <div className="mt-1">
+                    <div className="mb-2 rounded-xl bg-orange-50 px-3 py-2 text-xs text-orange-700">
+                      ⏰ Booking window expired — tenant did not complete payment in time.
+                    </div>
+                    <button
+                      disabled={!!isActing}
+                      onClick={() => reactivateRoom(booking.id, booking.rooms?.id)}
+                      className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {isActing ? 'Processing...' : '🔄 Re-activate Listing'}
                     </button>
                   </div>
                 )}

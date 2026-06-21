@@ -5,6 +5,12 @@ export type Profile = {
   phone?: string
   university?: string
   avatar_url?: string
+  bkash_number?: string
+  nagad_number?: string
+  verification_status?: string
+  is_verified?: boolean
+  gender?: string
+  role?: string
 }
 
 export type Room = {

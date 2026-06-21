@@ -51,7 +51,7 @@ export default function HomePage() {
         .select('*, profiles(full_name, phone, avatar_url)')
         .neq('status', 'closed')
         .order('created_at', { ascending: false })
-        .limit(6)
+        .limit(8)
 
       if (activeTab !== 'all') {
         query = query.eq('gender_type', activeTab)

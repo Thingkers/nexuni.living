@@ -13,6 +13,8 @@ const RoomsMap = dynamic(
   { ssr: false },
 )
 
+const PAGE_SIZE = 12
+
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
   { value: 'price_asc', label: 'Lowest Rent' },
@@ -77,9 +79,13 @@ function ListingsContent() {
 
   const [rooms, setRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
+  const [page, setPage] = useState(1)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   const monthOptions = buildMonthOptions()
+  const hasMore = rooms.length < totalCount
 
   function syncURL(params: Record<string, string>) {
     const nextParams = new URLSearchParams()
@@ -92,60 +98,66 @@ function ListingsContent() {
     )
   }
 
-  const fetchRooms = useCallback(async () => {
-    setLoading(true)
-
-    let queryBuilder = supabase.from('rooms').select(`
+  function buildQuery() {
+    let qb = supabase.from('rooms').select(`
       *,
       profiles(full_name, phone, avatar_url, is_verified)
-    `)
-
-    queryBuilder = queryBuilder
+    `, { count: 'exact' })
       .neq('status', 'booked')
       .neq('status', 'closed')
 
     if (query.trim()) {
-      queryBuilder = queryBuilder.or(
-        `title.ilike.%${query}%,location_name.ilike.%${query}%`,
-      )
+      qb = qb.or(`title.ilike.%${query}%,location_name.ilike.%${query}%`)
     }
-
     if (location.trim()) {
-      queryBuilder = queryBuilder.ilike('location_name', `%${location.trim()}%`)
+      qb = qb.ilike('location_name', `%${location.trim()}%`)
     }
-
-    if (gender) queryBuilder = queryBuilder.eq('gender_type', gender)
-    if (type) queryBuilder = queryBuilder.eq('type', type)
-    if (maxRent) queryBuilder = queryBuilder.lte('rent', Number(maxRent))
-
-    if (availableMonth) {
-      const firstDay = `${availableMonth}-01`
-      queryBuilder = queryBuilder.lte('available_from', firstDay)
-    }
-
-    if (currentUserId) {
-      queryBuilder = queryBuilder.neq('owner_id', currentUserId)
-    }
+    if (gender) qb = qb.eq('gender_type', gender)
+    if (type) qb = qb.eq('type', type)
+    if (maxRent) qb = qb.lte('rent', Number(maxRent))
+    if (availableMonth) qb = qb.lte('available_from', `${availableMonth}-01`)
+    if (currentUserId) qb = qb.neq('owner_id', currentUserId)
 
     if (sort === 'price_asc') {
-      queryBuilder = queryBuilder.order('rent', { ascending: true })
+      qb = qb.order('rent', { ascending: true })
     } else if (sort === 'price_desc') {
-      queryBuilder = queryBuilder.order('rent', { ascending: false })
+      qb = qb.order('rent', { ascending: false })
     } else {
-      queryBuilder = queryBuilder.order('created_at', { ascending: false })
+      qb = qb.order('created_at', { ascending: false })
     }
 
-    const { data, error } = await queryBuilder
+    return qb
+  }
 
-    if (error) {
-      console.error(error)
-      setRooms([])
-    } else {
+  // Initial load and filter changes — always resets to page 1
+  const fetchRooms = useCallback(async () => {
+    setLoading(true)
+    setPage(1)
+
+    const { data, error, count } = await buildQuery().range(0, PAGE_SIZE - 1)
+
+    if (!error) {
       setRooms((data ?? []) as Room[])
+      setTotalCount(count ?? 0)
     }
-
     setLoading(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, location, gender, type, maxRent, sort, availableMonth, currentUserId])
+
+  async function loadMore() {
+    setLoadingMore(true)
+    const nextPage = page + 1
+    const from = page * PAGE_SIZE
+    const to = nextPage * PAGE_SIZE - 1
+
+    const { data, error } = await buildQuery().range(from, to)
+
+    if (!error && data) {
+      setRooms((prev) => [...prev, ...(data as Room[])])
+      setPage(nextPage)
+    }
+    setLoadingMore(false)
+  }
 
   useEffect(() => {
     fetchRooms()
@@ -373,7 +385,11 @@ function ListingsContent() {
 
       {/* RESULTS COUNT */}
       <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-        {loading ? 'Loading...' : `${rooms.length} room${rooms.length !== 1 ? 's' : ''} found`}
+        {loading
+          ? 'Loading...'
+          : totalCount === 0
+          ? 'No rooms found'
+          : `Showing ${rooms.length} of ${totalCount} room${totalCount !== 1 ? 's' : ''}`}
       </p>
 
       {/* GRID */}
@@ -399,11 +415,42 @@ function ListingsContent() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {rooms.map((room) => (
-            <RoomCard key={room.id} room={room} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {rooms.map((room) => (
+              <RoomCard key={room.id} room={room} />
+            ))}
+          </div>
+
+          {hasMore && (
+            <div className="mt-8 flex flex-col items-center gap-2">
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {rooms.length} of {totalCount} rooms
+              </p>
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="rounded-xl border border-gray-200 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-blue-500 hover:text-blue-600 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+              >
+                {loadingMore ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    Loading...
+                  </span>
+                ) : `Load more rooms`}
+              </button>
+            </div>
+          )}
+
+          {!hasMore && totalCount > PAGE_SIZE && (
+            <p className="mt-8 text-center text-xs text-gray-400 dark:text-gray-500">
+              All {totalCount} rooms loaded
+            </p>
+          )}
+        </>
       )}
     </main>
   )

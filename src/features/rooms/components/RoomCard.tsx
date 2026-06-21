@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useSaved } from '@/hooks/useSaved'
 import type { Room } from '@/features/rooms/types/room.types'
+import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.types'
 import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
 
 const STATUS_CONFIG = {
@@ -157,7 +158,7 @@ export default function RoomCard({ room }: { room: Room }) {
           </span>
           <span className="text-gray-300 dark:text-gray-600">·</span>
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-            {room.type === 'mess' ? '🍳 Mess' : room.type === 'bachelor' ? '🛋 Bachelor' : '🔑 Sublet'}
+            {ROOM_TYPE_LABELS[room.type] ?? room.type}
           </span>
         </div>
 
@@ -169,7 +170,9 @@ export default function RoomCard({ room }: { room: Room }) {
 
         <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
           ৳{room.rent.toLocaleString('en-US')}
-          <span className="text-xs font-normal text-gray-400 dark:text-gray-500"> /month</span>
+          <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
+            {isSharedRoom(room.type) ? ' /seat/month' : ' /month'}
+          </span>
         </p>
 
         <div className="mt-1 flex items-center gap-2">

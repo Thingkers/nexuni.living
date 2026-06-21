@@ -7,6 +7,7 @@ import Link from 'next/link'
 import ShareButton from '@/features/rooms/components/ShareButton'
 import { supabase } from '@/lib/supabase'
 import type { Room } from '@/features/rooms/types/room.types'
+import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.types'
 import BookingModal from '@/features/bookings/components/BookingModal'
 import ReportListingButton from '@/features/rooms/components/ReportListingButton'
 import ReviewBox from '@/features/reviews/components/ReviewBox'
@@ -180,59 +181,112 @@ export default function ListingDetailsPage() {
 
             {/* Location + Type + Gender chips */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1 text-sm text-gray-500">
+              <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                 📍 {room.location_name || 'Location not added'}
               </span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-                {room.type === 'mess' ? '🍳 Mess' : room.type === 'bachelor' ? '🛋 Bachelor' : '🔑 Sublet'}
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                {ROOM_TYPE_LABELS[room.type] ?? room.type}
               </span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                 {room.gender_type === 'male' ? '👨 Male' : room.gender_type === 'female' ? '👩 Female' : '👥 Any'}
               </span>
             </div>
 
-            {/* Seats */}
-            <div className="mb-5 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-800">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {availableSeats === 0
-                  ? '🔴 No seats available'
-                  : availableSeats === totalSeats
-                    ? '🟢 All seats available'
-                    : `🟡 ${availableSeats} of ${totalSeats} seats available`}
-              </p>
+            {/* Seats availability */}
+            {isSharedRoom(room.type) && (
+              <div className="mb-4 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-800">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {availableSeats === 0
+                    ? '🔴 No seats available'
+                    : availableSeats === totalSeats
+                      ? `🟢 All ${totalSeats} seats available`
+                      : `🟡 ${availableSeats} of ${totalSeats} seats available`}
+                </p>
+              </div>
+            )}
+
+            {/* Pricing breakdown */}
+            <div className="mb-5 rounded-2xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+              <p className="mb-3 text-xs font-semibold text-blue-700 dark:text-blue-400">💰 Pricing</p>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {isSharedRoom(room.type) ? 'Rent per seat' : 'Monthly rent'}
+                    </p>
+                    <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">
+                      ৳{room.rent.toLocaleString('en-US')}
+                      <span className="ml-1 text-sm font-normal text-gray-400">/month</span>
+                    </p>
+                  </div>
+                  {isSharedRoom(room.type) && room.total_seats > 1 && (
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400">Total seats</p>
+                      <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{room.total_seats}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional costs */}
+                {((room.electricity_bill ?? 0) > 0 || (room.maid_bill ?? 0) > 0 || (room.other_bill ?? 0) > 0) && (
+                  <div className="mt-1 border-t border-blue-200 pt-2 dark:border-blue-700">
+                    <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">Additional monthly costs:</p>
+                    <div className="flex flex-col gap-1">
+                      {(room.electricity_bill ?? 0) > 0 && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-500 dark:text-gray-400">💡 Electricity bill</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">৳{(room.electricity_bill!).toLocaleString('en-US')}</span>
+                        </div>
+                      )}
+                      {(room.maid_bill ?? 0) > 0 && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-500 dark:text-gray-400">🧹 Maid bill</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">৳{(room.maid_bill!).toLocaleString('en-US')}</span>
+                        </div>
+                      )}
+                      {(room.other_bill ?? 0) > 0 && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-500 dark:text-gray-400">➕ {room.other_bill_label || 'Other'}</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">৳{(room.other_bill!).toLocaleString('en-US')}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between border-t border-blue-200 pt-1 text-xs dark:border-blue-700">
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">
+                          Total {isSharedRoom(room.type) ? 'per seat' : ''}/month
+                        </span>
+                        <span className="font-bold text-blue-600 dark:text-blue-400">
+                          ৳{(room.rent + (room.electricity_bill ?? 0) + (room.maid_bill ?? 0) + (room.other_bill ?? 0)).toLocaleString('en-US')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Rent + Stats */}
-            <div className="mb-5 flex flex-wrap items-end gap-6">
-              <div>
-                <p className="text-xs text-gray-400">Monthly Rent</p>
-                <p className="text-3xl font-bold text-blue-600">৳{room.rent.toLocaleString('en-US')}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">Total Seats</p>
-                <p className="text-xl font-semibold text-gray-700">{room.total_seats}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">Available Seats</p>
-                <p className="text-xl font-semibold text-blue-600">{room.available_seats}</p>
-              </div>
-            </div>
-
-            {/* Amenities */}
+            {/* Facilities */}
             <div className="mb-5">
-              <p className="mb-2 text-sm font-semibold text-gray-700">Amenities</p>
+              <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">Facilities</p>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { key: 'wifi', icon: '📶', label: 'WiFi' },
-                  { key: 'gas', icon: '🔥', label: 'Gas' },
-                  { key: 'electricity', icon: '💡', label: 'Electricity' },
-                ].map((amenity) => {
-                  const isAvailable = room[amenity.key as keyof Room]
+                  { key: 'wifi',          icon: '📶', label: 'WiFi' },
+                  { key: 'electricity',   icon: '💡', label: 'Electricity' },
+                  { key: 'gas',           icon: '🔥', label: 'Gas' },
+                  { key: 'ac',            icon: '❄️', label: 'AC' },
+                  { key: 'attached_bath', icon: '🚿', label: 'Attached Bath' },
+                  { key: 'study_table',   icon: '📚', label: 'Study Table' },
+                  { key: 'parking',       icon: '🅿️', label: 'Parking' },
+                  { key: 'laundry',       icon: '👕', label: 'Laundry' },
+                  { key: 'cctv',          icon: '📷', label: 'CCTV' },
+                ].filter((a) => room[a.key as keyof Room] !== undefined).map((amenity) => {
+                  const available = room[amenity.key as keyof Room]
                   return (
                     <div
                       key={amenity.key}
                       className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium ${
-                        isAvailable ? 'bg-blue-50 text-blue-700' : 'bg-gray-50 text-gray-300 line-through'
+                        available
+                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          : 'bg-gray-50 text-gray-300 line-through dark:bg-gray-800 dark:text-gray-600'
                       }`}
                     >
                       {amenity.icon} {amenity.label}

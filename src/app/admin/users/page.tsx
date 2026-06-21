@@ -166,7 +166,7 @@ export default function AdminUsersPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           onClick={() => setPreviewUrl(null)}
         >
-          <div className="relative max-h-[80vh] max-w-lg w-full overflow-hidden rounded-2xl bg-white p-2">
+          <div className="relative max-h-[80vh] max-w-lg w-full overflow-hidden rounded-2xl bg-white p-2 dark:bg-gray-900">
             <Image
               src={previewUrl}
               alt="Student ID Card"
@@ -176,7 +176,7 @@ export default function AdminUsersPage() {
             />
             <button
               onClick={() => setPreviewUrl(null)}
-              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow text-gray-600 hover:bg-gray-100"
+              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
             >
               ×
             </button>
@@ -186,25 +186,25 @@ export default function AdminUsersPage() {
 
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Users Management</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Users Management</h1>
           <p className="mt-1 text-sm text-gray-400">Total: {users.length} users</p>
         </div>
 
         {pendingUsers.length > 0 && (
-          <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700">
+          <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
             ⏳ {pendingUsers.length} pending
           </span>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="mb-5 flex rounded-xl border border-gray-200 p-1 w-fit gap-1">
+      <div className="mb-5 flex rounded-xl border border-gray-200 p-1 w-fit gap-1 dark:border-gray-700">
         <button
           onClick={() => setActiveTab('pending')}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'pending'
               ? 'bg-yellow-500 text-white'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
           }`}
         >
           ⏳ Pending ({pendingUsers.length})
@@ -214,7 +214,7 @@ export default function AdminUsersPage() {
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'all'
               ? 'bg-blue-600 text-white'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
           }`}
         >
           👥 All Users ({allUsers.length})
@@ -225,20 +225,20 @@ export default function AdminUsersPage() {
       {activeTab === 'pending' && (
         <>
           {pendingUsers.length === 0 ? (
-            <div className="rounded-2xl border border-gray-100 bg-white py-16 text-center">
+            <div className="rounded-2xl border border-gray-100 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
               <p className="text-3xl mb-2">✅</p>
               <p className="text-sm text-gray-400">No pending verifications</p>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {pendingUsers.map((user) => (
-                <div key={user.id} className="rounded-2xl border border-yellow-100 bg-white p-5 shadow-sm">
+                <div key={user.id} className="rounded-2xl border border-yellow-100 bg-white p-5 shadow-sm dark:border-yellow-900/30 dark:bg-gray-800">
                   <div className="mb-4 flex items-start justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">{user.full_name || 'Unknown'}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{user.full_name || 'Unknown'}</p>
                       <p className="text-xs text-gray-400">{user.email}</p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        Student ID: <span className="font-medium text-gray-700">{user.student_id || 'Not provided'}</span>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Student ID: <span className="font-medium text-gray-700 dark:text-gray-300">{user.student_id || 'Not provided'}</span>
                       </p>
                       {user.created_at && (
                         <p className="text-xs text-gray-400 mt-0.5">
@@ -246,7 +246,7 @@ export default function AdminUsersPage() {
                         </p>
                       )}
                     </div>
-                    <span className="rounded-full bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-600">
+                    <span className="rounded-full bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400">
                       Pending
                     </span>
                   </div>
@@ -255,9 +255,9 @@ export default function AdminUsersPage() {
                   {user.student_id_card_url ? (
                     <button
                       onClick={() => setPreviewUrl(user.student_id_card_url!)}
-                      className="mb-4 w-full overflow-hidden rounded-xl border border-gray-200 hover:border-blue-400"
+                      className="mb-4 w-full overflow-hidden rounded-xl border border-gray-200 hover:border-blue-400 dark:border-gray-700"
                     >
-                      <div className="relative h-36 w-full bg-gray-50">
+                      <div className="relative h-36 w-full bg-gray-50 dark:bg-gray-700">
                         <Image
                           src={user.student_id_card_url}
                           alt="ID Card"
@@ -272,7 +272,7 @@ export default function AdminUsersPage() {
                       </div>
                     </button>
                   ) : (
-                    <div className="mb-4 flex h-24 items-center justify-center rounded-xl border border-dashed border-gray-200 text-xs text-gray-400">
+                    <div className="mb-4 flex h-24 items-center justify-center rounded-xl border border-dashed border-gray-200 text-xs text-gray-400 dark:border-gray-700">
                       No ID card uploaded
                     </div>
                   )}
@@ -289,7 +289,7 @@ export default function AdminUsersPage() {
                     <button
                       onClick={() => rejectUser(user.id)}
                       disabled={actionLoading === user.id}
-                      className="flex-1 rounded-xl border border-red-200 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                      className="flex-1 rounded-xl border border-red-200 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-900/20"
                     >
                       {actionLoading === user.id ? '...' : '✕ Reject'}
                     </button>
@@ -301,116 +301,85 @@ export default function AdminUsersPage() {
                       🗑
                     </button>
                   </div>
-
-
                 </div>
-
               ))}
             </div>
           )}
         </>
       )}
 
-      {/* ALL USERS TAB */}
+      {/* ALL USERS TAB — card list (no table, works on all screen sizes) */}
       {activeTab === 'all' && (
-        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="border-b border-gray-100 bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Student ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Role</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-50">
-                    <td className="px-4 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{user.full_name || 'Unknown'}</p>
-                        <p className="text-xs text-gray-400">{user.email}</p>
-                      </div>
-                    </td>
+        <div className="flex flex-col gap-3">
+          {allUsers.map((user) => (
+            <div key={user.id} className="rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-                    <td className="px-4 py-4 text-sm text-gray-600">
-                      {user.student_id || '—'}
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        user.verification_status === 'approved'
-                          ? 'bg-green-100 text-green-700'
-                          : user.verification_status === 'rejected'
-                            ? 'bg-red-100 text-red-600'
-                            : 'bg-yellow-100 text-yellow-600'
-                      }`}>
-                        {user.verification_status === 'approved' ? '✓ Approved'
-                          : user.verification_status === 'rejected' ? '✕ Rejected'
-                          : '⏳ Pending'}
+                {/* User info */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user.full_name || 'Unknown'}</p>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      user.verification_status === 'approved'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        : user.verification_status === 'rejected'
+                          ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                          : 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    }`}>
+                      {user.verification_status === 'approved' ? '✓ Verified'
+                        : user.verification_status === 'rejected' ? '✕ Rejected'
+                        : '⏳ Pending'}
+                    </span>
+                    {user.role === 'admin' && (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                        Admin
                       </span>
-                    </td>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-gray-400">{user.email}</p>
+                  {user.student_id && (
+                    <p className="mt-0.5 text-xs text-gray-400">ID: {user.student_id}</p>
+                  )}
+                </div>
 
-                    <td className="px-4 py-4">
-                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        user.role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {user.role || 'student'}
-                      </span>
-                    </td>
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2">
+                  {user.student_id_card_url && (
+                    <button
+                      onClick={() => setPreviewUrl(user.student_id_card_url!)}
+                      className="rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700"
+                    >
+                      🪪 ID Card
+                    </button>
+                  )}
 
-                    <td className="px-4 py-4">
+                  <button
+                    onClick={() => toggleVerify(user.id, !!user.is_verified)}
+                    className="rounded-xl border border-blue-200 px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                  >
+                    {user.is_verified ? 'Unverify' : 'Verify'}
+                  </button>
 
-                      <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => toggleAdmin(user.id, user.role)}
+                    className="rounded-xl border border-red-200 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                  >
+                    {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                  </button>
 
-                        {user.student_id_card_url && (
-                          <button
-                            onClick={() => setPreviewUrl(user.student_id_card_url!)}
-                            className="rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
-                          >
-                            🪪 ID
-                          </button>
-                        )}
-
-                        <button
-                          onClick={() => toggleVerify(user.id, !!user.is_verified)}
-                          className="rounded-xl border border-blue-200 px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50"
-                        >
-                          {user.is_verified ? 'Unverify' : 'Verify'}
-                        </button>
-
-                        <button
-                          onClick={() => toggleAdmin(user.id, user.role)}
-                          className="rounded-xl border border-red-200 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50"
-                        >
-                          {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
-                        </button>
-
-                        {user.verification_status === 'rejected' && (
-                          <button
-                            onClick={() => deleteUser(user.id)}
-                            disabled={actionLoading === user.id}
-                            className="rounded-xl bg-red-600 px-3 py-1.5 text-xs text-white hover:bg-red-700 disabled:opacity-50"
-                          >
-                            {actionLoading === user.id ? '...' : 'Delete'}
-                          </button>
-                        )} 
-
-                      </div>
-
-                    </td>
-
-                  </tr>
-
-                ))}
-
-              </tbody>
-
-            </table>
-
-          </div>
+                  {user.verification_status === 'rejected' && (
+                    <button
+                      onClick={() => deleteUser(user.id)}
+                      disabled={actionLoading === user.id}
+                      className="rounded-xl bg-red-600 px-3 py-1.5 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {actionLoading === user.id ? '...' : 'Delete'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </main>

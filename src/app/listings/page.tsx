@@ -13,6 +13,8 @@ const RoomsMap = dynamic(
   { ssr: false },
 )
 
+const PAGE_SIZE = 12
+
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
   { value: 'price_asc', label: 'Lowest Rent' },
@@ -28,12 +30,13 @@ const GENDER_OPTIONS = [
 
 const TYPE_OPTIONS = [
   { value: '', label: 'Any Type' },
+  { value: 'mess', label: 'Mess' },
+  { value: 'bachelor', label: 'Bachelor' },
   { value: 'single', label: 'Single Room' },
   { value: 'shared', label: 'Shared Room' },
   { value: 'sublet', label: 'Sublet' },
 ]
 
-// Month list for the "Available From" picker
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -56,6 +59,9 @@ function buildMonthOptions() {
   return options
 }
 
+const inputCls = 'w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-blue-500'
+const selectCls = 'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
+
 function ListingsContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -66,17 +72,20 @@ function ListingsContent() {
   const [type, setType] = useState(searchParams.get('type') ?? '')
   const [maxRent, setMaxRent] = useState(searchParams.get('rent') ?? '')
   const [sort, setSort] = useState(searchParams.get('sort') ?? 'newest')
-
-  // New filters
   const [location, setLocation] = useState(searchParams.get('location') ?? '')
   const [locationInput, setLocationInput] = useState(searchParams.get('location') ?? '')
   const [availableMonth, setAvailableMonth] = useState(searchParams.get('month') ?? '')
+  const [showFilters, setShowFilters] = useState(false)
 
   const [rooms, setRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
+  const [page, setPage] = useState(1)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   const monthOptions = buildMonthOptions()
+  const hasMore = rooms.length < totalCount
 
   function syncURL(params: Record<string, string>) {
     const nextParams = new URLSearchParams()
@@ -89,83 +98,76 @@ function ListingsContent() {
     )
   }
 
-  const fetchRooms = useCallback(async () => {
-    setLoading(true)
-
-    let queryBuilder = supabase.from('rooms').select(`
+  function buildQuery() {
+    let qb = supabase.from('rooms').select(`
       *,
       profiles(full_name, phone, avatar_url, is_verified)
-    `)
-
-    queryBuilder = queryBuilder
+    `, { count: 'exact' })
       .neq('status', 'booked')
       .neq('status', 'closed')
 
-    // Text search (title or location_name)
     if (query.trim()) {
-      queryBuilder = queryBuilder.or(
-        `title.ilike.%${query}%,location_name.ilike.%${query}%`,
-      )
+      qb = qb.or(`title.ilike.%${query}%,location_name.ilike.%${query}%`)
     }
-
-    // Location filter — separate dedicated filter
     if (location.trim()) {
-      queryBuilder = queryBuilder.ilike('location_name', `%${location.trim()}%`)
+      qb = qb.ilike('location_name', `%${location.trim()}%`)
     }
-
-    if (gender) queryBuilder = queryBuilder.eq('gender_type', gender)
-    if (type) queryBuilder = queryBuilder.eq('type', type)
-    if (maxRent) queryBuilder = queryBuilder.lte('rent', Number(maxRent))
-
-    // Available from month filter
-    // Assumes `available_from` is a date column in the DB (e.g. "2025-07-01")
-    // We filter rooms where available_from <= first day of selected month
-    // i.e. room is already available by that month
-    if (availableMonth) {
-      const firstDay = `${availableMonth}-01`
-      queryBuilder = queryBuilder.lte('available_from', firstDay)
-    }
-
-    if (currentUserId) {
-      queryBuilder = queryBuilder.neq('owner_id', currentUserId)
-    }
-
-
-
-
+    if (gender) qb = qb.eq('gender_type', gender)
+    if (type) qb = qb.eq('type', type)
+    if (maxRent) qb = qb.lte('rent', Number(maxRent))
+    if (availableMonth) qb = qb.lte('available_from', `${availableMonth}-01`)
+    if (currentUserId) qb = qb.neq('owner_id', currentUserId)
 
     if (sort === 'price_asc') {
-      queryBuilder = queryBuilder.order('rent', { ascending: true })
+      qb = qb.order('rent', { ascending: true })
     } else if (sort === 'price_desc') {
-      queryBuilder = queryBuilder.order('rent', { ascending: false })
+      qb = qb.order('rent', { ascending: false })
     } else {
-      queryBuilder = queryBuilder.order('created_at', { ascending: false })
+      qb = qb.order('created_at', { ascending: false })
     }
 
-    const { data, error } = await queryBuilder
+    return qb
+  }
 
-    if (error) {
-      console.error(error)
-      setRooms([])
-    } else {
+  // Initial load and filter changes — always resets to page 1
+  const fetchRooms = useCallback(async () => {
+    setLoading(true)
+    setPage(1)
+
+    const { data, error, count } = await buildQuery().range(0, PAGE_SIZE - 1)
+
+    if (!error) {
       setRooms((data ?? []) as Room[])
+      setTotalCount(count ?? 0)
     }
-
     setLoading(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, location, gender, type, maxRent, sort, availableMonth, currentUserId])
+
+  async function loadMore() {
+    setLoadingMore(true)
+    const nextPage = page + 1
+    const from = page * PAGE_SIZE
+    const to = nextPage * PAGE_SIZE - 1
+
+    const { data, error } = await buildQuery().range(from, to)
+
+    if (!error && data) {
+      setRooms((prev) => [...prev, ...(data as Room[])])
+      setPage(nextPage)
+    }
+    setLoadingMore(false)
+  }
 
   useEffect(() => {
     fetchRooms()
   }, [fetchRooms])
 
   useEffect(() => {
-  supabase.auth.getUser().then(({ data }) => {
-    setCurrentUserId(data.user?.id ?? null)
-  })
-}, [])
-
-
-
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id ?? null)
+    })
+  }, [])
 
   function handleSearch() {
     setQuery(inputValue)
@@ -228,164 +230,227 @@ function ListingsContent() {
   const hasFilter =
     query || gender || type || maxRent || sort !== 'newest' || location || availableMonth
 
+  const activeFilterCount = [query, gender, type, maxRent, location, availableMonth].filter(Boolean).length
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
       {/* HEADER */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">All Listings</h1>
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">All Listings</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Browse available rooms for students</p>
       </div>
 
-      {/* SEARCH ROW */}
-      <div className="mb-4 flex gap-2">
-        {/* Keyword search */}
+      {/* SEARCH ROW — stacks on mobile */}
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row">
         <input
-          className="flex-1 rounded-xl border px-4 py-2"
+          className={`flex-1 ${inputCls}`}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder="Search by title..."
+          placeholder="Search by title or keyword..."
         />
-        {/* Location search */}
         <input
-          className="w-48 rounded-xl border px-4 py-2"
+          className={`sm:w-44 ${inputCls}`}
           value={locationInput}
           onChange={(e) => setLocationInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder="Enter Location Name..."
+          placeholder="Location..."
         />
         <button
           onClick={handleSearch}
-          className="rounded-xl bg-blue-600 px-5 text-white"
+          className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Search
         </button>
       </div>
 
-      {/* FILTER ROW */}
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        {/* Sort */}
-        <select
-          value={sort}
-          onChange={(e) => handleFilterChange({ sort: e.target.value })}
-          className="rounded-xl border px-3 py-2 text-sm"
+      {/* FILTER TOGGLE — mobile */}
+      <div className="mb-3 flex items-center justify-between">
+        <button
+          onClick={() => setShowFilters((p) => !p)}
+          className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 sm:hidden"
         >
-          {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 8h10M10 12h4" />
+          </svg>
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{activeFilterCount}</span>
+          )}
+        </button>
 
-        {/* Gender */}
-        <select
-          value={gender}
-          onChange={(e) => handleFilterChange({ gender: e.target.value })}
-          className="rounded-xl border px-3 py-2 text-sm"
-        >
-          {GENDER_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-
-        {/* Room type */}
-        <select
-          value={type}
-          onChange={(e) => handleFilterChange({ type: e.target.value })}
-          className="rounded-xl border px-3 py-2 text-sm"
-        >
-          {TYPE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-
-        {/* Max rent */}
-        <input
-          type="number"
-          value={maxRent}
-          onChange={(e) => handleFilterChange({ maxRent: e.target.value })}
-          placeholder="Max rent (৳)"
-          className="w-36 rounded-xl border px-3 py-2 text-sm"
-          min={0}
-        />
-
-        {/* Available from month */}
-        <select
-          value={availableMonth}
-          onChange={(e) => handleFilterChange({ availableMonth: e.target.value })}
-          className="rounded-xl border px-3 py-2 text-sm"
-        >
-          <option value="">Any Month</option>
-          {monthOptions.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-
-        {/* Clear */}
         {hasFilter && (
-          <button onClick={clearAll} className="text-sm text-red-500 underline">
+          <button onClick={clearAll} className="text-sm text-red-500 underline sm:hidden">
             Clear all
           </button>
         )}
+      </div>
+
+      {/* FILTER ROW — always visible on desktop, toggle on mobile */}
+      <div className={`mb-4 ${showFilters ? 'block' : 'hidden sm:block'}`}>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={sort}
+            onChange={(e) => handleFilterChange({ sort: e.target.value })}
+            className={selectCls}
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={gender}
+            onChange={(e) => handleFilterChange({ gender: e.target.value })}
+            className={selectCls}
+          >
+            {GENDER_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={type}
+            onChange={(e) => handleFilterChange({ type: e.target.value })}
+            className={selectCls}
+          >
+            {TYPE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+
+          <input
+            type="number"
+            value={maxRent}
+            onChange={(e) => handleFilterChange({ maxRent: e.target.value })}
+            placeholder="Max rent (৳)"
+            className={`w-36 ${inputCls}`}
+            min={0}
+          />
+
+          <select
+            value={availableMonth}
+            onChange={(e) => handleFilterChange({ availableMonth: e.target.value })}
+            className={selectCls}
+          >
+            <option value="">Any Month</option>
+            {monthOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+
+          {hasFilter && (
+            <button onClick={clearAll} className="hidden text-sm text-red-500 underline sm:block">
+              Clear all
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Active filter chips */}
       {hasFilter && (
         <div className="mb-4 flex flex-wrap gap-2">
           {query && (
-            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700">
+            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
               Search: {query}
             </span>
           )}
           {location && (
-            <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700 dark:bg-green-900/30 dark:text-green-400">
               Location: {location}
             </span>
           )}
           {gender && (
-            <span className="rounded-full bg-purple-100 px-3 py-1 text-xs text-purple-700">
-              Gender: {GENDER_OPTIONS.find(o => o.value === gender)?.label}
+            <span className="rounded-full bg-purple-100 px-3 py-1 text-xs text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+              {GENDER_OPTIONS.find(o => o.value === gender)?.label}
             </span>
           )}
           {type && (
-            <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs text-yellow-700">
-              Type: {TYPE_OPTIONS.find(o => o.value === type)?.label}
+            <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+              {TYPE_OPTIONS.find(o => o.value === type)?.label}
             </span>
           )}
           {maxRent && (
-            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs text-orange-700">
-              Max rent: ৳{maxRent}
+            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+              Max ৳{maxRent}
             </span>
           )}
           {availableMonth && (
-            <span className="rounded-full bg-teal-100 px-3 py-1 text-xs text-teal-700">
-              Available by: {monthOptions.find(o => o.value === availableMonth)?.label}
+            <span className="rounded-full bg-teal-100 px-3 py-1 text-xs text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
+              By: {monthOptions.find(o => o.value === availableMonth)?.label}
             </span>
           )}
         </div>
       )}
 
       {/* RESULTS COUNT */}
-      <p className="mb-4 text-sm text-gray-500">
-        {loading ? 'Loading...' : `${rooms.length} rooms found`}
+      <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+        {loading
+          ? 'Loading...'
+          : totalCount === 0
+          ? 'No rooms found'
+          : `Showing ${rooms.length} of ${totalCount} room${totalCount !== 1 ? 's' : ''}`}
       </p>
 
       {/* GRID */}
       {loading ? (
-        <div>Loading...</div>
-      ) : rooms.length === 0 ? (
-        <p>No rooms found</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {rooms.map((room) => (
-            <RoomCard key={room.id} room={room} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+              <div className="mb-3 h-44 rounded-xl bg-gray-100 dark:bg-gray-700" />
+              <div className="mb-2 h-4 w-3/4 rounded bg-gray-100 dark:bg-gray-700" />
+              <div className="h-3 w-1/2 rounded bg-gray-100 dark:bg-gray-700" />
+            </div>
           ))}
         </div>
+      ) : rooms.length === 0 ? (
+        <div className="py-16 text-center">
+          <p className="mb-2 text-4xl">🔍</p>
+          <p className="mb-1 font-medium text-gray-700 dark:text-gray-300">No rooms found</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">Try adjusting your filters</p>
+          {hasFilter && (
+            <button onClick={clearAll} className="mt-3 text-sm text-blue-600 underline">
+              Clear all filters
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {rooms.map((room) => (
+              <RoomCard key={room.id} room={room} />
+            ))}
+          </div>
+
+          {hasMore && (
+            <div className="mt-8 flex flex-col items-center gap-2">
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {rooms.length} of {totalCount} rooms
+              </p>
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="rounded-xl border border-gray-200 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-blue-500 hover:text-blue-600 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+              >
+                {loadingMore ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    Loading...
+                  </span>
+                ) : `Load more rooms`}
+              </button>
+            </div>
+          )}
+
+          {!hasMore && totalCount > PAGE_SIZE && (
+            <p className="mt-8 text-center text-xs text-gray-400 dark:text-gray-500">
+              All {totalCount} rooms loaded
+            </p>
+          )}
+        </>
       )}
     </main>
   )
@@ -393,7 +458,18 @@ function ListingsContent() {
 
 export default function ListingsPage() {
   return (
-    <Suspense fallback={<p className="p-10">Loading...</p>}>
+    <Suspense fallback={
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <div className="mb-4 h-8 w-48 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+              <div className="mb-3 h-44 rounded-xl bg-gray-100 dark:bg-gray-700" />
+            </div>
+          ))}
+        </div>
+      </div>
+    }>
       <ListingsContent />
     </Suspense>
   )

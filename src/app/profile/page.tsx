@@ -56,7 +56,7 @@ export default function ProfilePage() {
       ] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
         supabase.from('rooms').select('*').eq('owner_id', uid).order('created_at', { ascending: false }),
-        supabase.from('bookings').select('*, rooms(title, rent, location_name, owner_id)').eq('user_id', uid).order('created_at', { ascending: false }),
+        supabase.from('bookings').select('*, rooms(title, rent, location_name, owner_id, profiles(full_name, phone, bkash_number, nagad_number))').eq('user_id', uid).order('created_at', { ascending: false }),
         supabase.from('saved_rooms').select('*, rooms(*, profiles(full_name, avatar_url))').eq('user_id', uid).order('created_at', { ascending: false }),
       ])
 
@@ -89,7 +89,7 @@ export default function ProfilePage() {
 
     const { error } = await supabase
       .from('profiles')
-      .update({ full_name: profile.full_name, phone: profile.phone, university: profile.university })
+      .update({ full_name: profile.full_name, phone: profile.phone, university: profile.university, bkash_number: profile.bkash_number, nagad_number: profile.nagad_number })
       .eq('id', userId)
 
     setSaving(false)
@@ -269,9 +269,11 @@ export default function ProfilePage() {
       {tab === 'info' && (
         <div className="flex flex-col gap-4">
           {[
-            { key: 'full_name',  label: 'Full Name',    type: 'text' },
-            { key: 'phone',      label: 'Phone Number', type: 'text' },
-            { key: 'university', label: 'University',   type: 'text' },
+            { key: 'full_name',    label: 'Full Name',       type: 'text' },
+            { key: 'phone',        label: 'Phone Number',    type: 'text' },
+            { key: 'university',   label: 'University',      type: 'text' },
+            { key: 'bkash_number', label: 'bKash Number (for payment)', type: 'text' },
+            { key: 'nagad_number', label: 'Nagad Number (for payment)', type: 'text' },
           ].map((field) => (
             <div key={field.key}>
               <label className="mb-1 block text-xs text-gray-500">{field.label}</label>
@@ -283,6 +285,10 @@ export default function ProfilePage() {
               />
             </div>
           ))}
+
+          <div className="rounded-xl bg-blue-50 px-4 py-3 text-xs text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+            💡 Add your bKash/Nagad number so tenants can send payment after booking confirmation.
+          </div>
 
           <div>
             <label className="mb-1 block text-xs text-gray-500">Email</label>
@@ -376,13 +382,17 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {bookings.map((booking: Booking & { rooms?: Room }) => {
+              {bookings.map((booking: any) => {
                 const status = BOOKING_STATUS[booking.status] ?? BOOKING_STATUS.pending
+                const ownerProfile = booking.rooms?.profiles
+                const hasBkash = ownerProfile?.bkash_number
+                const hasNagad = ownerProfile?.nagad_number
+                const hasPayment = hasBkash || hasNagad
                 return (
-                  <div key={booking.id} className="rounded-2xl border border-gray-100 p-4">
+                  <div key={booking.id} className="rounded-2xl border border-gray-100 dark:border-gray-700 p-4 dark:bg-gray-800">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{booking.rooms?.title}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{booking.rooms?.title}</p>
                         <p className="mt-0.5 text-xs text-gray-400">৳{booking.rooms?.rent}/month · {booking.rooms?.location_name}</p>
                         {booking.move_in_date && (
                           <p className="mt-1 text-xs text-gray-400">🗓 Move-in date: {new Date(booking.move_in_date).toLocaleDateString('en-US')}</p>
@@ -390,17 +400,53 @@ export default function ProfilePage() {
                       </div>
                       <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}>{status.label}</span>
                     </div>
+
+                    {booking.status === 'confirmed' && hasPayment && (
+                      <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
+                        <p className="mb-2 text-xs font-semibold text-green-800 dark:text-green-400">💸 Payment Info</p>
+                        <p className="mb-1.5 text-xs text-gray-500 dark:text-gray-400">Send your advance/first-month rent to the owner:</p>
+                        <div className="flex flex-col gap-1.5">
+                          {hasBkash && (
+                            <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
+                              <span className="text-xs font-medium text-pink-600">📱 bKash</span>
+                              <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{ownerProfile.bkash_number}</span>
+                            </div>
+                          )}
+                          {hasNagad && (
+                            <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
+                              <span className="text-xs font-medium text-orange-600">📱 Nagad</span>
+                              <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{ownerProfile.nagad_number}</span>
+                            </div>
+                          )}
+                          {ownerProfile?.phone && (
+                            <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+                              Contact owner: <a href={`tel:${ownerProfile.phone}`} className="text-blue-600 hover:underline">{ownerProfile.phone}</a>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {booking.status === 'confirmed' && !hasPayment && (
+                      <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                        ✅ Booking confirmed! Contact the owner to arrange payment.
+                        {ownerProfile?.phone && (
+                          <a href={`tel:${ownerProfile.phone}`} className="ml-1 font-medium underline">{ownerProfile.phone}</a>
+                        )}
+                      </div>
+                    )}
+
                     <BookingTimeline bookingId={booking.id} />
                     {booking.status === 'confirmed' && booking.expires_at && (
-                      <>
+                      <div className="mt-2">
                         <BookingCountdown expiresAt={booking.expires_at} />
-                        <Link href={`/inbox/${booking.rooms?.owner_id}`} className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
+                        <Link href={`/inbox/${booking.rooms?.owner_id}`} className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
                           💬 Message Owner
                         </Link>
-                      </>
+                      </div>
                     )}
                     {booking.message && (
-                      <p className="mt-2 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-400">"{booking.message}"</p>
+                      <p className="mt-2 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-400 dark:bg-gray-700">"{booking.message}"</p>
                     )}
                   </div>
                 )

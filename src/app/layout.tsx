@@ -38,22 +38,27 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Inline theme script — runs before paint to avoid flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-white text-gray-900 transition-colors dark:bg-gray-950 dark:text-gray-100">
+        <Navbar />
 
-      
-          <Navbar />
+        <main className="flex-1">
+          {children}
+        </main>
 
-          <main className="flex-1">
-            {children}
-          </main>
+        <NotificationProvider />
 
-          <NotificationProvider />
-
-          <Toaster
-            position="top-right"
-            richColors
-          />
-       
+        <Toaster
+          position="top-right"
+          richColors
+        />
       </body>
     </html>
   )

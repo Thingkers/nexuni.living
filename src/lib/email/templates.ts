@@ -44,7 +44,7 @@ export function bookingConfirmedTemplate({
         </p>
 
         <a
-          href="http://localhost:3000/profile"
+          href="${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'}/profile"
           style="
             display: inline-block;
             margin-top: 20px;

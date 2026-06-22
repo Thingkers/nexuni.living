@@ -42,6 +42,7 @@ export default function ReportListingButton({ roomId }: Props) {
       reporter_id: authData.user.id,
       reason,
       details,
+      status: 'pending',
     })
 
     setLoading(false)

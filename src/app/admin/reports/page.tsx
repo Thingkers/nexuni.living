@@ -30,6 +30,7 @@ export default function AdminReportsPage() {
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<{ reportId: string; roomId: string } | null>(null)
   const [filter, setFilter] = useState<'pending' | 'all'>('pending')
 
   useEffect(() => {
@@ -54,20 +55,14 @@ export default function AdminReportsPage() {
           details,
           status,
           created_at,
-
-          rooms (
-            id,
-            title
-          ),
-
-          profiles (
-            full_name,
-            email
-          )
+          rooms (id, title),
+          profiles!reporter_id (full_name, email)
         `)
         .order('created_at', { ascending: false })
 
-      if (!error && data) {
+      if (error) {
+        toast.error('Failed to load reports: ' + error.message)
+      } else if (data) {
         setReports(data as any)
       }
 
@@ -97,8 +92,6 @@ export default function AdminReportsPage() {
 
   async function deleteListing(reportId: string, roomId?: string) {
     if (!roomId) return
-    const confirmed = window.confirm('Delete this listing permanently?')
-    if (!confirmed) return
 
     setActing(reportId)
     const { error } = await supabase.from('rooms').delete().eq('id', roomId)
@@ -195,9 +188,11 @@ export default function AdminReportsPage() {
                     <span className={`rounded-full px-2 py-0.5 text-xs ${
                       report.status === 'reviewed'
                         ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                        : report.status === 'dismissed'
+                        ? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
                         : 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'
                     }`}>
-                      {report.status === 'reviewed' ? 'Reviewed' : 'Pending'}
+                      {report.status === 'reviewed' ? 'Reviewed' : report.status === 'dismissed' ? 'Dismissed' : 'Pending'}
                     </span>
                   </div>
 
@@ -246,13 +241,27 @@ export default function AdminReportsPage() {
                       >
                         {acting === report.id ? '...' : 'Dismiss'}
                       </button>
-                      <button
-                        onClick={() => deleteListing(report.id, report.rooms?.id)}
-                        disabled={!report.rooms?.id || acting === report.id}
-                        className="rounded-xl border border-red-200 px-4 py-2 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-900/20"
-                      >
-                        {acting === report.id ? '...' : 'Delete Listing'}
-                      </button>
+                      {confirmDelete?.reportId === report.id ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-red-500">Delete?</span>
+                          <button
+                            onClick={() => { setConfirmDelete(null); deleteListing(report.id, report.rooms?.id) }}
+                            className="rounded-lg bg-red-500 px-3 py-1.5 text-xs text-white hover:bg-red-600"
+                          >Yes</button>
+                          <button
+                            onClick={() => setConfirmDelete(null)}
+                            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 dark:border-gray-700"
+                          >No</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => report.rooms?.id && setConfirmDelete({ reportId: report.id, roomId: report.rooms.id })}
+                          disabled={!report.rooms?.id || acting === report.id}
+                          className="rounded-xl border border-red-200 px-4 py-2 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                        >
+                          {acting === report.id ? '...' : 'Delete Listing'}
+                        </button>
+                      )}
                     </>
                   )}
                   {report.status !== 'pending' && (

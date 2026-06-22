@@ -137,7 +137,12 @@ export default function PostRoomPage() {
   function validateStep1() {
     const e: Record<string, string> = {}
     if (!form.title.trim()) e.title = 'Title is required'
+    if (!form.title.trim() && form.title.trim().length < 5) e.title = 'Title must be at least 5 characters'
+    const rent = Number(form.rent)
     if (!form.rent) e.rent = 'Rent is required'
+    else if (isNaN(rent) || rent <= 0) e.rent = 'Rent must be a positive number'
+    else if (rent < 500) e.rent = 'Rent seems too low (minimum ৳500)'
+    else if (rent > 100000) e.rent = 'Rent seems too high (maximum ৳1,00,000)'
     if (!form.location_name.trim()) e.location_name = 'Location is required'
     if (!form.available_from) e.available_from = 'Available date is required'
     setErrors(e)

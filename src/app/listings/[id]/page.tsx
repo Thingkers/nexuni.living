@@ -41,7 +41,10 @@ export default function ListingDetailsPage() {
       if (!roomData) return
       setRoom(roomData as Room)
 
-      await supabase.from('rooms').update({ views: (roomData.views ?? 0) + 1 }).eq('id', roomData.id)
+      const isOwner = userData.user?.id === roomData.owner_id
+      if (!isOwner) {
+        await supabase.from('rooms').update({ views: (roomData.views ?? 0) + 1 }).eq('id', roomData.id)
+      }
 
       setCurrentUser(userData.user)
 

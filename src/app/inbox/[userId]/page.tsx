@@ -40,6 +40,12 @@ export default function ChatPage() {
       if (!authData.user) { router.push('/auth/login'); return }
 
       const currentUserId = authData.user.id
+
+      if (currentUserId === otherUserId) {
+        router.replace('/inbox')
+        return
+      }
+
       setMyId(currentUserId)
       myIdRef.current = currentUserId
 

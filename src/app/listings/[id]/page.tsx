@@ -30,6 +30,7 @@ export default function ListingDetailsPage() {
   const [showBooking, setShowBooking] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
   const [descExpanded, setDescExpanded] = useState(false)
+  const [lightbox, setLightbox] = useState<number | null>(null)
 
   useEffect(() => {
     async function loadRoomDetails() {
@@ -113,7 +114,8 @@ export default function ListingDetailsPage() {
                 {room.images.map((src, index) => (
                   <div
                     key={src}
-                    className={`absolute inset-0 transition-opacity duration-700 ${index === activeImage ? 'opacity-100' : 'opacity-0'}`}
+                    className={`absolute inset-0 cursor-zoom-in transition-opacity duration-700 ${index === activeImage ? 'opacity-100' : 'opacity-0'}`}
+                    onClick={() => setLightbox(activeImage)}
                   >
                     <Image src={src} alt={room.title} fill className="object-cover" />
                   </div>
@@ -413,6 +415,60 @@ export default function ListingDetailsPage() {
 
       {showBooking && currentUser && isVerified && (
         <BookingModal room={room} userId={currentUser.id} onClose={() => setShowBooking(false)} />
+      )}
+
+      {/* Image Lightbox */}
+      {lightbox !== null && room.images && room.images.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl text-white hover:bg-white/20"
+            onClick={() => setLightbox(null)}
+          >
+            ×
+          </button>
+
+          {room.images.length > 1 && (
+            <>
+              <button
+                className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl text-white hover:bg-white/20"
+                onClick={(e) => { e.stopPropagation(); setLightbox((prev) => ((prev! - 1 + room.images!.length) % room.images!.length)) }}
+              >‹</button>
+              <button
+                className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl text-white hover:bg-white/20"
+                onClick={(e) => { e.stopPropagation(); setLightbox((prev) => ((prev! + 1) % room.images!.length)) }}
+              >›</button>
+            </>
+          )}
+
+          <div
+            className="relative max-h-[90vh] max-w-[90vw]"
+            style={{ aspectRatio: '16/9', width: '90vw' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={room.images[lightbox]}
+              alt={room.title}
+              fill
+              className="object-contain"
+              sizes="90vw"
+            />
+          </div>
+
+          {room.images.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">
+              {room.images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setLightbox(i) }}
+                  className={`h-1.5 rounded-full transition-all ${i === lightbox ? 'w-5 bg-white' : 'w-1.5 bg-white/40'}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </>
   )

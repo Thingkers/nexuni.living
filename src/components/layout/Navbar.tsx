@@ -298,6 +298,10 @@ export default function Navbar() {
                   )}
 
                   {isVerified && (
+                    <Link href="/dashboard/my-bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>My Bookings</Link>
+                  )}
+
+                  {isVerified && (
                     <Link href="/dashboard/saved" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>Saved Rooms</Link>
                   )}
 
@@ -379,6 +383,7 @@ export default function Navbar() {
                           <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
                         )}
                       </Link>
+                      <Link href="/dashboard/my-bookings" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>📋 My Bookings</Link>
                       <Link href="/dashboard/saved" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>🤍 Saved Rooms</Link>
                     </>
                   )}

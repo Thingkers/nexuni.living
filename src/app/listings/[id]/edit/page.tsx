@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { toast } from 'sonner'
+import Image from 'next/image'
+import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase'
 import { isSharedRoom } from '@/features/rooms/types/room.types'
 
@@ -33,10 +36,15 @@ export default function EditListingPage() {
   const [form, setForm] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [imageFiles, setImageFiles] = useState<File[]>([])
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [showMap, setShowMap] = useState(false)
+
+  // Existing images (already in DB)
+  const [existingImages, setExistingImages] = useState<string[]>([])
+  const [removedImages, setRemovedImages] = useState<string[]>([])
+
+  // New images to upload
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [newPreviews, setNewPreviews] = useState<string[]>([])
 
   useEffect(() => {
     async function loadRoom() {
@@ -49,6 +57,7 @@ export default function EditListingPage() {
       if (roomError || !room) { router.push('/listings'); return }
       if (!auth.user || room.owner_id !== auth.user.id) { router.push(`/listings/${roomId}`); return }
 
+      setExistingImages(room.images ?? [])
       setForm(room)
       setLoading(false)
     }
@@ -56,49 +65,58 @@ export default function EditListingPage() {
     if (roomId) loadRoom()
   }, [roomId, router])
 
+  useEffect(() => {
+    return () => newPreviews.forEach((url) => URL.revokeObjectURL(url))
+  }, [newPreviews])
+
   function updateField(key: string, value: any) {
     setForm((prev: any) => ({ ...prev, [key]: value }))
   }
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []).slice(0, 4)
-    setImageFiles(files)
-    setImagePreviews(files.map((f) => URL.createObjectURL(f)))
+  async function handleNewImages(e: React.ChangeEvent<HTMLInputElement>) {
+    const visible = existingImages.filter((u) => !removedImages.includes(u))
+    const remaining = 4 - visible.length - newFiles.length
+    if (remaining <= 0) { toast.error('Maximum 4 images allowed'); return }
+    const files = Array.from(e.target.files ?? []).slice(0, remaining)
+    const compressed = await Promise.all(files.map((f) => compressImage(f)))
+    setNewFiles((prev) => [...prev, ...compressed])
+    setNewPreviews((prev) => [...prev, ...compressed.map((f) => URL.createObjectURL(f))])
   }
 
-  function removeImage(index: number) {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index))
-    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  async function uploadImages(id: string) {
-    const urls: string[] = []
-    for (const file of imageFiles) {
-      const ext = file.name.split('.').pop()
-      const path = `${id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage.from('room-images').upload(path, file)
-      if (error) throw error
-      const { data } = supabase.storage.from('room-images').getPublicUrl(path)
-      urls.push(data.publicUrl)
-    }
-    return urls
+  function removeNew(index: number) {
+    URL.revokeObjectURL(newPreviews[index])
+    setNewFiles((prev) => prev.filter((_, i) => i !== index))
+    setNewPreviews((prev) => prev.filter((_, i) => i !== index))
   }
 
   async function handleSave() {
     if (!form.title?.trim() || !form.rent || !form.location_name?.trim()) {
-      setError('Title, rent and location are required')
+      toast.error('Title, rent and location are required')
       return
     }
 
     setSaving(true)
-    setError('')
 
     try {
-      let uploadedImages = form.images ?? []
-      if (imageFiles.length > 0) uploadedImages = await uploadImages(roomId)
+      // Upload new images
+      const uploadedUrls: string[] = []
+      for (const file of newFiles) {
+        const ext = file.name.split('.').pop()
+        const path = `${roomId}/${crypto.randomUUID()}.${ext}`
+        const { error } = await supabase.storage.from('room-images').upload(path, file)
+        if (error) throw new Error(error.message)
+        const { data } = supabase.storage.from('room-images').getPublicUrl(path)
+        uploadedUrls.push(data.publicUrl)
+      }
 
+      const finalImages = [
+        ...existingImages.filter((u) => !removedImages.includes(u)),
+        ...uploadedUrls,
+      ]
+
+      const shared = isSharedRoom(form.type)
       const totalSeats = Number(form.total_seats)
-      const availableSeats = Math.min(Number(form.available_seats), totalSeats)
+      const availableSeats = Math.min(Number(form.available_seats ?? totalSeats), totalSeats)
 
       const { error: updateError } = await supabase
         .from('rooms')
@@ -107,16 +125,15 @@ export default function EditListingPage() {
           type: form.type,
           gender_type: form.gender_type,
           rent: Number(form.rent),
-          total_seats: totalSeats,
-          available_seats: availableSeats,
+          total_seats: shared ? totalSeats : 1,
+          available_seats: shared ? availableSeats : 1,
           location_name: form.location_name,
           latitude: form.latitude ? Number(form.latitude) : null,
           longitude: form.longitude ? Number(form.longitude) : null,
           available_from: form.available_from,
           description: form.description,
           status: form.status,
-          images: uploadedImages,
-          // amenities
+          images: finalImages,
           wifi: form.wifi ?? false,
           gas: form.gas ?? false,
           electricity: form.electricity ?? false,
@@ -126,7 +143,6 @@ export default function EditListingPage() {
           parking: form.parking ?? false,
           laundry: form.laundry ?? false,
           cctv: form.cctv ?? false,
-          // additional costs
           electricity_bill: form.electricity_bill ? Number(form.electricity_bill) : null,
           maid_bill: form.maid_bill ? Number(form.maid_bill) : null,
           other_bill: form.other_bill ? Number(form.other_bill) : null,
@@ -134,11 +150,12 @@ export default function EditListingPage() {
         })
         .eq('id', roomId)
 
-      if (updateError) { setError(updateError.message || 'Failed to save'); return }
+      if (updateError) { toast.error(updateError.message || 'Failed to save'); return }
 
+      toast.success('Listing updated!')
       router.push(`/listings/${roomId}`)
     } catch (err: any) {
-      setError(err.message || 'Failed to save changes')
+      toast.error(err.message || 'Failed to save changes')
     } finally {
       setSaving(false)
     }
@@ -160,21 +177,27 @@ export default function EditListingPage() {
     (Number(form.maid_bill) || 0) +
     (Number(form.other_bill) || 0)
 
+  const visibleExisting = existingImages.filter((u) => !removedImages.includes(u))
+  const totalImages = visibleExisting.length + newFiles.length
+
   return (
     <main className="mx-auto max-w-lg px-4 py-8">
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-white">Edit Listing</h1>
-
-      {error && (
-        <div className="mb-4 rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-          {error}
-        </div>
-      )}
+      <div className="mb-6 flex items-center gap-3">
+        <button onClick={() => router.push(`/listings/${roomId}`)} className="text-sm text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">← Cancel</button>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Edit Listing</h1>
+      </div>
 
       <div className="flex flex-col gap-4">
 
         <div>
           <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Title *</label>
-          <input className={inputCls} value={form.title ?? ''} onChange={(e) => updateField('title', e.target.value)} />
+          <input
+            className={inputCls}
+            value={form.title ?? ''}
+            maxLength={100}
+            onChange={(e) => updateField('title', e.target.value)}
+          />
+          <p className="mt-1 text-right text-xs text-gray-400">{(form.title ?? '').length}/100</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -211,8 +234,7 @@ export default function EditListingPage() {
             <div>
               <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Total Seats</label>
               <input
-                type="number"
-                min={1}
+                type="number" min={1}
                 disabled={!shared}
                 className={`${inputCls} ${!shared ? 'cursor-not-allowed opacity-60' : ''}`}
                 value={shared ? (form.total_seats ?? 1) : 1}
@@ -222,15 +244,17 @@ export default function EditListingPage() {
           </div>
         </div>
 
-        <div>
-          <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Available Seats</label>
-          <input
-            type="number" min={0}
-            className={inputCls}
-            value={form.available_seats ?? 0}
-            onChange={(e) => updateField('available_seats', e.target.value)}
-          />
-        </div>
+        {shared && (
+          <div>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Available Seats</label>
+            <input
+              type="number" min={0}
+              className={inputCls}
+              value={form.available_seats ?? 0}
+              onChange={(e) => updateField('available_seats', e.target.value)}
+            />
+          </div>
+        )}
 
         {/* Additional costs */}
         <div>
@@ -257,7 +281,7 @@ export default function EditListingPage() {
             </div>
           </div>
           {form.rent && totalAdditional > 0 && (
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-2 rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400">
               Total per {shared ? 'seat' : 'room'}: ৳{(Number(form.rent) + totalAdditional).toLocaleString('en-US')}/month
             </p>
           )}
@@ -306,10 +330,10 @@ export default function EditListingPage() {
         <div>
           <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Current Status</label>
           <select className={inputCls} value={form.status ?? 'open'} onChange={(e) => updateField('status', e.target.value)}>
-            <option value="open">Open</option>
-            <option value="partial">Partially Available</option>
-            <option value="booked">Booked</option>
-            <option value="closed">Closed</option>
+            <option value="open">✅ Open</option>
+            <option value="partial">🔶 Partially Available</option>
+            <option value="booked">🔴 Fully Booked</option>
+            <option value="closed">⛔ Closed</option>
           </select>
         </div>
 
@@ -337,40 +361,61 @@ export default function EditListingPage() {
 
         <div>
           <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Description</label>
-          <textarea rows={4} className={`resize-none ${inputCls}`}
+          <textarea
+            rows={4}
+            className={`resize-none ${inputCls}`}
             value={form.description ?? ''}
-            onChange={(e) => updateField('description', e.target.value)} />
+            maxLength={1000}
+            onChange={(e) => updateField('description', e.target.value)}
+          />
+          <p className={`mt-1 text-right text-xs ${(form.description ?? '').length >= 950 ? 'text-orange-500' : 'text-gray-400'}`}>
+            {(form.description ?? '').length}/1000
+          </p>
         </div>
 
         {/* Images */}
         <div>
-          <label className="mb-2 block text-xs text-gray-500 dark:text-gray-400">Replace Images</label>
-          <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-6 text-center hover:border-blue-400 hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-blue-900/10">
-            <span className="mb-1 text-3xl">📷</span>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Upload new images</span>
-            <span className="mt-1 text-xs text-gray-400">Selecting new images will replace old ones</span>
-            <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
+          <label className="mb-2 block text-xs text-gray-500 dark:text-gray-400">
+            Room Photos ({totalImages}/4)
           </label>
 
-          {imagePreviews.length > 0 ? (
-            <div className="mt-3 grid grid-cols-4 gap-2">
-              {imagePreviews.map((preview, index) => (
-                <div key={preview} className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
-                  <img src={preview} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
-                  <button type="button" onClick={() => removeImage(index)}
+          {visibleExisting.length > 0 && (
+            <div className="mb-3 grid grid-cols-4 gap-2">
+              {visibleExisting.map((url) => (
+                <div key={url} className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
+                  <Image src={url} alt="Room" fill className="object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setRemovedImages((prev) => [...prev, url])}
+                    className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs text-red-500 shadow"
+                  >×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {newPreviews.length > 0 && (
+            <div className="mb-3 grid grid-cols-4 gap-2">
+              {newPreviews.map((src, index) => (
+                <div key={src} className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
+                  <Image src={src} alt={`New ${index + 1}`} fill className="object-cover" />
+                  <span className="absolute left-1 top-1 rounded bg-blue-600 px-1 text-[9px] text-white">New</span>
+                  <button type="button" onClick={() => removeNew(index)}
                     className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs text-red-500 shadow">×</button>
                 </div>
               ))}
             </div>
-          ) : form.images?.length > 0 ? (
-            <div className="mt-3 grid grid-cols-4 gap-2">
-              {form.images.map((image: string) => (
-                <div key={image} className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
-                  <img src={image} alt="Room" className="h-full w-full object-cover" />
-                </div>
-              ))}
-            </div>
-          ) : null}
+          )}
+
+          {totalImages < 4 && (
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-5 text-center hover:border-blue-400 hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-blue-900/10">
+              <span className="text-2xl">📷</span>
+              <span className="mt-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+                Add photos ({4 - totalImages} remaining)
+              </span>
+              <input type="file" accept="image/*" multiple className="hidden" onChange={handleNewImages} />
+            </label>
+          )}
         </div>
 
         <div className="flex gap-3 pt-2">

@@ -14,6 +14,8 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement | null>(null)
   const otherUserId = params.userId
 
+  const MSG_PAGE_SIZE = 50
+
   const [myId, setMyId] = useState('')
   const [profile, setProfile] = useState<any>(null)
   const [otherUser, setOtherUser] = useState<any>(null)
@@ -21,6 +23,9 @@ export default function ChatPage() {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [hasOlderMessages, setHasOlderMessages] = useState(false)
+  const [loadingOlder, setLoadingOlder] = useState(false)
+  const myIdRef = useRef('')
 
   const { typingUsers, sendTyping } = useTypingIndicator({
     roomId: otherUserId ?? '',
@@ -36,6 +41,7 @@ export default function ChatPage() {
 
       const currentUserId = authData.user.id
       setMyId(currentUserId)
+      myIdRef.current = currentUserId
 
       const [{ data: profileData }, { data: otherProfileData }] = await Promise.all([
         supabase.from('profiles').select('id, full_name, university, avatar_url').eq('id', currentUserId).single(),
@@ -49,9 +55,12 @@ export default function ChatPage() {
         .from('messages')
         .select('*')
         .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`)
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false })
+        .limit(MSG_PAGE_SIZE)
 
-      setMessages(messageData ?? [])
+      const ordered = (messageData ?? []).reverse()
+      setMessages(ordered)
+      setHasOlderMessages(ordered.length === MSG_PAGE_SIZE)
 
       await supabase.from('messages').update({ is_read: true })
         .eq('sender_id', otherUserId).eq('receiver_id', currentUserId)
@@ -61,6 +70,25 @@ export default function ChatPage() {
 
     if (otherUserId) loadChat()
   }, [otherUserId, router])
+
+  async function loadOlderMessages() {
+    if (!messages.length || loadingOlder) return
+    setLoadingOlder(true)
+    const oldest = messages[0].created_at
+
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .or(`and(sender_id.eq.${myIdRef.current},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${myIdRef.current})`)
+      .lt('created_at', oldest)
+      .order('created_at', { ascending: false })
+      .limit(MSG_PAGE_SIZE)
+
+    const older = (data ?? []).reverse()
+    setMessages((prev) => [...older, ...prev])
+    setHasOlderMessages(older.length === MSG_PAGE_SIZE)
+    setLoadingOlder(false)
+  }
 
   useEffect(() => {
     if (!myId || !otherUserId) return
@@ -204,6 +232,17 @@ export default function ChatPage() {
           </div>
         ) : (
           <div className="space-y-1">
+            {hasOlderMessages && (
+              <div className="mb-3 flex justify-center">
+                <button
+                  onClick={loadOlderMessages}
+                  disabled={loadingOlder}
+                  className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs text-gray-500 shadow-sm hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                >
+                  {loadingOlder ? 'Loading...' : '↑ Load older messages'}
+                </button>
+              </div>
+            )}
             {messages.map((message) => {
               const isMine = message.sender_id === myId
               const dateLabel = getDateLabel(message.created_at)

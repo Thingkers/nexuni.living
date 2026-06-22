@@ -23,8 +23,13 @@ type UserProfile = {
 export default function AdminUsersPage() {
   const router = useRouter()
 
+  const PAGE_SIZE = 50
+
   const [users, setUsers]           = useState<UserProfile[]>([])
   const [loading, setLoading]       = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore]       = useState(false)
+  const [page, setPage]             = useState(0)
   const [activeTab, setActiveTab]   = useState<'pending' | 'all'>('pending')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -42,85 +47,86 @@ export default function AdminUsersPage() {
 
     if (me?.role !== 'admin') { router.push('/'); return }
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('profiles')
       .select('id, full_name, email, university, role, is_verified, verification_status, student_id, student_id_card_url, created_at')
       .order('created_at', { ascending: false })
+      .range(0, PAGE_SIZE - 1)
 
-    setUsers((data ?? []) as UserProfile[])
+    const result = (data ?? []) as UserProfile[]
+    setUsers(result)
+    setHasMore(result.length === PAGE_SIZE)
     setLoading(false)
   }
 
   loadUsers()
 }, [router])
 
-  async function approveUser(userId: string) {
-    setActionLoading(userId)
-    const { error } = await supabase
+  async function loadMore() {
+    setLoadingMore(true)
+    const nextPage = page + 1
+    const from = nextPage * PAGE_SIZE
+    const { data } = await supabase
       .from('profiles')
-      .update({ verification_status: 'approved', is_verified: true })
-      .eq('id', userId)
+      .select('id, full_name, email, university, role, is_verified, verification_status, student_id, student_id_card_url, created_at')
+      .order('created_at', { ascending: false })
+      .range(from, from + PAGE_SIZE - 1)
 
-    if (!error) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userId
-            ? { ...u, verification_status: 'approved', is_verified: true }
-            : u,
-        ),
-      )
+    const result = (data ?? []) as UserProfile[]
+    setUsers((prev) => [...prev, ...result])
+    setHasMore(result.length === PAGE_SIZE)
+    setPage(nextPage)
+    setLoadingMore(false)
+  }
+
+  async function adminAction(
+    userId: string,
+    action: 'approve' | 'reject' | 'toggle-verify' | 'toggle-admin',
+    optimisticUpdate: (u: UserProfile) => UserProfile,
+  ) {
+    setActionLoading(userId)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.access_token) { setActionLoading(null); return }
+
+    const res = await fetch('/api/admin/update-user', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ userId, action }),
+    })
+
+    if (res.ok) {
+      setUsers((prev) => prev.map((u) => u.id === userId ? optimisticUpdate(u) : u))
+    } else {
+      const data = await res.json()
+      toast.error(data.error || 'Action failed')
     }
     setActionLoading(null)
   }
 
-  async function rejectUser(userId: string) {
-    setActionLoading(userId)
-    const { error } = await supabase
-      .from('profiles')
-      .update({ verification_status: 'rejected', is_verified: false })
-      .eq('id', userId)
-
-    if (!error) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userId
-            ? { ...u, verification_status: 'rejected', is_verified: false }
-            : u,
-        ),
-      )
-    }
-    setActionLoading(null)
+  function approveUser(userId: string) {
+    return adminAction(userId, 'approve', (u) => ({ ...u, verification_status: 'approved', is_verified: true }))
   }
 
-  async function toggleVerify(userId: string, current: boolean) {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_verified: !current, verification_status: !current ? 'approved' : 'pending' })
-      .eq('id', userId)
-
-    if (!error) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userId
-            ? { ...u, is_verified: !current, verification_status: !current ? 'approved' : 'pending' }
-            : u,
-        ),
-      )
-    }
+  function rejectUser(userId: string) {
+    return adminAction(userId, 'reject', (u) => ({ ...u, verification_status: 'rejected', is_verified: false }))
   }
 
-  async function toggleAdmin(userId: string, currentRole: string | null) {
-    const nextRole = currentRole === 'admin' ? 'student' : 'admin'
-    const { error } = await supabase
-      .from('profiles')
-      .update({ role: nextRole })
-      .eq('id', userId)
+  function toggleVerify(userId: string, current: boolean) {
+    return adminAction(userId, 'toggle-verify', (u) => ({
+      ...u,
+      is_verified: !current,
+      verification_status: !current ? 'approved' : 'pending',
+    }))
+  }
 
-    if (!error) {
-      setUsers((prev) =>
-        prev.map((u) => u.id === userId ? { ...u, role: nextRole } : u),
-      )
-    }
+  function toggleAdmin(userId: string, currentRole: string | null) {
+    return adminAction(userId, 'toggle-admin', (u) => ({
+      ...u,
+      role: currentRole === 'admin' ? 'student' : 'admin',
+    }))
   }
 
   async function deleteUser(userId: string) {
@@ -382,6 +388,18 @@ export default function AdminUsersPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {activeTab === 'all' && hasMore && (
+        <div className="mt-6 text-center">
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="rounded-xl border border-gray-200 px-6 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+          >
+            {loadingMore ? 'Loading...' : 'Load More'}
+          </button>
         </div>
       )}
     </main>

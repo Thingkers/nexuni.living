@@ -67,6 +67,42 @@ export function bookingConfirmedTemplate({
   `
 }
 
+export function bookingRejectedTemplate({
+  userName,
+  roomTitle,
+  roomLocation,
+}: {
+  userName?: string | null
+  roomTitle: string
+  roomLocation?: string | null
+}) {
+  return `
+    <div style="font-family: Arial, sans-serif; padding: 24px; background: #f8fafc;">
+      <div style="max-width: 560px; margin: auto; background: white; border-radius: 16px; padding: 32px; border: 1px solid #e5e7eb;">
+        <h1 style="margin: 0 0 12px; color: #111827;">Booking Update</h1>
+        <p style="color: #4b5563; line-height: 1.7;">Hello ${userName || 'Student'},</p>
+        <p style="color: #4b5563; line-height: 1.7;">
+          Unfortunately, your booking request was not accepted by the owner.
+        </p>
+        <div style="margin: 24px 0; padding: 16px; background: #f9fafb; border-radius: 12px;">
+          <p style="margin: 0 0 8px; font-weight: 600; color: #111827;">${roomTitle}</p>
+          ${roomLocation ? `<p style="margin: 0; color: #6b7280;">📍 ${roomLocation}</p>` : ''}
+        </div>
+        <p style="color: #4b5563; line-height: 1.7;">
+          Don't worry — there are more rooms available. Browse other listings and find your perfect match.
+        </p>
+        <a
+          href="${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'}/listings"
+          style="display: inline-block; margin-top: 20px; background: #2563eb; color: white; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 600;"
+        >
+          Browse Other Rooms
+        </a>
+        <p style="margin-top: 32px; font-size: 12px; color: #9ca3af;">Student Hostel Platform</p>
+      </div>
+    </div>
+  `
+}
+
 export function newMessageTemplate({
   receiverName,
   senderName,

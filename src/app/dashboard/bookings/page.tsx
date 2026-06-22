@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
+import { bookingConfirmedTemplate, bookingRejectedTemplate } from '@/lib/email/templates'
 
 type FilterStatus = 'all' | 'pending' | 'confirmed' | 'cancelled' | 'rejected'
 
@@ -55,7 +57,7 @@ export default function BookingRequestsPage() {
         .select(`
           *,
           rooms!inner(id, title, rent, location_name, owner_id),
-          profiles(id, full_name, phone, university, gender)
+          profiles(id, full_name, email, phone, university, gender)
         `)
         .eq('rooms.owner_id', authData.user.id)
         .order('created_at', { ascending: false })
@@ -78,21 +80,63 @@ export default function BookingRequestsPage() {
   ) {
     setActing(bookingId)
 
+    const booking = bookings.find((b) => b.id === bookingId)
+
     const { error } = await supabase
       .from('bookings')
       .update({ status: action })
       .eq('id', bookingId)
 
     if (error) {
-      alert(error.message)
-    } else {
-      setBookings((previous) =>
-        previous.map((booking) =>
-          booking.id === bookingId
-            ? { ...booking, status: action }
-            : booking,
-        ),
-      )
+      toast.error(error.message)
+      setActing(null)
+      return
+    }
+
+    // Update available_seats on the room when confirmed or rejected
+    if (booking?.rooms?.id) {
+      if (action === 'confirmed') {
+        const seatsBooked = booking.seats ?? 1
+        await supabase.rpc('decrement_available_seats', {
+          room_id: booking.rooms.id,
+          seats: seatsBooked,
+        })
+      }
+    }
+
+    setBookings((previous) =>
+      previous.map((b) => b.id === bookingId ? { ...b, status: action } : b),
+    )
+
+    toast.success(
+      action === 'confirmed' ? 'Booking confirmed!' :
+      action === 'rejected'  ? 'Booking rejected.' :
+      'Booking cancelled.',
+    )
+
+    // Notify tenant via email
+    const tenantEmail = booking?.profiles?.email
+    const tenantName  = booking?.profiles?.full_name
+    if (tenantEmail && (action === 'confirmed' || action === 'rejected')) {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.access_token) {
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            to: tenantEmail,
+            subject: action === 'confirmed'
+              ? 'Your booking has been confirmed 🎉'
+              : 'Update on your booking request',
+            html: action === 'confirmed'
+              ? bookingConfirmedTemplate({ userName: tenantName, roomTitle: booking.rooms.title, roomLocation: booking.rooms.location_name })
+              : bookingRejectedTemplate({ userName: tenantName, roomTitle: booking.rooms.title, roomLocation: booking.rooms.location_name }),
+          }),
+        })
+      }
     }
 
     setActing(null)
@@ -107,13 +151,12 @@ export default function BookingRequestsPage() {
     ])
 
     if (bookingError || roomError) {
-      alert(bookingError?.message ?? roomError?.message)
+      toast.error(bookingError?.message ?? roomError?.message ?? 'Failed to reactivate')
     } else {
       setBookings((previous) =>
-        previous.map((booking) =>
-          booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking,
-        ),
+        previous.map((b) => b.id === bookingId ? { ...b, status: 'cancelled' } : b),
       )
+      toast.success('Listing reactivated!')
     }
 
     setActing(null)

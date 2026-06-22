@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
 
@@ -24,17 +26,17 @@ type Report = {
 }
 
 export default function AdminReportsPage() {
+  const router = useRouter()
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
+  const [acting, setActing] = useState<string | null>(null)
+  const [filter, setFilter] = useState<'pending' | 'all'>('pending')
 
   useEffect(() => {
     async function loadReports() {
       const { data: authData } = await supabase.auth.getUser()
 
-      if (!authData.user) {
-        window.location.href = '/auth/login'
-        return
-      }
+      if (!authData.user) { router.push('/auth/login'); return }
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -42,10 +44,7 @@ export default function AdminReportsPage() {
         .eq('id', authData.user.id)
         .single()
 
-      if (profile?.role !== 'admin') {
-        window.location.href = '/'
-        return
-      }
+      if (profile?.role !== 'admin') { router.push('/'); return }
 
       const { data, error } = await supabase
         .from('reports')
@@ -79,41 +78,65 @@ export default function AdminReportsPage() {
   }, [])
 
   async function markReviewed(reportId: string) {
+    setActing(reportId)
     const { error } = await supabase
       .from('reports')
       .update({ status: 'reviewed' })
       .eq('id', reportId)
 
-    if (!error) {
+    if (error) {
+      toast.error(error.message)
+    } else {
       setReports((prev) =>
-        prev.map((report) =>
-          report.id === reportId
-            ? { ...report, status: 'reviewed' }
-            : report,
-        ),
+        prev.map((r) => r.id === reportId ? { ...r, status: 'reviewed' } : r),
       )
+      toast.success('Marked as reviewed')
     }
+    setActing(null)
   }
 
-  async function deleteListing(roomId?: string) {
+  async function deleteListing(reportId: string, roomId?: string) {
     if (!roomId) return
-
-    const confirmed = confirm('Are you sure you want to delete this listing?')
-
+    const confirmed = window.confirm('Delete this listing permanently?')
     if (!confirmed) return
 
+    setActing(reportId)
     const { error } = await supabase.from('rooms').delete().eq('id', roomId)
 
-    if (!error) {
+    if (error) {
+      toast.error(error.message)
+    } else {
       setReports((prev) =>
-        prev.map((report) =>
-          report.rooms?.id === roomId
-            ? { ...report, rooms: null, status: 'reviewed' }
-            : report,
+        prev.map((r) =>
+          r.rooms?.id === roomId ? { ...r, rooms: null, status: 'reviewed' } : r,
         ),
       )
+      toast.success('Listing deleted and report resolved')
     }
+    setActing(null)
   }
+
+  async function dismissReport(reportId: string) {
+    setActing(reportId)
+    const { error } = await supabase
+      .from('reports')
+      .update({ status: 'dismissed' })
+      .eq('id', reportId)
+
+    if (error) {
+      toast.error(error.message)
+    } else {
+      setReports((prev) =>
+        prev.map((r) => r.id === reportId ? { ...r, status: 'dismissed' } : r),
+      )
+      toast.success('Report dismissed')
+    }
+    setActing(null)
+  }
+
+  const filteredReports = filter === 'pending'
+    ? reports.filter((r) => r.status === 'pending')
+    : reports
 
   if (loading) {
     return (
@@ -125,24 +148,40 @@ export default function AdminReportsPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-          Reported Listings
-        </h1>
-
-        <p className="mt-1 text-sm text-gray-400">
-          Total reports: {reports.length}
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Reported Listings</h1>
+          <p className="mt-1 text-sm text-gray-400">Total: {reports.length} · Pending: {reports.filter((r) => r.status === 'pending').length}</p>
+        </div>
       </div>
 
-      {reports.length === 0 ? (
+      <div className="mb-5 flex gap-2">
+        {[
+          { key: 'pending', label: '⏳ Pending' },
+          { key: 'all',     label: '📋 All' },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setFilter(tab.key as 'pending' | 'all')}
+            className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+              filter === tab.key
+                ? 'border-blue-600 bg-blue-600 text-white'
+                : 'border-gray-200 text-gray-500 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {filteredReports.length === 0 ? (
         <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-800">
           <p className="text-4xl mb-2">🧹</p>
           <p className="text-gray-400">No reports submitted yet</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {reports.map((report) => (
+          {filteredReports.map((report) => (
             <div
               key={report.id}
               className="rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5"
@@ -191,21 +230,36 @@ export default function AdminReportsPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => markReviewed(report.id)}
-                    disabled={report.status === 'reviewed'}
-                    className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700"
-                  >
-                    {report.status === 'reviewed' ? '✓ Reviewed' : 'Mark Reviewed'}
-                  </button>
-
-                  <button
-                    onClick={() => deleteListing(report.rooms?.id)}
-                    disabled={!report.rooms?.id}
-                    className="rounded-xl border border-red-200 px-4 py-2 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-900/20"
-                  >
-                    Delete Listing
-                  </button>
+                  {report.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => markReviewed(report.id)}
+                        disabled={acting === report.id}
+                        className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700"
+                      >
+                        {acting === report.id ? '...' : '✓ Mark Reviewed'}
+                      </button>
+                      <button
+                        onClick={() => dismissReport(report.id)}
+                        disabled={acting === report.id}
+                        className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-700"
+                      >
+                        {acting === report.id ? '...' : 'Dismiss'}
+                      </button>
+                      <button
+                        onClick={() => deleteListing(report.id, report.rooms?.id)}
+                        disabled={!report.rooms?.id || acting === report.id}
+                        className="rounded-xl border border-red-200 px-4 py-2 text-sm text-red-500 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                      >
+                        {acting === report.id ? '...' : 'Delete Listing'}
+                      </button>
+                    </>
+                  )}
+                  {report.status !== 'pending' && (
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                      {report.status === 'reviewed' ? '✓ Reviewed' : '— Dismissed'}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

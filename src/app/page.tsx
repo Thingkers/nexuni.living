@@ -266,9 +266,11 @@ export default function HomePage() {
               <span className="h-2 w-2 rounded-full bg-blue-600" />
               Student Hostel
             </div>
-            <div className="flex gap-6 text-xs text-gray-400">
+            <div className="flex flex-wrap justify-center gap-6 text-xs text-gray-400">
               <Link href="/listings" className="hover:text-gray-700 dark:hover:text-gray-300">Browse Rooms</Link>
               <Link href="/auth/register" className="hover:text-gray-700 dark:hover:text-gray-300">Post a Room</Link>
+              <Link href="/terms" className="hover:text-gray-700 dark:hover:text-gray-300">Terms</Link>
+              <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300">Privacy</Link>
             </div>
             <p className="text-xs text-gray-400">© 2026 Student Hostel</p>
           </div>

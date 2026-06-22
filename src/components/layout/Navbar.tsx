@@ -99,12 +99,41 @@ export default function Navbar() {
 
     loadUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null)
       if (!session) {
         setProfile(null)
         setUnreadCount(0)
         setPendingBookingCount(0)
+      } else {
+        // Re-fetch profile so isVerified updates immediately after login
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url, role, verification_status')
+          .eq('id', session.user.id)
+          .maybeSingle()
+        setProfile(profileData)
+
+        const { count: msgCount } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('receiver_id', session.user.id)
+          .eq('is_read', false)
+        setUnreadCount(msgCount ?? 0)
+
+        const { data: myRooms } = await supabase
+          .from('rooms')
+          .select('id')
+          .eq('owner_id', session.user.id)
+        const roomIds = myRooms?.map((r) => r.id) ?? []
+        if (roomIds.length > 0) {
+          const { count: bookingCount } = await supabase
+            .from('bookings')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending')
+            .in('room_id', roomIds)
+          setPendingBookingCount(bookingCount ?? 0)
+        }
       }
     })
 
@@ -159,9 +188,14 @@ export default function Navbar() {
 
   async function handleLogout() {
     await supabase.auth.signOut()
+    setUser(null)
+    setProfile(null)
+    setUnreadCount(0)
+    setPendingBookingCount(0)
     setMenuOpen(false)
     setMobileOpen(false)
     router.push('/')
+    router.refresh()
   }
 
   function closeMenus() {

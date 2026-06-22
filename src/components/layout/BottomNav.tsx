@@ -38,7 +38,15 @@ export default function BottomNav() {
 
     check()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => check())
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setIsLoggedIn(false)
+        setIsVerified(false)
+        setUnread(0)
+      } else {
+        check()
+      }
+    })
     return () => subscription.unsubscribe()
   }, [])
 

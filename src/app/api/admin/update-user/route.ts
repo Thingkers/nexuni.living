@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rateLimit'
 
 type Action = 'approve' | 'reject' | 'toggle-verify' | 'toggle-admin'
 
@@ -30,6 +31,12 @@ export async function PATCH(req: NextRequest) {
 
   if (callerProfile?.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // 60 actions per minute per admin
+  const { allowed } = rateLimit(`admin-update:${caller.id}`, 60, 60 * 1000)
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 })
   }
 
   const { userId, action } = await req.json() as { userId: string; action: Action }

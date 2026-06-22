@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function DELETE(req: NextRequest) {
   const supabaseAdmin = createClient(
@@ -28,6 +29,12 @@ export async function DELETE(req: NextRequest) {
 
   if (callerProfile?.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // 10 deletes per hour per admin
+  const { allowed } = rateLimit(`admin-delete:${caller.id}`, 10, 60 * 60 * 1000)
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many delete requests. Please wait.' }, { status: 429 })
   }
 
   const { userId } = await req.json()

@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
+import { rateLimit } from '@/lib/rateLimit'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -10,7 +11,6 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: Request) {
   try {
-    // Require a logged-in user to send emails
     const authHeader = req.headers.get('authorization') ?? ''
     const token = authHeader.replace('Bearer ', '')
 
@@ -22,6 +22,12 @@ export async function POST(req: Request) {
 
     if (authError || !user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // 10 emails per user per hour
+    const { allowed } = rateLimit(`email:${user.id}`, 10, 60 * 60 * 1000)
+    if (!allowed) {
+      return Response.json({ error: 'Too many requests. Please wait before sending more emails.' }, { status: 429 })
     }
 
     const body = await req.json()

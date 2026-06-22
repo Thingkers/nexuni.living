@@ -116,7 +116,7 @@ export default function ListingDetailsPage() {
                   </div>
                 ))}
                 {/* Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent" />
 
                 {/* Nav arrows */}
                 {room.images.length > 1 && (
@@ -332,7 +332,7 @@ export default function ListingDetailsPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">{room.profiles?.full_name || 'Owner'}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">{room.profiles?.university || 'AIUB'}</p>
+                  {room.profiles?.university && <p className="text-xs text-gray-400 dark:text-gray-500">{room.profiles.university}</p>}
                 </div>
               </div>
 

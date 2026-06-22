@@ -131,7 +131,7 @@ export default function InboxPage() {
               >
                 {/* Avatar */}
                 <div className="relative shrink-0">
-                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-base font-semibold text-white shadow-sm">
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-blue-400 to-blue-600 text-base font-semibold text-white shadow-sm">
                     {thread.otherAvatar ? (
                       <img src={thread.otherAvatar} alt={thread.otherName} className="h-full w-full object-cover" />
                     ) : (

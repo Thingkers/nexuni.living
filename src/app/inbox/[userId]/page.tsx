@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { newMessageTemplate } from '@/lib/email/templates'
 import { supabase } from '@/lib/supabase'
 import { useTypingIndicator } from '@/hooks/useTypingIndicator'
@@ -25,6 +26,8 @@ export default function ChatPage() {
     roomId: otherUserId ?? '',
     currentUserId: myId ?? '',
   })
+
+  const lastEmailSentRef = useRef<number>(0)
 
   useEffect(() => {
     async function loadChat() {
@@ -96,25 +99,33 @@ export default function ChatPage() {
       is_read: false,
     })
 
-    if (!error && otherUser?.email) {
-      await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: otherUser.email,
-          subject: 'New message on Student Hostel',
-          html: newMessageTemplate({
-            receiverName: otherUser.full_name,
-            senderName: profile?.full_name,
-            message: text,
-            inboxUrl: `${window.location.origin}/inbox/${myId}`,
+    const ONE_HOUR = 60 * 60 * 1000
+    if (!error && otherUser?.email && Date.now() - lastEmailSentRef.current > ONE_HOUR) {
+      lastEmailSentRef.current = Date.now()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.access_token) {
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            to: otherUser.email,
+            subject: 'New message on Student Hostel',
+            html: newMessageTemplate({
+              receiverName: otherUser.full_name,
+              senderName: profile?.full_name,
+              message: text,
+              inboxUrl: `${window.location.origin}/inbox/${myId}`,
+            }),
           }),
-        }),
-      })
+        })
+      }
     }
 
     setSending(false)
-    if (error) { alert(error.message); setContent(text) }
+    if (error) { toast.error(error.message); setContent(text) }
   }
 
   function getDateLabel(dateStr: string) {
@@ -162,7 +173,7 @@ export default function ChatPage() {
           </svg>
         </Link>
 
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-sm font-semibold text-white">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-blue-400 to-blue-600 text-sm font-semibold text-white">
           {otherUser?.avatar_url
             ? <img src={otherUser.avatar_url} alt="" className="h-full w-full object-cover" />
             : otherInitials}
@@ -170,7 +181,7 @@ export default function ChatPage() {
 
         <div className="flex-1">
           <p className="text-sm font-semibold text-gray-900">{otherUser?.full_name || 'User'}</p>
-          <p className="text-xs text-gray-400">{otherUser?.university || 'AIUB'}</p>
+          {otherUser?.university && <p className="text-xs text-gray-400">{otherUser.university}</p>}
         </div>
 
         <Link
@@ -211,7 +222,7 @@ export default function ChatPage() {
 
                   <div className={`flex items-end gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}>
                     {!isMine && (
-                      <div className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-semibold text-white">
+                      <div className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-blue-400 to-blue-600 text-xs font-semibold text-white">
                         {otherUser?.avatar_url
                           ? <img src={otherUser.avatar_url} alt="" className="h-full w-full object-cover" />
                           : otherInitials}
@@ -243,7 +254,7 @@ export default function ChatPage() {
 
             {typingUsers.length > 0 && (
               <div className="flex items-end gap-2">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-xs font-semibold text-white">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-blue-400 to-blue-600 text-xs font-semibold text-white">
                   {otherUser?.avatar_url
                     ? <img src={otherUser.avatar_url} alt="" className="h-full w-full object-cover" />
                     : otherInitials}

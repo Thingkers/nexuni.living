@@ -83,7 +83,7 @@ export default function HomePage() {
   return (
     <main>
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 px-4 py-16 text-center md:py-24">
+      <section className="relative overflow-hidden bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 px-4 py-16 text-center md:py-24">
         {/* Decorative blobs */}
         <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 -right-16 h-80 w-80 rounded-full bg-indigo-500/20 blur-3xl" />

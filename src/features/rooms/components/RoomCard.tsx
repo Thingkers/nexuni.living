@@ -97,7 +97,7 @@ export default function RoomCard({ room }: { room: Room }) {
           <div className="flex h-full items-center justify-center text-5xl">🏠</div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent" />
 
         <span className={`absolute left-2.5 top-2.5 z-10 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm ${status.bg} ${status.text}`}>
           {status.label}

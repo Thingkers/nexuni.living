@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
 
@@ -123,7 +124,7 @@ export default function AdminUsersPage() {
   }
 
   async function deleteUser(userId: string) {
-    const confirmed = confirm('This will permanently delete the user. They will be able to register again with correct info.')
+    const confirmed = window.confirm('This will permanently delete the user. They will be able to register again with correct info.')
     if (!confirmed) return
 
     setActionLoading(userId)
@@ -136,9 +137,10 @@ export default function AdminUsersPage() {
 
     if (res.ok) {
       setUsers((prev) => prev.filter((u) => u.id !== userId))
+      toast.success('User deleted successfully')
     } else {
       const data = await res.json()
-      alert(data.error || 'Delete failed')
+      toast.error(data.error || 'Delete failed')
     }
 
     setActionLoading(null)

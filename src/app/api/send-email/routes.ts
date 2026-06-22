@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     const data = await resend.emails.send({
-      from: 'Student Hostel <onboarding@resend.dev>',
+      from: process.env.EMAIL_FROM ?? 'Student Hostel <onboarding@resend.dev>',
       to,
       subject,
       html,

@@ -106,7 +106,7 @@ export default function LoginPage() {
         </div>
           
           <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="mt-1 text-sm text-gray-500">AIUB Student Home</p>
+          <p className="mt-1 text-sm text-gray-500">Student Hostel</p>
         </div>
 
         {/* Login Type Toggle */}
@@ -201,8 +201,7 @@ export default function LoginPage() {
 
           </div>
 
-          <div className="flex items-center justify-between">
-            <label className="mb-1 block text-xs text-gray-500">Password</label>
+          <div className="flex justify-end">
             <Link
               href="/auth/forgot-password"
               className="text-xs text-blue-600 hover:underline"

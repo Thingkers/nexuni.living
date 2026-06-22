@@ -359,38 +359,38 @@ function ListingsContent() {
         </div>
       </div>
 
-      {/* Active filter chips */}
+      {/* Active filter chips — each has an × to remove */}
       {hasFilter && (
         <div className="mb-4 flex flex-wrap gap-2">
           {query && (
-            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-              Search: {query}
-            </span>
+            <button onClick={() => { setQuery(''); setInputValue(''); syncURL({ search: '', location, gender, type, rent: maxRent, sort, month: availableMonth }) }} className="flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">
+              Search: {query} <span className="ml-0.5 font-bold">×</span>
+            </button>
           )}
           {location && (
-            <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700 dark:bg-green-900/30 dark:text-green-400">
-              Location: {location}
-            </span>
+            <button onClick={() => { setLocation(''); setLocationInput(''); syncURL({ search: query, location: '', gender, type, rent: maxRent, sort, month: availableMonth }) }} className="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400">
+              📍 {location} <span className="ml-0.5 font-bold">×</span>
+            </button>
           )}
           {gender && (
-            <span className="rounded-full bg-purple-100 px-3 py-1 text-xs text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-              {GENDER_OPTIONS.find(o => o.value === gender)?.label}
-            </span>
+            <button onClick={() => handleFilterChange({ gender: '' })} className="flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">
+              {GENDER_OPTIONS.find(o => o.value === gender)?.label} <span className="ml-0.5 font-bold">×</span>
+            </button>
           )}
           {type && (
-            <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-              {TYPE_OPTIONS.find(o => o.value === type)?.label}
-            </span>
+            <button onClick={() => handleFilterChange({ type: '' })} className="flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400">
+              {TYPE_OPTIONS.find(o => o.value === type)?.label} <span className="ml-0.5 font-bold">×</span>
+            </button>
           )}
           {maxRent && (
-            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
-              Max ৳{maxRent}
-            </span>
+            <button onClick={() => handleFilterChange({ maxRent: '' })} className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400">
+              Max ৳{maxRent} <span className="ml-0.5 font-bold">×</span>
+            </button>
           )}
           {availableMonth && (
-            <span className="rounded-full bg-teal-100 px-3 py-1 text-xs text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
-              By: {monthOptions.find(o => o.value === availableMonth)?.label}
-            </span>
+            <button onClick={() => handleFilterChange({ availableMonth: '' })} className="flex items-center gap-1 rounded-full bg-teal-100 px-3 py-1 text-xs text-teal-700 hover:bg-teal-200 dark:bg-teal-900/30 dark:text-teal-400">
+              By: {monthOptions.find(o => o.value === availableMonth)?.label} <span className="ml-0.5 font-bold">×</span>
+            </button>
           )}
         </div>
       )}

@@ -190,7 +190,7 @@ export default function ListingDetailsPage() {
               </span>
             </div>
 
-            {/* Location + Type + Gender chips */}
+            {/* Location + Type + Gender chips + views */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                 📍 {room.location_name || 'Location not added'}
@@ -201,6 +201,11 @@ export default function ListingDetailsPage() {
               <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                 {room.gender_type === 'male' ? '👨 Male' : room.gender_type === 'female' ? '👩 Female' : '👥 Any'}
               </span>
+              {(room.views ?? 0) > 0 && (
+                <span className="flex items-center gap-1 rounded-full bg-gray-50 px-3 py-1 text-xs text-gray-400 dark:bg-gray-800">
+                  👁 {room.views} view{room.views !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
 
             {/* Seats availability */}

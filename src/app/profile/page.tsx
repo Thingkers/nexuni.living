@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadProfileData() {
@@ -143,6 +144,16 @@ export default function ProfilePage() {
 
 
 
+
+  async function toggleRoomStatus(room: Room) {
+    const nextStatus = room.status === 'open' ? 'closed' : 'open'
+    setTogglingId(room.id)
+    const { error } = await supabase.from('rooms').update({ status: nextStatus }).eq('id', room.id)
+    setTogglingId(null)
+    if (error) { toast.error(error.message); return }
+    setMyRooms((prev) => prev.map((r) => r.id === room.id ? { ...r, status: nextStatus } : r))
+    toast.success(`Room marked as ${nextStatus}`)
+  }
 
   async function deleteRoom(id: string) {
     setDeleting(true)
@@ -353,15 +364,20 @@ export default function ProfilePage() {
                     <p className="truncate text-sm font-medium text-gray-900">{room.title}</p>
                     <p className="mt-0.5 text-xs text-gray-400">৳{room.rent}/month · {room.location_name}</p>
                   </div>
-                  <div className="ml-3 flex shrink-0 items-center gap-2">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                      room.status === 'open' ? 'bg-green-50 text-green-700'
-                      : room.status === 'partial' ? 'bg-yellow-50 text-yellow-700'
-                      : room.status === 'booked' ? 'bg-red-50 text-red-600'
-                      : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {room.status === 'open' ? 'Open' : room.status === 'partial' ? 'Partial' : room.status === 'booked' ? 'Booked' : 'Closed'}
-                    </span>
+                  <div className="ml-3 flex shrink-0 flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => toggleRoomStatus(room)}
+                      disabled={togglingId === room.id}
+                      title="Toggle open/closed"
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
+                        room.status === 'open' ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                        : room.status === 'partial' ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
+                        : room.status === 'booked' ? 'bg-red-50 text-red-600'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {togglingId === room.id ? '...' : room.status === 'open' ? '🟢 Open' : room.status === 'partial' ? '🟡 Partial' : room.status === 'booked' ? '🔴 Booked' : '⛔ Closed'}
+                    </button>
                     <Link href={`/listings/${room.id}`} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">View</Link>
                     <Link href={`/listings/${room.id}/edit`} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">Edit</Link>
                     {confirmDeleteId === room.id ? (

@@ -169,6 +169,18 @@ function ListingsContent() {
     })
   }, [])
 
+  // Debounce inputValue → query (400ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (inputValue !== query) {
+        setQuery(inputValue)
+        syncURL({ search: inputValue, location, gender, type, rent: maxRent, sort, month: availableMonth })
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputValue])
+
   function handleSearch() {
     setQuery(inputValue)
     setLocation(locationInput)

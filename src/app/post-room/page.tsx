@@ -242,9 +242,13 @@ export default function PostRoomPage() {
               placeholder="e.g. Spacious mess room near university"
               className={inputCls(errors.title)}
               value={form.title}
+              maxLength={100}
               onChange={(e) => updateField('title', e.target.value)}
             />
-            {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
+            <div className="mt-1 flex justify-between">
+              {errors.title ? <p className="text-xs text-red-500">{errors.title}</p> : <span />}
+              <p className="text-xs text-gray-400">{form.title.length}/100</p>
+            </div>
           </div>
 
           {/* Type + Gender */}
@@ -454,9 +458,12 @@ export default function PostRoomPage() {
               placeholder={`Describe the room in detail...\n\nE.g. — floor level, nearby landmarks, transport access, house rules, etc.`}
               className={`w-full resize-none ${inputCls()}`}
               value={form.description}
+              maxLength={1000}
               onChange={(e) => updateField('description', e.target.value)}
             />
-            <p className="mt-1 text-right text-xs text-gray-400">{form.description.length} chars</p>
+            <p className={`mt-1 text-right text-xs ${form.description.length >= 950 ? 'text-orange-500' : 'text-gray-400'}`}>
+              {form.description.length}/1000
+            </p>
           </div>
 
           {/* Images */}

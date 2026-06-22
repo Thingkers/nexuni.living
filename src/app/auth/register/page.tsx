@@ -15,6 +15,21 @@ const INITIAL_FORM = {
   confirm_password: '',
   gender: 'male',
   student_id: '',
+  university: '',
+}
+
+function getPasswordStrength(password: string): { score: number; label: string; color: string } {
+  if (!password) return { score: 0, label: '', color: '' }
+  let score = 0
+  if (password.length >= 8) score++
+  if (/[A-Z]/.test(password)) score++
+  if (/[0-9]/.test(password)) score++
+  if (/[^A-Za-z0-9]/.test(password)) score++
+
+  if (score <= 1) return { score: 1, label: 'Weak', color: 'bg-red-500' }
+  if (score === 2) return { score: 2, label: 'Fair', color: 'bg-yellow-400' }
+  if (score === 3) return { score: 3, label: 'Good', color: 'bg-blue-500' }
+  return { score: 4, label: 'Strong', color: 'bg-green-500' }
 }
 
 export default function RegisterPage() {
@@ -29,18 +44,20 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
+  const passwordStrength = getPasswordStrength(form.password)
+
   function updateField(key: string, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
   async function handleIdCardChange(e: React.ChangeEvent<HTMLInputElement>) {
-  const file = e.target.files?.[0]
-  if (!file) return
-  
-  const compressed = await compressImage(file)
-  setIdCardFile(compressed)
-  setIdCardPreview(URL.createObjectURL(compressed))
-}
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const compressed = await compressImage(file)
+    setIdCardFile(compressed)
+    setIdCardPreview(URL.createObjectURL(compressed))
+  }
 
   async function uploadIdCard(userId: string): Promise<string | null> {
     if (!idCardFile) return null
@@ -70,7 +87,7 @@ export default function RegisterPage() {
     }
 
     if (!idCardFile) {
-      setError('Please upload your AIUB Student ID card')
+      setError('Please upload your Student ID card')
       return
     }
 
@@ -85,8 +102,7 @@ export default function RegisterPage() {
     }
 
     setLoading(true)
-    
-    // ✅ Student ID duplicate check
+
     const { data: existingStudent } = await supabase
       .from('profiles')
       .select('id')
@@ -99,10 +115,6 @@ export default function RegisterPage() {
       return
     }
 
-
-
-
-    // 1. Create auth user
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -114,7 +126,6 @@ export default function RegisterPage() {
       return
     }
 
-    // 2. Upload ID card
     let idCardUrl: string | null = null
     try {
       idCardUrl = await uploadIdCard(data.user.id)
@@ -124,14 +135,13 @@ export default function RegisterPage() {
       return
     }
 
-    // 3. Create profile
     const { error: profileError } = await supabase.from('profiles').insert({
       id: data.user.id,
       full_name: form.full_name,
       email: form.email,
       phone: form.phone,
       gender: form.gender,
-      university: 'AIUB',
+      university: form.university || null,
       student_id: form.student_id,
       student_id_card_url: idCardUrl,
       role: 'student',
@@ -153,26 +163,20 @@ export default function RegisterPage() {
     'rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
-
     <main className="min-h-screen bg-gray-50 px-4 py-10">
-
       <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
 
         <div className="mb-6 text-center">
-
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center">
-          <Image
-            src="/aiub_logo.png"
-            alt="AIUB Logo"
-            width={80}
-            height={80}
-            className="mx-auto"
-          />
-        </div>
-
-          <h1 className="text-2xl font-bold text-gray-900">AIUB Student Register</h1>
-          
-
+            <Image
+              src="/aiub_logo.png"
+              alt="Logo"
+              width={80}
+              height={80}
+              className="mx-auto"
+            />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Student Register</h1>
         </div>
 
         {error && (
@@ -183,7 +187,6 @@ export default function RegisterPage() {
 
         <div className="flex flex-col gap-4">
 
-          {/* Full Name */}
           <div>
             <label className="mb-1 block text-xs text-gray-500">Full Name *</label>
             <input
@@ -194,9 +197,8 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* AIUB Email */}
           <div>
-            <label className="mb-1 block text-xs text-gray-500"> Email *</label>
+            <label className="mb-1 block text-xs text-gray-500">Email *</label>
             <input
               type="email"
               placeholder="your@gmail.com"
@@ -206,18 +208,26 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Student ID */}
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">University</label>
+            <input
+              placeholder="e.g. AIUB, BUET, NSU..."
+              className={inputClass + ' w-full'}
+              value={form.university}
+              onChange={(e) => updateField('university', e.target.value)}
+            />
+          </div>
+
           <div>
             <label className="mb-1 block text-xs text-gray-500">Student ID *</label>
             <input
-              placeholder="xx-xxxxx-x"
+              placeholder="e.g. xx-xxxxx-x"
               className={inputClass + ' w-full'}
               value={form.student_id}
               onChange={(e) => updateField('student_id', e.target.value)}
             />
           </div>
 
-          {/* Phone */}
           <div>
             <label className="mb-1 block text-xs text-gray-500">Phone Number</label>
             <input
@@ -228,7 +238,6 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Gender */}
           <div>
             <label className="mb-1 block text-xs text-gray-500">Gender</label>
             <select
@@ -307,6 +316,29 @@ export default function RegisterPage() {
                 )}
               </button>
             </div>
+
+            {/* Password strength bar */}
+            {form.password.length > 0 && (
+              <div className="mt-2">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-1 flex-1 rounded-full transition-all ${
+                        i <= passwordStrength.score ? passwordStrength.color : 'bg-gray-200'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className={`mt-1 text-xs ${
+                  passwordStrength.score <= 1 ? 'text-red-500' :
+                  passwordStrength.score === 2 ? 'text-yellow-500' :
+                  passwordStrength.score === 3 ? 'text-blue-500' : 'text-green-600'
+                }`}>
+                  {passwordStrength.label}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Confirm Password */}
@@ -340,9 +372,8 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Notice */}
           <div className="rounded-xl bg-yellow-50 px-4 py-3 text-xs text-yellow-700">
-            ⏳ After registering, your account will be reviewed by admin. You'll get access once verified.
+            After registering, your account will be reviewed by admin. You'll get access once verified.
           </div>
 
           <button

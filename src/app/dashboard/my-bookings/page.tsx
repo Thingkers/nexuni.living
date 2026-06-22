@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import BookingTimeline from '@/features/bookings/components/BookingTimeline'
 import BookingCountdown from '@/features/bookings/components/BookingCountdown'
@@ -19,6 +20,8 @@ export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'rejected'>('all')
+  const [cancelling, setCancelling] = useState<string | null>(null)
+  const [confirmCancel, setConfirmCancel] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -43,6 +46,28 @@ export default function MyBookingsPage() {
 
     load()
   }, [router])
+
+  async function cancelBooking(bookingId: string) {
+    setCancelling(bookingId)
+    const { error } = await supabase
+      .from('bookings')
+      .update({ status: 'cancelled' })
+      .eq('id', bookingId)
+
+    if (error) {
+      toast.error(error.message)
+    } else {
+      setBookings((prev) => prev.map((b) => b.id === bookingId ? { ...b, status: 'cancelled' } : b))
+      toast.success('Booking cancelled')
+    }
+    setCancelling(null)
+    setConfirmCancel(null)
+  }
+
+  async function copyToClipboard(text: string, label: string) {
+    await navigator.clipboard.writeText(text)
+    toast.success(`${label} copied!`)
+  }
 
   const filtered = filter === 'all' ? bookings : bookings.filter((b) => b.status === filter)
 
@@ -156,13 +181,19 @@ export default function MyBookingsPage() {
                       {hasBkash && (
                         <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
                           <span className="text-xs font-medium text-pink-600">📱 bKash</span>
-                          <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner.bkash_number}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner.bkash_number}</span>
+                            <button onClick={() => copyToClipboard(owner.bkash_number, 'bKash number')} className="text-xs text-gray-400 hover:text-pink-600">Copy</button>
+                          </div>
                         </div>
                       )}
                       {hasNagad && (
                         <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
                           <span className="text-xs font-medium text-orange-600">📱 Nagad</span>
-                          <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner.nagad_number}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner.nagad_number}</span>
+                            <button onClick={() => copyToClipboard(owner.nagad_number, 'Nagad number')} className="text-xs text-gray-400 hover:text-orange-600">Copy</button>
+                          </div>
                         </div>
                       )}
                       {owner?.phone && (
@@ -201,12 +232,36 @@ export default function MyBookingsPage() {
                   <p className="text-xs text-gray-400">
                     Submitted {new Date(booking.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                   </p>
-                  <Link
-                    href={`/listings/${booking.rooms?.id}`}
-                    className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-                  >
-                    View listing →
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    {booking.status === 'pending' && (
+                      confirmCancel === booking.id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">Cancel?</span>
+                          <button
+                            onClick={() => cancelBooking(booking.id)}
+                            disabled={cancelling === booking.id}
+                            className="text-xs font-medium text-red-500 hover:text-red-700 disabled:opacity-50"
+                          >
+                            {cancelling === booking.id ? '...' : 'Yes'}
+                          </button>
+                          <button onClick={() => setConfirmCancel(null)} className="text-xs text-gray-400 hover:text-gray-600">No</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmCancel(booking.id)}
+                          className="text-xs text-red-400 hover:text-red-600"
+                        >
+                          Cancel
+                        </button>
+                      )
+                    )}
+                    <Link
+                      href={`/listings/${booking.rooms?.id}`}
+                      className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                      View →
+                    </Link>
+                  </div>
                 </div>
               </div>
             )

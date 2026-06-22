@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase'
 import type { Booking, Profile, Room } from '@/types'
@@ -35,6 +36,8 @@ export default function ProfilePage() {
   const [pageError, setPageError] = useState('')
   const [isVerified, setIsVerified] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     async function loadProfileData() {
@@ -93,7 +96,8 @@ export default function ProfilePage() {
       .eq('id', userId)
 
     setSaving(false)
-    if (error) { setPageError(error.message); return }
+    if (error) { toast.error(error.message); return }
+    toast.success('Profile saved!')
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
   }
@@ -141,11 +145,13 @@ export default function ProfilePage() {
 
 
   async function deleteRoom(id: string) {
-    const confirmed = confirm('Are you sure you want to delete this listing?')
-    if (!confirmed) return
+    setDeleting(true)
     const { error } = await supabase.from('rooms').delete().eq('id', id)
-    if (error) { alert(error.message); return }
+    setDeleting(false)
+    if (error) { toast.error(error.message); return }
     setMyRooms((rooms) => rooms.filter((room) => room.id !== id))
+    setConfirmDeleteId(null)
+    toast.success('Listing deleted')
   }
 
   if (loading) {
@@ -358,7 +364,14 @@ export default function ProfilePage() {
                     </span>
                     <Link href={`/listings/${room.id}`} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">View</Link>
                     <Link href={`/listings/${room.id}/edit`} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">Edit</Link>
-                    <button onClick={() => deleteRoom(room.id)} className="px-2 text-xs text-red-400 hover:text-red-600">Delete</button>
+                    {confirmDeleteId === room.id ? (
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => deleteRoom(room.id)} disabled={deleting} className="text-xs font-medium text-red-500 hover:text-red-700 disabled:opacity-50">{deleting ? '...' : 'Sure?'}</button>
+                        <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-gray-400 hover:text-gray-600">No</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setConfirmDeleteId(room.id)} className="px-2 text-xs text-red-400 hover:text-red-600">Delete</button>
+                    )}
                   </div>
                 </div>
               ))}

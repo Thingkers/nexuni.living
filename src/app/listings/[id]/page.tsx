@@ -31,6 +31,7 @@ export default function ListingDetailsPage() {
   const [activeImage, setActiveImage] = useState(0)
   const [descExpanded, setDescExpanded] = useState(false)
   const [lightbox, setLightbox] = useState<number | null>(null)
+  const [existingBooking, setExistingBooking] = useState<{ status: string } | null>(null)
 
   useEffect(() => {
     async function loadRoomDetails() {
@@ -50,9 +51,12 @@ export default function ListingDetailsPage() {
       setCurrentUser(userData.user)
 
       if (userData.user) {
-        const { data: profile } = await supabase
-          .from('profiles').select('verification_status, role').eq('id', userData.user.id).single()
+        const [{ data: profile }, { data: booking }] = await Promise.all([
+          supabase.from('profiles').select('verification_status, role').eq('id', userData.user.id).single(),
+          supabase.from('bookings').select('status').eq('room_id', params.id).eq('user_id', userData.user.id).in('status', ['pending', 'confirmed']).maybeSingle(),
+        ])
         setUserProfile(profile)
+        if (booking) setExistingBooking(booking)
       }
 
       setLoading(false)
@@ -363,19 +367,34 @@ export default function ListingDetailsPage() {
 
               {!isOwner && currentUser && isVerified && (
                 <div className="flex flex-col gap-2">
-                  <button
-                    disabled={isBooked}
-                    onClick={() => setShowBooking(true)}
-                    className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {isBooked ? 'Booking Closed' : 'Request Booking'}
-                  </button>
+                  {existingBooking ? (
+                    <div className={`rounded-xl px-4 py-3 text-center text-sm font-medium ${
+                      existingBooking.status === 'confirmed'
+                        ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                        : 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'
+                    }`}>
+                      {existingBooking.status === 'confirmed' ? '✅ Booking Confirmed' : '⏳ Booking Pending'}
+                    </div>
+                  ) : (
+                    <button
+                      disabled={isBooked}
+                      onClick={() => setShowBooking(true)}
+                      className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {isBooked ? 'Booking Closed' : 'Request Booking'}
+                    </button>
+                  )}
                   <Link
                     href={`/inbox/${room.owner_id}`}
-                    className="w-full rounded-xl border border-gray-200 py-3 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="w-full rounded-xl border border-gray-200 py-3 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                   >
                     Message Owner
                   </Link>
+                  {existingBooking && (
+                    <Link href="/dashboard/my-bookings" className="text-center text-xs text-blue-600 hover:underline dark:text-blue-400">
+                      View booking status →
+                    </Link>
+                  )}
                 </div>
               )}
 

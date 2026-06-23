@@ -99,7 +99,10 @@ export default function Navbar() {
 
     loadUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // INITIAL_SESSION is already handled by loadUser() above — skip to avoid double fetching
+      if (event === 'INITIAL_SESSION') return
+
       setUser(session?.user ?? null)
       if (!session) {
         setProfile(null)

@@ -38,11 +38,13 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [pendingBookingCount, setPendingBookingCount] = useState(0)
+  const [myBookingCount, setMyBookingCount] = useState(0)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
   // Read initial theme from DOM (set by inline script)
   useEffect(() => {
     setTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light')
+    setMyBookingCount(parseInt(localStorage.getItem('my_booking_updates') || '0', 10))
   }, [])
 
   // Close desktop dropdown when clicking outside
@@ -156,18 +158,34 @@ export default function Navbar() {
 
     const bookingChannel = supabase
       .channel('navbar-bookings')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, async () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, async (payload) => {
         const { data } = await supabase.auth.getUser()
         if (!data.user) return
-        const { data: myRooms } = await supabase.from('rooms').select('id').eq('owner_id', data.user.id)
+        const uid = data.user.id
+
+        // OWNER: update pending booking count
+        const { data: myRooms } = await supabase.from('rooms').select('id').eq('owner_id', uid)
         const roomIds = myRooms?.map((r) => r.id) ?? []
-        if (roomIds.length === 0) return
-        const { count } = await supabase
-          .from('bookings')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending')
-          .in('room_id', roomIds)
-        setPendingBookingCount(count ?? 0)
+        if (roomIds.length > 0) {
+          const { count } = await supabase
+            .from('bookings')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending')
+            .in('room_id', roomIds)
+          setPendingBookingCount(count ?? 0)
+        }
+
+        // TENANT: badge on My Bookings when owner confirms/rejects
+        if (payload.eventType === 'UPDATE') {
+          const newBooking = payload.new as { user_id: string; status: string }
+          if (newBooking.user_id === uid && (newBooking.status === 'confirmed' || newBooking.status === 'rejected')) {
+            setMyBookingCount((prev) => {
+              const next = prev + 1
+              localStorage.setItem('my_booking_updates', String(next))
+              return next
+            })
+          }
+        }
       })
       .subscribe()
 
@@ -204,6 +222,12 @@ export default function Navbar() {
   function closeMenus() {
     setMenuOpen(false)
     setMobileOpen(false)
+  }
+
+  function goToMyBookings() {
+    setMyBookingCount(0)
+    localStorage.removeItem('my_booking_updates')
+    closeMenus()
   }
 
   const initials =
@@ -281,9 +305,9 @@ export default function Navbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             )}
-            {(unreadCount > 0 || pendingBookingCount > 0) && (
+            {(unreadCount > 0 || pendingBookingCount > 0 || myBookingCount > 0) && (
               <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
-                {unreadCount + pendingBookingCount}
+                {unreadCount + pendingBookingCount + myBookingCount}
               </span>
             )}
           </button>
@@ -296,7 +320,7 @@ export default function Navbar() {
                 className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full hover:ring-2 hover:ring-teal-300"
               >
                 <Avatar size={8} />
-                {(unreadCount > 0 || pendingBookingCount > 0) && (
+                {(unreadCount > 0 || pendingBookingCount > 0 || myBookingCount > 0) && (
                   <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-1 ring-white" />
                 )}
               </button>
@@ -335,7 +359,12 @@ export default function Navbar() {
                   )}
 
                   {isVerified && (
-                    <Link href="/dashboard/my-bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>My Bookings</Link>
+                    <Link href="/dashboard/my-bookings" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={goToMyBookings}>
+                      <span>My Bookings</span>
+                      {myBookingCount > 0 && (
+                        <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
+                      )}
+                    </Link>
                   )}
 
                   {isVerified && (
@@ -420,7 +449,12 @@ export default function Navbar() {
                           <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
                         )}
                       </Link>
-                      <Link href="/dashboard/my-bookings" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>📋 My Bookings</Link>
+                      <Link href="/dashboard/my-bookings" className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={goToMyBookings}>
+                        <span>📋 My Bookings</span>
+                        {myBookingCount > 0 && (
+                          <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
+                        )}
+                      </Link>
                       <Link href="/dashboard/saved" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>🤍 Saved Rooms</Link>
                     </>
                   )}

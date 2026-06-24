@@ -152,9 +152,8 @@ export default function PostRoomPage() {
   async function uploadRoomImages(roomId: string) {
     const urls: string[] = []
     for (const image of images) {
-      const ext = image.name.split('.').pop()
-      const filePath = `${roomId}/${crypto.randomUUID()}.${ext}`
-      const { error } = await supabase.storage.from('room-images').upload(filePath, image)
+      const filePath = `${roomId}/${crypto.randomUUID()}.webp`
+      const { error } = await supabase.storage.from('room-images').upload(filePath, image, { contentType: 'image/webp' })
       if (error) throw new Error(error.message)
       const { data } = supabase.storage.from('room-images').getPublicUrl(filePath)
       urls.push(data.publicUrl)

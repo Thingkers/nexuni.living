@@ -101,9 +101,8 @@ export default function EditListingPage() {
       // Upload new images
       const uploadedUrls: string[] = []
       for (const file of newFiles) {
-        const ext = file.name.split('.').pop()
-        const path = `${roomId}/${crypto.randomUUID()}.${ext}`
-        const { error } = await supabase.storage.from('room-images').upload(path, file)
+        const path = `${roomId}/${crypto.randomUUID()}.webp`
+        const { error } = await supabase.storage.from('room-images').upload(path, file, { contentType: 'image/webp' })
         if (error) throw new Error(error.message)
         const { data } = supabase.storage.from('room-images').getPublicUrl(path)
         uploadedUrls.push(data.publicUrl)

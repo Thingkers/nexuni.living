@@ -1,6 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { Resend } from 'resend'
 import { rateLimit } from '@/lib/rateLimit'
+import { profileVerifiedTemplate, profileRejectedTemplate } from '@/lib/email/templates'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 type Action = 'approve' | 'reject' | 'toggle-verify' | 'toggle-admin'
 
@@ -51,7 +55,7 @@ export async function PATCH(req: NextRequest) {
 
   const { data: target } = await supabaseAdmin
     .from('profiles')
-    .select('role, is_verified, verification_status')
+    .select('role, is_verified, verification_status, email, full_name')
     .eq('id', userId)
     .single()
 
@@ -81,6 +85,23 @@ export async function PATCH(req: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Send verification email (best-effort — don't fail the action if email fails)
+  if ((action === 'approve' || action === 'reject') && target.email) {
+    const isApproved = action === 'approve'
+    try {
+      await resend.emails.send({
+        from: process.env.EMAIL_FROM ?? 'Student Hostel <onboarding@resend.dev>',
+        to: target.email,
+        subject: isApproved ? 'Your account has been verified ✅' : 'Verification update for your account',
+        html: isApproved
+          ? profileVerifiedTemplate({ userName: target.full_name })
+          : profileRejectedTemplate({ userName: target.full_name }),
+      })
+    } catch {
+      // Email failure is non-fatal
+    }
   }
 
   return NextResponse.json({ success: true, updates })

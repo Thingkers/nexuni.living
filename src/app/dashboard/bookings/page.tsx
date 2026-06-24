@@ -7,6 +7,8 @@ import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
 import { bookingConfirmedTemplate, bookingRejectedTemplate } from '@/lib/email/templates'
+import { isSharedRoom } from '@/features/rooms/types/room.types'
+import type { RoomType } from '@/features/rooms/types/room.types'
 
 type FilterStatus = 'all' | 'pending' | 'confirmed' | 'cancelled' | 'rejected'
 
@@ -56,7 +58,7 @@ export default function BookingRequestsPage() {
         .from('bookings')
         .select(`
           *,
-          rooms!inner(id, title, rent, location_name, owner_id),
+          rooms!inner(id, title, rent, location_name, owner_id, type, available_seats),
           profiles(id, full_name, email, phone, university, gender)
         `)
         .eq('rooms.owner_id', authData.user.id)
@@ -93,14 +95,24 @@ export default function BookingRequestsPage() {
       return
     }
 
-    // Update available_seats on the room when confirmed or rejected
-    if (booking?.rooms?.id) {
-      if (action === 'confirmed') {
+    // Update room seats/status when booking is confirmed
+    if (booking?.rooms?.id && action === 'confirmed') {
+      const roomType = booking.rooms.type as RoomType
+      const roomId   = booking.rooms.id
+
+      if (isSharedRoom(roomType)) {
         const seatsBooked = booking.seats ?? 1
-        await supabase.rpc('decrement_available_seats', {
-          room_id: booking.rooms.id,
-          seats: seatsBooked,
-        })
+        const newSeats    = Math.max(0, (booking.rooms.available_seats ?? 0) - seatsBooked)
+        await supabase
+          .from('rooms')
+          .update({ available_seats: newSeats, status: newSeats === 0 ? 'booked' : 'partial' })
+          .eq('id', roomId)
+      } else {
+        // Single / master_bedroom — one booking fills the room
+        await supabase
+          .from('rooms')
+          .update({ status: 'booked' })
+          .eq('id', roomId)
       }
     }
 

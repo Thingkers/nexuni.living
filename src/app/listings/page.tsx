@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
@@ -84,6 +84,13 @@ function ListingsContent() {
   const [page, setPage] = useState(1)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid')
+  const [mapRooms, setMapRooms] = useState<{ id: string; title: string; rent: number; latitude: number | null; longitude: number | null; location_name: string | null }[]>([])
+  const [loadingMap, setLoadingMap] = useState(false)
+
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const monthOptions = buildMonthOptions()
   const hasMore = rooms.length < totalCount
 
@@ -168,6 +175,78 @@ function ListingsContent() {
       setCurrentUserId(data.user?.id ?? null)
     })
   }, [])
+
+  // Infinite scroll — auto-load next page when sentinel enters viewport
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore && !loadingMore && !loading) {
+          loadMore()
+        }
+      },
+      { rootMargin: '200px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMore, loadingMore, loading])
+
+  // Map view — fetch all filtered rooms with coordinates (up to 300)
+  useEffect(() => {
+    if (viewMode !== 'map') return
+    setLoadingMap(true)
+
+    let qb = supabase
+      .from('rooms')
+      .select('id, title, rent, latitude, longitude, location_name')
+      .not('latitude', 'is', null)
+      .not('longitude', 'is', null)
+      .neq('status', 'booked')
+      .neq('status', 'closed')
+      .limit(300)
+
+    if (query.trim())     qb = qb.or(`title.ilike.%${query}%,location_name.ilike.%${query}%`)
+    if (location.trim())  qb = qb.ilike('location_name', `%${location.trim()}%`)
+    if (gender)           qb = qb.eq('gender_type', gender)
+    if (type)             qb = qb.eq('type', type)
+    if (maxRent)          qb = qb.lte('rent', Number(maxRent))
+    if (availableMonth)   qb = qb.lte('available_from', `${availableMonth}-01`)
+    if (currentUserId)    qb = qb.neq('owner_id', currentUserId)
+
+    qb.then(({ data }) => {
+      setMapRooms((data ?? []) as typeof mapRooms)
+      setLoadingMap(false)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, query, location, gender, type, maxRent, availableMonth, currentUserId])
+
+  // Location autocomplete — fetch matching location_name values from DB
+  useEffect(() => {
+    if (locationInput.trim().length < 2) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from('rooms')
+        .select('location_name')
+        .ilike('location_name', `%${locationInput.trim()}%`)
+        .not('location_name', 'is', null)
+        .neq('status', 'booked')
+        .neq('status', 'closed')
+        .limit(20)
+
+      if (data) {
+        const unique = [...new Set(data.map((r) => r.location_name).filter(Boolean))] as string[]
+        setSuggestions(unique.slice(0, 7))
+        setShowSuggestions(unique.length > 0)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [locationInput])
 
   // Debounce inputValue → query (400ms)
   useEffect(() => {
@@ -261,13 +340,41 @@ function ListingsContent() {
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           placeholder="Search by title or keyword..."
         />
-        <input
-          className={`sm:w-44 ${inputCls}`}
-          value={locationInput}
-          onChange={(e) => setLocationInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder="Location..."
-        />
+        <div className="relative sm:w-44">
+          <input
+            className={`w-full ${inputCls}`}
+            value={locationInput}
+            onChange={(e) => setLocationInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') { setShowSuggestions(false); handleSearch() }
+              if (e.key === 'Escape') setShowSuggestions(false)
+            }}
+            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            placeholder="Location..."
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute left-0 top-full z-50 mt-1 w-56 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              {suggestions.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    setLocationInput(s)
+                    setLocation(s)
+                    setShowSuggestions(false)
+                    syncURL({ search: query, location: s, gender, type, rent: maxRent, sort, month: availableMonth })
+                  }}
+                >
+                  <span className="text-gray-400">📍</span>
+                  <span className="truncate">{s}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <button
           onClick={handleSearch}
           className="rounded-xl bg-teal-600 px-5 py-2 text-sm font-medium text-white hover:bg-teal-700"
@@ -395,74 +502,119 @@ function ListingsContent() {
         </div>
       )}
 
-      {/* RESULTS COUNT */}
-      <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-        {loading
-          ? 'Loading...'
-          : totalCount === 0
-          ? 'No rooms found'
-          : `Showing ${rooms.length} of ${totalCount} room${totalCount !== 1 ? 's' : ''}`}
-      </p>
+      {/* RESULTS COUNT + VIEW TOGGLE */}
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {loading
+            ? 'Loading...'
+            : totalCount === 0
+            ? 'No rooms found'
+            : `Showing ${rooms.length} of ${totalCount} room${totalCount !== 1 ? 's' : ''}`}
+        </p>
 
-      {/* GRID */}
-      {loading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-              <div className="mb-3 h-44 rounded-xl bg-gray-100 dark:bg-gray-700" />
-              <div className="mb-2 h-4 w-3/4 rounded bg-gray-100 dark:bg-gray-700" />
-              <div className="h-3 w-1/2 rounded bg-gray-100 dark:bg-gray-700" />
-            </div>
-          ))}
+        <div className="flex overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors ${
+              viewMode === 'grid'
+                ? 'bg-teal-600 text-white'
+                : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'
+            }`}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            Grid
+          </button>
+          <button
+            onClick={() => setViewMode('map')}
+            className={`flex items-center gap-1.5 border-l border-gray-200 px-3 py-1.5 text-sm transition-colors dark:border-gray-700 ${
+              viewMode === 'map'
+                ? 'bg-teal-600 text-white'
+                : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'
+            }`}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+            Map
+          </button>
         </div>
-      ) : rooms.length === 0 ? (
-        <div className="py-16 text-center">
-          <p className="mb-2 text-4xl">🔍</p>
-          <p className="mb-1 font-medium text-gray-700 dark:text-gray-300">No rooms found</p>
-          <p className="text-sm text-gray-400 dark:text-gray-500">Try adjusting your filters</p>
-          {hasFilter && (
-            <button onClick={clearAll} className="mt-3 text-sm text-teal-600 underline">
-              Clear all filters
-            </button>
-          )}
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {rooms.map((room) => (
-              <RoomCard key={room.id} room={room} />
-            ))}
-          </div>
+      </div>
 
-          {hasMore && (
-            <div className="mt-8 flex flex-col items-center gap-2">
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                {rooms.length} of {totalCount} rooms
-              </p>
-              <button
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="rounded-xl border border-gray-200 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-teal-500 hover:text-teal-600 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-teal-500 dark:hover:text-teal-400"
-              >
-                {loadingMore ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                    </svg>
-                    Loading...
-                  </span>
-                ) : `Load more rooms`}
-              </button>
+      {/* MAP VIEW */}
+      {viewMode === 'map' && (
+        <div className="mb-8">
+          {loadingMap ? (
+            <div className="flex h-[500px] items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+              <svg className="h-6 w-6 animate-spin text-teal-500" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              </svg>
+            </div>
+          ) : mapRooms.length === 0 ? (
+            <div className="flex h-[500px] flex-col items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+              <p className="text-2xl">🗺️</p>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">No rooms with location data found</p>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-700">
+              <RoomsMap rooms={mapRooms} />
             </div>
           )}
-
-          {!hasMore && totalCount > PAGE_SIZE && (
-            <p className="mt-8 text-center text-xs text-gray-400 dark:text-gray-500">
-              All {totalCount} rooms loaded
+          {mapRooms.length > 0 && (
+            <p className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
+              Showing {mapRooms.length} room{mapRooms.length !== 1 ? 's' : ''} on map
             </p>
           )}
-        </>
+        </div>
+      )}
+
+      {/* GRID */}
+      {viewMode === 'grid' && (
+        loading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+                <div className="mb-3 h-44 rounded-xl bg-gray-100 dark:bg-gray-700" />
+                <div className="mb-2 h-4 w-3/4 rounded bg-gray-100 dark:bg-gray-700" />
+                <div className="h-3 w-1/2 rounded bg-gray-100 dark:bg-gray-700" />
+              </div>
+            ))}
+          </div>
+        ) : rooms.length === 0 ? (
+          <div className="py-16 text-center">
+            <p className="mb-2 text-4xl">🔍</p>
+            <p className="mb-1 font-medium text-gray-700 dark:text-gray-300">No rooms found</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">Try adjusting your filters</p>
+            {hasFilter && (
+              <button onClick={clearAll} className="mt-3 text-sm text-teal-600 underline">
+                Clear all filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {rooms.map((room) => (
+                <RoomCard key={room.id} room={room} />
+              ))}
+            </div>
+
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelRef} className="mt-8 flex flex-col items-center gap-2 pb-4">
+              {loadingMore && (
+                <svg className="h-5 w-5 animate-spin text-teal-500" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+              )}
+              {!hasMore && totalCount > PAGE_SIZE && (
+                <p className="text-xs text-gray-400 dark:text-gray-500">All {totalCount} rooms loaded</p>
+              )}
+            </div>
+          </>
+        )
       )}
     </main>
   )

@@ -20,7 +20,6 @@ const AMENITIES = [
 ] as const
 
 export default function RoomCard({ room }: { room: Room }) {
-  const status = STATUS_CONFIG[room.status] ?? STATUS_CONFIG.open
   const isBooked = room.status === 'booked' || room.status === 'closed'
   const { isSaved, toggleSaved } = useSaved(room.id)
 
@@ -41,6 +40,11 @@ export default function RoomCard({ room }: { room: Room }) {
     availableSeats: room.available_seats,
     totalSeats: room.total_seats,
   })
+
+  // If a shared room has 0 seats left, treat it as booked regardless of DB status
+  const effectiveStatus =
+    isSharedRoom(room.type) && (room.available_seats ?? 0) === 0 ? 'booked' : room.status
+  const statusConfig = STATUS_CONFIG[effectiveStatus] ?? STATUS_CONFIG.open
 
   const availableDate = room.available_from
     ? new Date(room.available_from).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
@@ -99,14 +103,6 @@ export default function RoomCard({ room }: { room: Room }) {
 
         <div className="absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent" />
 
-        <span className={`absolute left-2.5 top-2.5 z-10 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm ${status.bg} ${status.text}`}>
-          {status.label}
-        </span>
-
-        <span className="absolute right-2.5 top-2.5 z-10 rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-gray-700 shadow-sm backdrop-blur-sm">
-          {room.gender_type === 'male' ? '👨 Male' : room.gender_type === 'female' ? '👩 Female' : '👥 Any'}
-        </span>
-
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSaved() }}
@@ -160,6 +156,9 @@ export default function RoomCard({ room }: { room: Room }) {
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
             {ROOM_TYPE_LABELS[room.type] ?? room.type}
           </span>
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+            {room.gender_type === 'male' ? '👨 Male' : room.gender_type === 'female' ? '👩 Female' : '👥 Any'}
+          </span>
         </div>
 
         {shortDesc && (
@@ -175,14 +174,22 @@ export default function RoomCard({ room }: { room: Room }) {
           </span>
         </p>
 
-        <div className="mt-1 flex items-center gap-2">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {room.available_seats} of {room.total_seats} seats
-          </p>
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
-            {availability.emoji} {availability.label}
-          </span>
-        </div>
+        {isSharedRoom(room.type) ? (
+          <div className="mt-1 flex items-center gap-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {room.available_seats} of {room.total_seats} seats
+            </p>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
+              {availability.emoji} {availability.label}
+            </span>
+          </div>
+        ) : (
+          <div className="mt-1">
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
+              {statusConfig.label}
+            </span>
+          </div>
+        )}
 
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {AMENITIES.filter((a) => room[a.key]).map((a) => (

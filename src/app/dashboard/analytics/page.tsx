@@ -1,197 +1,184 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
-
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { supabase } from '@/lib/supabase'
 
-type Room = {
-  id: string
-  title: string
-  views: number
-}
-
-type Booking = {
-  status: string
-}
+type Room    = { id: string; title: string; views: number }
+type Booking = { status: string }
 
 export default function AnalyticsPage() {
-  const [loading, setLoading] =
-    useState(true)
+  const [loading, setLoading]   = useState(true)
+  const [rooms, setRooms]       = useState<Room[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [isDark, setIsDark]     = useState(false)
 
-  const [rooms, setRooms] =
-    useState<Room[]>([])
-
-  const [bookings, setBookings] =
-    useState<Booking[]>([])
+  useEffect(() => {
+    const check = () => setIsDark(document.documentElement.classList.contains('dark'))
+    check()
+    const observer = new MutationObserver(check)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     async function loadData() {
-      const { data: auth } =
-        await supabase.auth.getUser()
-
+      const { data: auth } = await supabase.auth.getUser()
       if (!auth.user) return
 
-      const { data: roomsData } =
-        await supabase
-          .from('rooms')
-          .select('id, title, views')
-          .eq('owner_id', auth.user.id)
+      const { data: roomsData } = await supabase
+        .from('rooms').select('id, title, views').eq('owner_id', auth.user.id)
 
-      const roomIds =
-        (roomsData ?? []).map(
-          (room) => room.id,
-        )
+      const roomIds = (roomsData ?? []).map((r) => r.id)
 
-      const { data: bookingsData } =
-        await supabase
-          .from('bookings')
-          .select('status')
-          .in('room_id', roomIds)
+      const { data: bookingsData } = roomIds.length
+        ? await supabase.from('bookings').select('status').in('room_id', roomIds)
+        : { data: [] }
 
       setRooms((roomsData ?? []) as Room[])
-      setBookings(
-        (bookingsData ?? []) as Booking[],
-      )
-
+      setBookings((bookingsData ?? []) as Booking[])
       setLoading(false)
     }
-
     loadData()
   }, [])
 
   if (loading) {
     return (
-      <div className="p-6">
-        Loading analytics...
+      <div className="mx-auto max-w-6xl px-4 py-8 animate-pulse">
+        <div className="mb-2 h-7 w-48 rounded-lg bg-gray-100 dark:bg-gray-800" />
+        <div className="mb-8 h-4 w-32 rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 rounded-2xl bg-gray-100 dark:bg-gray-800" />
+          ))}
+        </div>
+        <div className="mt-8 h-80 rounded-2xl bg-gray-100 dark:bg-gray-800" />
       </div>
     )
   }
 
-  const totalViews = rooms.reduce(
-    (sum, room) =>
-      sum + (room.views || 0),
-    0,
-  )
+  const totalViews        = rooms.reduce((s, r) => s + (r.views || 0), 0)
+  const confirmedBookings = bookings.filter((b) => b.status === 'confirmed').length
+  const pendingBookings   = bookings.filter((b) => b.status === 'pending').length
+  const topRoom           = [...rooms].sort((a, b) => (b.views || 0) - (a.views || 0))[0]
 
-  const confirmedBookings =
-    bookings.filter(
-      (booking) =>
-        booking.status === 'confirmed',
-    ).length
-
-  const pendingBookings =
-    bookings.filter(
-      (booking) =>
-        booking.status === 'pending',
-    ).length
-
-  const topRoom =
-    [...rooms].sort(
-      (a, b) =>
-        (b.views || 0) -
-        (a.views || 0),
-    )[0]
+  const axisColor   = isDark ? '#9ca3af' : '#6b7280'
+  const gridColor   = isDark ? '#374151' : '#f3f4f6'
+  const tooltipBg   = isDark ? '#1f2937' : '#ffffff'
+  const tooltipText = isDark ? '#f9fafb' : '#111827'
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">
-          Analytics Dashboard
-        </h1>
-
-        <p className="mt-1 text-sm text-gray-400">
-          Insights about your listings
-        </p>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Analytics Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Insights about your listings</p>
       </div>
 
-      {/* stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard
-          title="Total Views"
-          value={String(totalViews)}
-        />
-
-        <StatCard
-          title="Confirmed Bookings"
-          value={String(
-            confirmedBookings,
-          )}
-        />
-
-        <StatCard
-          title="Pending Requests"
-          value={String(
-            pendingBookings,
-          )}
-        />
-
-        <StatCard
-          title="Top Room"
-          value={
-            topRoom?.title || 'N/A'
-          }
-        />
+      {/* Stat cards */}
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+        <StatCard title="Total Views"        value={String(totalViews)}        icon="👁" color="teal" />
+        <StatCard title="Confirmed Bookings" value={String(confirmedBookings)} icon="✅" color="green" />
+        <StatCard title="Pending Requests"   value={String(pendingBookings)}   icon="⏳" color="yellow" />
+        <StatCard title="Top Room"           value={topRoom?.title || 'N/A'}   icon="🏆" color="purple" small />
       </div>
 
-      {/* chart */}
-      <div className="mt-8 rounded-2xl border border-gray-100 bg-white p-5">
+      {/* Bar chart */}
+      <div className="mt-8 rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Room Views
-          </h2>
-
-          <p className="text-sm text-gray-400">
-            Performance of your listings
-          </p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Room Views</h2>
+          <p className="text-sm text-gray-400 dark:text-gray-500">Views per listing</p>
         </div>
 
-        <div className="h-[320px]">
-          <ResponsiveContainer
-            width="100%"
-            height="100%"
-          >
-            <BarChart data={rooms}>
-              <XAxis dataKey="title" />
-
-              <YAxis />
-
-              <Tooltip />
-
-              <Bar
-                dataKey="views"
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {rooms.length === 0 ? (
+          <div className="flex h-[280px] items-center justify-center text-sm text-gray-400 dark:text-gray-500">
+            No rooms posted yet
+          </div>
+        ) : (
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={rooms} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <XAxis
+                  dataKey="title"
+                  tick={{ fill: axisColor, fontSize: 12 }}
+                  axisLine={{ stroke: gridColor }}
+                  tickLine={false}
+                  tickFormatter={(v) => v.length > 12 ? v.slice(0, 12) + '…' : v}
+                />
+                <YAxis
+                  tick={{ fill: axisColor, fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: tooltipBg,
+                    border: `1px solid ${gridColor}`,
+                    borderRadius: 12,
+                    color: tooltipText,
+                    fontSize: 13,
+                  }}
+                  cursor={{ fill: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }}
+                />
+                <Bar dataKey="views" radius={[8, 8, 0, 0]}>
+                  {rooms.map((_, i) => (
+                    <Cell key={i} fill={isDark ? '#14b8a6' : '#0d9488'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
+
+      {/* Booking breakdown */}
+      {bookings.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+          <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">Booking Status</h2>
+          <div className="flex flex-col gap-3">
+            {[
+              { label: 'Confirmed', count: confirmedBookings, color: 'bg-green-500' },
+              { label: 'Pending',   count: pendingBookings,   color: 'bg-yellow-400' },
+              { label: 'Rejected',  count: bookings.filter((b) => b.status === 'rejected').length,  color: 'bg-red-400' },
+              { label: 'Cancelled', count: bookings.filter((b) => b.status === 'cancelled').length, color: 'bg-gray-400' },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center gap-3">
+                <span className="w-20 shrink-0 text-xs text-gray-500 dark:text-gray-400">{row.label}</span>
+                <div className="flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                  <div
+                    className={`h-2 rounded-full ${row.color} transition-all duration-500`}
+                    style={{ width: bookings.length ? `${(row.count / bookings.length) * 100}%` : '0%' }}
+                  />
+                </div>
+                <span className="w-6 shrink-0 text-right text-xs font-medium text-gray-600 dark:text-gray-300">{row.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   )
 }
 
 function StatCard({
-  title,
-  value,
+  title, value, icon, color, small = false,
 }: {
-  title: string
-  value: string
+  title: string; value: string; icon: string; color: string; small?: boolean
 }) {
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5">
-      <p className="text-sm text-gray-400">
-        {title}
-      </p>
+  const colorMap: Record<string, string> = {
+    teal:   'bg-teal-50 dark:bg-teal-900/20',
+    green:  'bg-green-50 dark:bg-green-900/20',
+    yellow: 'bg-yellow-50 dark:bg-yellow-900/20',
+    purple: 'bg-purple-50 dark:bg-purple-900/20',
+  }
 
-      <h2 className="mt-2 text-2xl font-semibold text-gray-900">
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+      <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl text-lg ${colorMap[color]}`}>
+        {icon}
+      </div>
+      <p className="text-xs text-gray-400 dark:text-gray-500">{title}</p>
+      <h2 className={`mt-1 font-semibold text-gray-900 dark:text-white ${small ? 'truncate text-base' : 'text-2xl'}`}>
         {value}
       </h2>
     </div>

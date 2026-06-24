@@ -80,20 +80,16 @@ export function useNotification() {
 
     // =========================
     // TENANT: booking status changed
+    // Server-side filter on UPDATE requires REPLICA IDENTITY FULL — use client-side filter instead
     // =========================
     const bookingStatusChannel = supabase
       .channel(`notify-booking-status-${userId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'bookings', filter: `user_id=eq.${userId}` },
+        { event: 'UPDATE', schema: 'public', table: 'bookings' },
         async (payload) => {
-          const oldBooking = payload.old as { status: string }
-          const newBooking = payload.new as { status: string; room_id: string }
-          if (newBooking.status === oldBooking.status) return
-
-          const { data: room } = await supabase
-            .from('rooms').select('title').eq('id', newBooking.room_id).maybeSingle()
-          const title = room?.title ?? 'Your booking'
+          const newBooking = payload.new as { status: string; room_id: string; user_id: string }
+          if (newBooking.user_id !== userId) return
 
           const map: Record<string, { label: string; emoji: string }> = {
             confirmed: { label: 'Booking Confirmed', emoji: '🎉' },
@@ -102,6 +98,10 @@ export function useNotification() {
           }
           const info = map[newBooking.status]
           if (!info) return
+
+          const { data: room } = await supabase
+            .from('rooms').select('title').eq('id', newBooking.room_id).maybeSingle()
+          const title = room?.title ?? 'Your booking'
 
           push({
             type: newBooking.status === 'confirmed' ? 'booking' : 'error',

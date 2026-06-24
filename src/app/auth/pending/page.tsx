@@ -18,7 +18,7 @@ export default function PendingPage() {
           সাধারণত <span className="font-medium text-gray-700 dark:text-gray-300">24-48 ঘণ্টা</span> সময় লাগে।
         </p>
 
-        <div className="mb-6 rounded-xl bg-blue-50 px-4 py-3 text-xs text-blue-700 text-left dark:bg-blue-900/20 dark:text-blue-400">
+        <div className="mb-6 rounded-xl bg-teal-50 px-4 py-3 text-xs text-teal-700 text-left dark:bg-teal-900/20 dark:text-teal-400">
           <p className="font-medium mb-1">Verification এর পর আপনি পারবেন:</p>
           <ul className="space-y-1">
             <li>✓ Room browse ও search করতে</li>
@@ -30,7 +30,7 @@ export default function PendingPage() {
 
         <Link
           href="/listings"
-          className="block w-full rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+          className="block w-full rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700"
         >
           Browse Rooms (Read Only)
         </Link>

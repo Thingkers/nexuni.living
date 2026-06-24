@@ -62,7 +62,7 @@ export default function BottomNav() {
   const navCls = (href: string) =>
     `flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
       isActive(href)
-        ? 'text-blue-600 dark:text-blue-400'
+        ? 'text-teal-600 dark:text-teal-400'
         : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
     }`
 
@@ -86,12 +86,12 @@ export default function BottomNav() {
 
         {isLoggedIn && isVerified ? (
           <Link href="/post-room" className={navCls('/post-room')}>
-            <div className={`flex h-9 w-9 items-center justify-center rounded-full ${isActive('/post-room') ? 'bg-blue-600' : 'bg-blue-600'}`}>
+            <div className={`flex h-9 w-9 items-center justify-center rounded-full ${isActive('/post-room') ? 'bg-teal-600' : 'bg-teal-600'}`}>
               <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
             </div>
-            <span className="text-blue-600 dark:text-blue-400">Post</span>
+            <span className="text-teal-600 dark:text-teal-400">Post</span>
           </Link>
         ) : (
           <div className={navCls('/post-room') + ' opacity-40 cursor-not-allowed'}>

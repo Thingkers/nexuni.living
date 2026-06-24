@@ -218,7 +218,7 @@ export default function Navbar() {
 
   const Avatar = ({ size = 8 }: { size?: number }) => (
     <div
-      className={`flex h-${size} w-${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xs font-semibold text-blue-700`}
+      className={`flex h-${size} w-${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-xs font-semibold text-teal-700`}
     >
       {profile?.avatar_url ? (
         <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
@@ -234,7 +234,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white" onClick={closeMenus}>
-          <span className="h-2 w-2 rounded-full bg-blue-600" />
+          <span className="h-2 w-2 rounded-full bg-teal-600" />
           Student Hostel
         </Link>
 
@@ -260,7 +260,7 @@ export default function Navbar() {
           {user && isVerified && (
             <Link
               href="/post-room"
-              className="hidden rounded-xl bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 md:block"
+              className="hidden rounded-xl bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 md:block"
             >
               + Post Room
             </Link>
@@ -293,7 +293,7 @@ export default function Navbar() {
             <div className="relative hidden md:block" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((prev) => !prev)}
-                className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full hover:ring-2 hover:ring-blue-300"
+                className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full hover:ring-2 hover:ring-teal-300"
               >
                 <Avatar size={8} />
                 {(unreadCount > 0 || pendingBookingCount > 0) && (
@@ -320,7 +320,7 @@ export default function Navbar() {
                     <Link href="/inbox" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
                       <span>Inbox</span>
                       {unreadCount > 0 && (
-                        <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
+                        <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
                       )}
                     </Link>
                   )}
@@ -347,7 +347,7 @@ export default function Navbar() {
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                       <Link href="/dashboard/analytics" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>Analytics 📊</Link>
                       <Link href="/admin/reports" className="block px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={closeMenus}>Admin Reports</Link>
-                      <Link href="/admin/users" className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20" onClick={closeMenus}>Admin Users</Link>
+                      <Link href="/admin/users" className="block px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>Admin Users</Link>
                       <Link href="/admin/rooms" className="block px-4 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20" onClick={closeMenus}>Admin Rooms</Link>
                     </>
                   )}
@@ -362,7 +362,7 @@ export default function Navbar() {
           ) : (
             <div className="hidden items-center gap-3 md:flex">
               <Link href="/auth/login" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Login</Link>
-              <Link href="/auth/register" className="rounded-xl bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">Register</Link>
+              <Link href="/auth/register" className="rounded-xl bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700">Register</Link>
             </div>
           )}
         </div>
@@ -383,7 +383,7 @@ export default function Navbar() {
 
               {user ? (
                 <>
-                  <div className="flex items-center gap-3 rounded-xl bg-blue-50 px-3 py-2.5 dark:bg-blue-900/20">
+                  <div className="flex items-center gap-3 rounded-xl bg-teal-50 px-3 py-2.5 dark:bg-teal-900/20">
                     <Avatar size={9} />
                     <div className="flex min-w-0 flex-col">
                       <span className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">{profile?.full_name || user.email}</span>
@@ -398,7 +398,7 @@ export default function Navbar() {
                   <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Account</p>
 
                   {isVerified && (
-                    <Link href="/post-room" className="rounded-xl bg-blue-50 px-3 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40" onClick={closeMenus}>
+                    <Link href="/post-room" className="rounded-xl bg-teal-50 px-3 py-2.5 text-sm font-medium text-teal-600 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40" onClick={closeMenus}>
                       ➕ Post Room
                     </Link>
                   )}
@@ -411,7 +411,7 @@ export default function Navbar() {
                       <Link href="/inbox" className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
                         <span>💬 Inbox</span>
                         {unreadCount > 0 && (
-                          <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
+                          <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
                         )}
                       </Link>
                       <Link href="/dashboard/bookings" className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
@@ -431,7 +431,7 @@ export default function Navbar() {
                       <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Admin</p>
                       <Link href="/dashboard/analytics" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>Analytics 📊</Link>
                       <Link href="/admin/reports" className="rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-500 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40" onClick={closeMenus}>Admin Reports</Link>
-                      <Link href="/admin/users" className="rounded-xl bg-blue-50 px-3 py-2.5 text-sm text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40" onClick={closeMenus}>Admin Users</Link>
+                      <Link href="/admin/users" className="rounded-xl bg-teal-50 px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40" onClick={closeMenus}>Admin Users</Link>
                       <Link href="/admin/rooms" className="rounded-xl bg-green-50 px-3 py-2.5 text-sm text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40" onClick={closeMenus}>Admin Rooms</Link>
                     </>
                   )}
@@ -444,7 +444,7 @@ export default function Navbar() {
               ) : (
                 <>
                   <Link href="/auth/login" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300" onClick={closeMenus}>Login</Link>
-                  <Link href="/auth/register" className="rounded-xl bg-blue-600 px-3 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700" onClick={closeMenus}>Register</Link>
+                  <Link href="/auth/register" className="rounded-xl bg-teal-600 px-3 py-2.5 text-center text-sm font-medium text-white hover:bg-teal-700" onClick={closeMenus}>Register</Link>
                 </>
               )}
             </div>

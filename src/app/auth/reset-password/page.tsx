@@ -53,7 +53,7 @@ export default function ResetPasswordPage() {
 
         <div className="mb-6 text-center">
 
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-2xl">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-600 text-2xl">
             🔒
           </div>
 
@@ -79,7 +79,7 @@ export default function ResetPasswordPage() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Min 6 characters"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-teal-500"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -112,7 +112,7 @@ export default function ResetPasswordPage() {
             <input
               type={showConfirmPassword ? 'text' : 'password'}
               placeholder="Repeat password"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-teal-500"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
@@ -142,7 +142,7 @@ export default function ResetPasswordPage() {
           <button
             onClick={handleReset}
             disabled={loading}
-            className="rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
           >
             {loading ? 'Updating...' : 'Update Password'}
           </button>

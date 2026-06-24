@@ -107,8 +107,8 @@ export default function InboxPage() {
 
       {threads.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-teal-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
           </div>
@@ -131,7 +131,7 @@ export default function InboxPage() {
               >
                 {/* Avatar */}
                 <div className="relative shrink-0">
-                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-blue-400 to-blue-600 text-base font-semibold text-white shadow-sm">
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-teal-400 to-teal-600 text-base font-semibold text-white shadow-sm">
                     {thread.otherAvatar ? (
                       <img src={thread.otherAvatar} alt={thread.otherName} className="h-full w-full object-cover" />
                     ) : (
@@ -139,7 +139,7 @@ export default function InboxPage() {
                     )}
                   </div>
                   {thread.unread > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white ring-2 ring-white">
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-teal-600 text-[10px] font-bold text-white ring-2 ring-white">
                       {thread.unread > 9 ? '9+' : thread.unread}
                     </span>
                   )}
@@ -151,7 +151,7 @@ export default function InboxPage() {
                     <p className={`truncate text-sm ${thread.unread > 0 ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'}`}>
                       {thread.otherName}
                     </p>
-                    <p className={`shrink-0 text-[11px] ${thread.unread > 0 ? 'font-medium text-blue-600' : 'text-gray-400'}`}>
+                    <p className={`shrink-0 text-[11px] ${thread.unread > 0 ? 'font-medium text-teal-600' : 'text-gray-400'}`}>
                       {timeStr}
                     </p>
                   </div>

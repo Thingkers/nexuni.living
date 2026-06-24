@@ -10,7 +10,7 @@ type Props = {
 }
 
 const TYPE_STYLE: Record<AppToast['type'], string> = {
-  message: 'border-blue-200 bg-blue-50 text-blue-800',
+  message: 'border-teal-200 bg-teal-50 text-teal-800',
   booking: 'border-green-200 bg-green-50 text-green-800',
   success: 'border-green-200 bg-green-50 text-green-800',
   error: 'border-red-200 bg-red-50 text-red-800',

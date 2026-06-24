@@ -78,7 +78,7 @@ export default function RoomCard({ room }: { room: Room }) {
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-700 ${isBooked ? 'opacity-70' : ''}`}
+      className={`group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-teal-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-700 ${isBooked ? 'opacity-70' : ''}`}
     >
       {/* Image */}
       <div className="relative h-44 overflow-hidden bg-gray-100 dark:bg-gray-700">
@@ -146,7 +146,7 @@ export default function RoomCard({ room }: { room: Room }) {
       <div className="p-4">
         <div className="mb-1 flex items-start justify-between gap-2">
           <Link href={`/listings/${room.id}`}>
-            <h3 className="line-clamp-1 font-semibold text-gray-900 transition-colors hover:text-blue-600 dark:text-white dark:hover:text-blue-400">
+            <h3 className="line-clamp-1 font-semibold text-gray-900 transition-colors hover:text-teal-600 dark:text-white dark:hover:text-teal-400">
               {room.title}
             </h3>
           </Link>
@@ -168,7 +168,7 @@ export default function RoomCard({ room }: { room: Room }) {
           </p>
         )}
 
-        <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+        <p className="text-xl font-bold text-teal-600 dark:text-teal-400">
           ৳{room.rent.toLocaleString('en-US')}
           <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
             {isSharedRoom(room.type) ? ' /seat/month' : ' /month'}
@@ -186,7 +186,7 @@ export default function RoomCard({ room }: { room: Room }) {
 
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {AMENITIES.filter((a) => room[a.key]).map((a) => (
-            <span key={a.key} className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+            <span key={a.key} className="rounded-full bg-teal-50 px-2 py-0.5 text-xs text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
               {a.icon} {a.label}
             </span>
           ))}
@@ -202,7 +202,7 @@ export default function RoomCard({ room }: { room: Room }) {
       {/* Footer */}
       <div className="flex items-center justify-between border-t border-gray-50 px-4 py-3 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-xs font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
             {room.profiles?.avatar_url ? (
               <img src={room.profiles.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
             ) : initials}
@@ -210,14 +210,14 @@ export default function RoomCard({ room }: { room: Room }) {
           <div className="flex items-center gap-1">
             <span className="text-xs text-gray-600 dark:text-gray-400">{room.profiles?.full_name}</span>
             {room.profiles?.is_verified && (
-              <span title="Verified" className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">✓</span>
+              <span title="Verified" className="flex h-4 w-4 items-center justify-center rounded-full bg-teal-600 text-[10px] text-white">✓</span>
             )}
           </div>
         </div>
 
         <Link
           href={`/listings/${room.id}`}
-          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+          className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-teal-700"
         >
           Details →
         </Link>

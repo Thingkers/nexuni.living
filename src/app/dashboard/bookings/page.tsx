@@ -222,7 +222,7 @@ export default function BookingRequestsPage() {
             onClick={() => setFilter(item.key as FilterStatus)}
             className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
               filter === item.key
-                ? 'border-blue-600 bg-blue-600 text-white'
+                ? 'border-teal-600 bg-teal-600 text-white'
                 : 'border-gray-200 text-gray-500 hover:border-gray-400'
             }`}
           >
@@ -257,7 +257,7 @@ export default function BookingRequestsPage() {
                   <div>
                     <Link
                       href={`/listings/${booking.rooms?.id}`}
-                      className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                      className="text-sm font-medium text-gray-900 hover:text-teal-600"
                     >
                       🏠 {booking.rooms?.title}
                     </Link>
@@ -280,7 +280,7 @@ export default function BookingRequestsPage() {
                   <div className="flex items-center gap-3">
 
                     <Link href={`/users/${booking.profiles?.id}`}>
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700 cursor-pointer hover:ring-2 hover:ring-blue-300">
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-medium text-teal-700 cursor-pointer hover:ring-2 hover:ring-teal-300">
                         {booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
                       </div>
                     </Link>
@@ -290,7 +290,7 @@ export default function BookingRequestsPage() {
                     <div className="min-w-0 flex-1">
 
                       <Link href={`/users/${booking.profiles?.id}`}>
-                        <p className="text-sm font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
+                        <p className="text-sm font-medium text-gray-900 hover:text-teal-600 cursor-pointer">
                           {booking.profiles?.full_name || 'User'}
                         </p>
                       </Link>
@@ -341,7 +341,7 @@ export default function BookingRequestsPage() {
                 </div>
 
                 {booking.message && (
-                  <p className="mb-4 rounded-xl bg-blue-50 px-3 py-2 text-xs italic text-gray-500">
+                  <p className="mb-4 rounded-xl bg-teal-50 px-3 py-2 text-xs italic text-gray-500">
                     💬 “{booking.message}”
                   </p>
                 )}
@@ -353,7 +353,7 @@ export default function BookingRequestsPage() {
                       onClick={() =>
                         handleAction(booking.id, 'confirmed')
                       }
-                      className="flex-1 rounded-xl bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                      className="flex-1 rounded-xl bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
                     >
                       {isActing ? 'Processing...' : '✓ Confirm'}
                     </button>

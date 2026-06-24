@@ -59,8 +59,8 @@ function buildMonthOptions() {
   return options
 }
 
-const inputCls = 'w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-blue-500'
-const selectCls = 'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
+const inputCls = 'w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-teal-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-teal-500'
+const selectCls = 'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-teal-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
 
 function ListingsContent() {
   const searchParams = useSearchParams()
@@ -270,7 +270,7 @@ function ListingsContent() {
         />
         <button
           onClick={handleSearch}
-          className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded-xl bg-teal-600 px-5 py-2 text-sm font-medium text-white hover:bg-teal-700"
         >
           Search
         </button>
@@ -287,7 +287,7 @@ function ListingsContent() {
           </svg>
           Filters
           {activeFilterCount > 0 && (
-            <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{activeFilterCount}</span>
+            <span className="rounded-full bg-teal-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{activeFilterCount}</span>
           )}
         </button>
 
@@ -363,7 +363,7 @@ function ListingsContent() {
       {hasFilter && (
         <div className="mb-4 flex flex-wrap gap-2">
           {query && (
-            <button onClick={() => { setQuery(''); setInputValue(''); syncURL({ search: '', location, gender, type, rent: maxRent, sort, month: availableMonth }) }} className="flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">
+            <button onClick={() => { setQuery(''); setInputValue(''); syncURL({ search: '', location, gender, type, rent: maxRent, sort, month: availableMonth }) }} className="flex items-center gap-1 rounded-full bg-teal-100 px-3 py-1 text-xs text-teal-700 hover:bg-teal-200 dark:bg-teal-900/30 dark:text-teal-400">
               Search: {query} <span className="ml-0.5 font-bold">×</span>
             </button>
           )}
@@ -421,7 +421,7 @@ function ListingsContent() {
           <p className="mb-1 font-medium text-gray-700 dark:text-gray-300">No rooms found</p>
           <p className="text-sm text-gray-400 dark:text-gray-500">Try adjusting your filters</p>
           {hasFilter && (
-            <button onClick={clearAll} className="mt-3 text-sm text-blue-600 underline">
+            <button onClick={clearAll} className="mt-3 text-sm text-teal-600 underline">
               Clear all filters
             </button>
           )}
@@ -442,7 +442,7 @@ function ListingsContent() {
               <button
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="rounded-xl border border-gray-200 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-blue-500 hover:text-blue-600 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+                className="rounded-xl border border-gray-200 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-teal-500 hover:text-teal-600 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-teal-500 dark:hover:text-teal-400"
               >
                 {loadingMore ? (
                   <span className="flex items-center gap-2">

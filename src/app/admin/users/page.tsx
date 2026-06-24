@@ -225,7 +225,7 @@ export default function AdminUsersPage() {
           onClick={() => setActiveTab('all')}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'all'
-              ? 'bg-blue-600 text-white'
+              ? 'bg-teal-600 text-white'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
           }`}
         >
@@ -267,7 +267,7 @@ export default function AdminUsersPage() {
                   {user.student_id_card_url ? (
                     <button
                       onClick={() => setPreviewUrl(user.student_id_card_url!)}
-                      className="mb-4 w-full overflow-hidden rounded-xl border border-gray-200 hover:border-blue-400 dark:border-gray-700"
+                      className="mb-4 w-full overflow-hidden rounded-xl border border-gray-200 hover:border-teal-400 dark:border-gray-700"
                     >
                       <div className="relative h-36 w-full bg-gray-50 dark:bg-gray-700">
                         <Image
@@ -367,7 +367,7 @@ export default function AdminUsersPage() {
 
                   <button
                     onClick={() => toggleVerify(user.id, !!user.is_verified)}
-                    className="rounded-xl border border-blue-200 px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                    className="rounded-xl border border-teal-200 px-3 py-1.5 text-xs text-teal-600 hover:bg-teal-50 dark:border-teal-800 dark:hover:bg-teal-900/20"
                   >
                     {user.is_verified ? 'Unverify' : 'Verify'}
                   </button>

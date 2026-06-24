@@ -103,7 +103,7 @@ export default function MyBookingsPage() {
             onClick={() => setFilter(tab.key as any)}
             className={`shrink-0 rounded-full border px-4 py-1.5 text-sm transition-colors ${
               filter === tab.key
-                ? 'border-blue-600 bg-blue-600 text-white'
+                ? 'border-teal-600 bg-teal-600 text-white'
                 : 'border-gray-200 text-gray-500 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'
             }`}
           >
@@ -116,7 +116,7 @@ export default function MyBookingsPage() {
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-20 text-center dark:border-gray-700">
           <p className="mb-2 text-4xl">📋</p>
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">No booking requests yet</p>
-          <Link href="/listings" className="mt-3 text-sm text-blue-600 hover:underline">Browse rooms →</Link>
+          <Link href="/listings" className="mt-3 text-sm text-teal-600 hover:underline">Browse rooms →</Link>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
@@ -146,7 +146,7 @@ export default function MyBookingsPage() {
                       <div>
                         <Link
                           href={`/listings/${booking.rooms?.id}`}
-                          className="block truncate text-sm font-semibold text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+                          className="block truncate text-sm font-semibold text-gray-900 hover:text-teal-600 dark:text-white dark:hover:text-teal-400"
                         >
                           {booking.rooms?.title ?? 'Room'}
                         </Link>
@@ -198,7 +198,7 @@ export default function MyBookingsPage() {
                       )}
                       {owner?.phone && (
                         <p className="mt-1 text-[11px] text-gray-400">
-                          Owner: <a href={`tel:${owner.phone}`} className="text-blue-600 hover:underline">{owner.phone}</a>
+                          Owner: <a href={`tel:${owner.phone}`} className="text-teal-600 hover:underline">{owner.phone}</a>
                         </p>
                       )}
                     </div>
@@ -206,7 +206,7 @@ export default function MyBookingsPage() {
                 )}
 
                 {booking.status === 'confirmed' && !hasBkash && !hasNagad && (
-                  <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                  <div className="mt-3 rounded-xl border border-teal-100 bg-teal-50 px-3 py-2.5 text-xs text-teal-700 dark:border-teal-800 dark:bg-teal-900/20 dark:text-teal-400">
                     ✅ Booking confirmed! Contact the owner to arrange payment.
                     {owner?.phone && (
                       <a href={`tel:${owner.phone}`} className="ml-1 font-medium underline">{owner.phone}</a>
@@ -221,7 +221,7 @@ export default function MyBookingsPage() {
                     <BookingCountdown expiresAt={booking.expires_at} />
                     <Link
                       href={`/inbox/${booking.rooms?.profiles?.id ?? ''}`}
-                      className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400"
+                      className="mt-2 inline-flex items-center gap-1 text-xs text-teal-600 hover:underline dark:text-teal-400"
                     >
                       💬 Message Owner
                     </Link>
@@ -257,7 +257,7 @@ export default function MyBookingsPage() {
                     )}
                     <Link
                       href={`/listings/${booking.rooms?.id}`}
-                      className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                      className="text-xs text-teal-600 hover:underline dark:text-teal-400"
                     >
                       View →
                     </Link>

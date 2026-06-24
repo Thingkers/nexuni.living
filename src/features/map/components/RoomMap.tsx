@@ -136,7 +136,7 @@ function DistancePanel({ roomLat, roomLng }: { roomLat: number; roomLng: number 
           {/* Text search */}
           <div className="mb-3 flex gap-2">
             <input
-              className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+              className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-teal-400"
               placeholder="যেমন: AIUB, Uttara Sector 7, Dhanmondi…"
               value={locationInput}
               onChange={(e) => setLocationInput(e.target.value)}
@@ -145,7 +145,7 @@ function DistancePanel({ roomLat, roomLng }: { roomLat: number; roomLng: number 
             <button
               onClick={searchLocation}
               disabled={searching || !locationInput.trim()}
-              className="rounded-xl bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-xl bg-teal-600 px-4 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
             >
               {searching ? '…' : 'খুঁজুন'}
             </button>
@@ -222,11 +222,11 @@ function DistancePanel({ roomLat, roomLng }: { roomLat: number; roomLng: number 
               </p>
               <p className="mt-0.5 text-xs text-gray-400">দূরত্ব</p>
             </div>
-            <div className="rounded-xl bg-blue-50 p-3">
-              <p className="text-lg font-bold text-blue-700">
+            <div className="rounded-xl bg-teal-50 p-3">
+              <p className="text-lg font-bold text-teal-700">
                 {walkMin === 0 ? '<1' : walkMin} মিনিট
               </p>
-              <p className="mt-0.5 text-xs text-blue-400">🚶 হেঁটে</p>
+              <p className="mt-0.5 text-xs text-teal-400">🚶 হেঁটে</p>
             </div>
             <div className="rounded-xl bg-green-50 p-3">
               <p className="text-lg font-bold text-green-700">

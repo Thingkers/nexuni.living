@@ -78,7 +78,7 @@ export default function UserProfilePage() {
 
       {/* Profile header */}
       <div className="mb-6 flex items-center gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xl font-semibold text-blue-700">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-xl font-semibold text-teal-700">
           {profile.avatar_url ? (
             <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
           ) : (
@@ -89,7 +89,7 @@ export default function UserProfilePage() {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-semibold text-gray-900">{profile.full_name}</h1>
             {profile.is_verified && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white">✓</span>
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600 text-xs text-white">✓</span>
             )}
           </div>
           <p className="text-sm text-gray-400">{profile.university || 'University not added'}</p>
@@ -105,7 +105,7 @@ export default function UserProfilePage() {
         {profile.phone && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500">Phone</span>
-            <a href={`tel:${profile.phone}`} className="text-sm font-medium text-blue-600 hover:underline">
+            <a href={`tel:${profile.phone}`} className="text-sm font-medium text-teal-600 hover:underline">
               📞 {profile.phone}
             </a>
           </div>
@@ -141,7 +141,7 @@ export default function UserProfilePage() {
               <a
                 key={room.id}
                 href={'/listings/' + room.id}
-                className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 hover:border-blue-200 hover:bg-blue-50"
+                className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 hover:border-teal-200 hover:bg-teal-50"
               >
                 
                 <div>
@@ -163,7 +163,7 @@ export default function UserProfilePage() {
       
     <a
       href={'/inbox/' + profile.id}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700"
       >
         💬 Message
       </a>

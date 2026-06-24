@@ -77,7 +77,7 @@ export default function SimilarRooms({ currentRoomId, type, locationName, gender
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">Similar Rooms</h2>
         <Link
           href={`/listings?type=${type}&gender=${genderType}`}
-          className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+          className="text-sm text-teal-600 hover:text-teal-700 dark:text-teal-400"
         >
           View all →
         </Link>
@@ -113,7 +113,7 @@ export default function SimilarRooms({ currentRoomId, type, locationName, gender
                 <p className="mb-1 line-clamp-1 text-[10px] text-gray-400 dark:text-gray-500">
                   📍 {room.location_name || '—'}
                 </p>
-                <p className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                <p className="text-sm font-bold text-teal-600 dark:text-teal-400">
                   ৳{room.rent.toLocaleString('en-US')}
                   <span className="text-[10px] font-normal text-gray-400">
                     {shared ? '/seat' : '/mo'}

@@ -83,10 +83,10 @@ export default function HomePage() {
   return (
     <main>
       {/* HERO */}
-      <section className="relative overflow-hidden bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 px-4 py-16 text-center md:py-24">
+      <section className="relative overflow-hidden bg-linear-to-br from-teal-600 via-teal-700 to-slate-800 px-4 py-16 text-center md:py-24">
         {/* Decorative blobs */}
         <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -right-16 h-80 w-80 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -right-16 h-80 w-80 rounded-full bg-teal-500/20 blur-3xl" />
 
         <div className="relative mx-auto max-w-3xl">
           <span className="inline-block rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold tracking-wide text-white/90 backdrop-blur-sm">
@@ -95,10 +95,10 @@ export default function HomePage() {
 
           <h1 className="mt-5 mb-4 text-3xl font-extrabold leading-tight text-white md:text-5xl lg:text-6xl">
             Find your perfect
-            <span className="block text-blue-200"> mess, room or sublet</span>
+            <span className="block text-teal-200"> mess, room or sublet</span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-xl text-sm leading-relaxed text-blue-100 md:text-base">
+          <p className="mx-auto mb-8 max-w-xl text-sm leading-relaxed text-teal-100 md:text-base">
             A dedicated platform for students to discover nearby mess, bachelor rooms,
             and sublets — no more hunting through messy Facebook groups.
           </p>
@@ -124,7 +124,7 @@ export default function HomePage() {
             </div>
             <button
               onClick={handleSearch}
-              className="rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-blue-700 shadow-lg transition hover:bg-blue-50 hover:shadow-xl"
+              className="rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-teal-700 shadow-lg transition hover:bg-teal-50 hover:shadow-xl"
             >
               Search
             </button>
@@ -149,15 +149,15 @@ export default function HomePage() {
       <section className="border-b border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
         <div className="mx-auto flex max-w-4xl divide-x divide-gray-100 dark:divide-gray-800">
           <div className="flex flex-1 flex-col items-center py-5">
-            <p className="text-2xl font-extrabold text-blue-600">{stats.rooms}+</p>
+            <p className="text-2xl font-extrabold text-teal-600">{stats.rooms}+</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Active Listings</p>
           </div>
           <div className="flex flex-1 flex-col items-center py-5">
-            <p className="text-2xl font-extrabold text-blue-600">{stats.users}+</p>
+            <p className="text-2xl font-extrabold text-teal-600">{stats.users}+</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Verified Students</p>
           </div>
           <div className="flex flex-1 flex-col items-center py-5">
-            <p className="text-2xl font-extrabold text-blue-600">Free</p>
+            <p className="text-2xl font-extrabold text-teal-600">Free</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Always Free</p>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function HomePage() {
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Latest Available Rooms</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">Updated in real time</p>
           </div>
-          <Link href="/listings" className="rounded-xl border border-blue-200 px-4 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-900/20">
+          <Link href="/listings" className="rounded-xl border border-teal-200 px-4 py-1.5 text-sm font-medium text-teal-600 hover:bg-teal-50 dark:border-teal-800 dark:hover:bg-teal-900/20">
             View all →
           </Link>
         </div>
@@ -187,7 +187,7 @@ export default function HomePage() {
               onClick={() => setActiveTab(tab.key as 'all' | 'male' | 'female')}
               className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'border-blue-600 bg-blue-600 text-white'
+                  ? 'border-teal-600 bg-teal-600 text-white'
                   : 'border-gray-200 text-gray-500 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'
               }`}
             >
@@ -212,7 +212,7 @@ export default function HomePage() {
         <div className="mt-8 text-center">
           <Link
             href="/listings"
-            className="inline-block rounded-2xl bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow hover:bg-blue-700"
+            className="inline-block rounded-2xl bg-teal-600 px-8 py-3 text-sm font-semibold text-white shadow hover:bg-teal-700"
           >
             Browse All Listings →
           </Link>
@@ -230,11 +230,11 @@ export default function HomePage() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {HOW_IT_WORKS.map((step, index) => (
               <div key={index} className="rounded-2xl bg-white p-6 text-center shadow-sm dark:bg-gray-800">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl dark:bg-blue-900/30">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 text-2xl dark:bg-teal-900/30">
                   {step.icon}
                 </div>
                 <div className="mb-1 flex items-center justify-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">{index + 1}</span>
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600 text-[10px] font-bold text-white">{index + 1}</span>
                   <p className="font-semibold text-gray-900 dark:text-white">{step.title}</p>
                 </div>
                 <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">{step.description}</p>
@@ -245,13 +245,13 @@ export default function HomePage() {
       </section>
 
       {/* CTA BANNER */}
-      <section className="bg-blue-600 py-12 text-center">
+      <section className="bg-teal-600 py-12 text-center">
         <div className="mx-auto max-w-xl px-4">
           <h2 className="mb-2 text-xl font-bold text-white">Have a room to offer?</h2>
-          <p className="mb-5 text-sm text-blue-100">Post your room for free and reach thousands of students instantly.</p>
+          <p className="mb-5 text-sm text-teal-100">Post your room for free and reach thousands of students instantly.</p>
           <Link
             href="/auth/register"
-            className="inline-block rounded-2xl bg-white px-8 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+            className="inline-block rounded-2xl bg-white px-8 py-3 text-sm font-semibold text-teal-700 hover:bg-teal-50"
           >
             Get Started Free →
           </Link>
@@ -263,7 +263,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
-              <span className="h-2 w-2 rounded-full bg-blue-600" />
+              <span className="h-2 w-2 rounded-full bg-teal-600" />
               Student Hostel
             </div>
             <div className="flex flex-wrap justify-center gap-6 text-xs text-gray-400">

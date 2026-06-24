@@ -28,7 +28,7 @@ function getPasswordStrength(password: string): { score: number; label: string; 
 
   if (score <= 1) return { score: 1, label: 'Weak', color: 'bg-red-500' }
   if (score === 2) return { score: 2, label: 'Fair', color: 'bg-yellow-400' }
-  if (score === 3) return { score: 3, label: 'Good', color: 'bg-blue-500' }
+  if (score === 3) return { score: 3, label: 'Good', color: 'bg-teal-500' }
   return { score: 4, label: 'Strong', color: 'bg-green-500' }
 }
 
@@ -160,7 +160,7 @@ export default function RegisterPage() {
   }
 
   const inputClass =
-    'rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500'
+    'rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500'
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-10 dark:bg-gray-950">
@@ -256,7 +256,7 @@ export default function RegisterPage() {
               Student ID Card * <span className="text-gray-400">(photo/scan)</span>
             </label>
 
-            <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-5 text-center hover:border-blue-400 hover:bg-blue-50">
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-5 text-center hover:border-teal-400 hover:bg-teal-50">
               <input
                 type="file"
                 accept="image/*"
@@ -333,7 +333,7 @@ export default function RegisterPage() {
                 <p className={`mt-1 text-xs ${
                   passwordStrength.score <= 1 ? 'text-red-500' :
                   passwordStrength.score === 2 ? 'text-yellow-500' :
-                  passwordStrength.score === 3 ? 'text-blue-500' : 'text-green-600'
+                  passwordStrength.score === 3 ? 'text-teal-500' : 'text-green-600'
                 }`}>
                   {passwordStrength.label}
                 </p>
@@ -379,7 +379,7 @@ export default function RegisterPage() {
           <button
             onClick={handleRegister}
             disabled={loading}
-            className="rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
           >
             {loading ? 'Creating account...' : 'Register →'}
           </button>
@@ -387,7 +387,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-gray-500">
           Already have an account?{' '}
-          <Link href="/auth/login" className="font-medium text-blue-600 hover:underline">
+          <Link href="/auth/login" className="font-medium text-teal-600 hover:underline">
             Login
           </Link>
         </p>

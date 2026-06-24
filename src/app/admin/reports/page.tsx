@@ -158,7 +158,7 @@ export default function AdminReportsPage() {
             onClick={() => setFilter(tab.key as 'pending' | 'all')}
             className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
               filter === tab.key
-                ? 'border-blue-600 bg-blue-600 text-white'
+                ? 'border-teal-600 bg-teal-600 text-white'
                 : 'border-gray-200 text-gray-500 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'
             }`}
           >
@@ -198,7 +198,7 @@ export default function AdminReportsPage() {
 
                   <Link
                     href={`/listings/${report.rooms?.id}`}
-                    className="mt-1 block truncate text-base font-semibold text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 sm:text-lg"
+                    className="mt-1 block truncate text-base font-semibold text-gray-900 hover:text-teal-600 dark:text-white dark:hover:text-teal-400 sm:text-lg"
                   >
                     {report.rooms?.title || 'Deleted room'}
                   </Link>

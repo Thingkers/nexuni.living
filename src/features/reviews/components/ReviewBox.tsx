@@ -145,7 +145,7 @@ export default function ReviewBox({ roomId, ownerId }: Props) {
       {canReview && !showForm && (
         <button
           onClick={() => setShowForm(true)}
-          className="mb-5 w-full rounded-xl border border-blue-200 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900/20"
+          className="mb-5 w-full rounded-xl border border-teal-200 py-2.5 text-sm font-medium text-teal-600 hover:bg-teal-50 dark:border-teal-700 dark:hover:bg-teal-900/20"
         >
           ✍️ Write a Review
         </button>
@@ -159,7 +159,7 @@ export default function ReviewBox({ roomId, ownerId }: Props) {
 
       {/* Review form */}
       {showForm && canReview && (
-        <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/10">
+        <div className="mb-6 rounded-2xl border border-teal-100 bg-teal-50 p-4 dark:border-teal-800 dark:bg-teal-900/10">
           <p className="mb-3 text-sm font-semibold text-gray-800 dark:text-gray-200">Your Rating</p>
 
           {/* Interactive star selector */}
@@ -188,7 +188,7 @@ export default function ReviewBox({ roomId, ownerId }: Props) {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Share your experience with this room..."
-            className="mb-3 w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+            className="mb-3 w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-teal-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
           />
 
           <div className="flex gap-2">
@@ -201,7 +201,7 @@ export default function ReviewBox({ roomId, ownerId }: Props) {
             <button
               onClick={submitReview}
               disabled={submitting}
-              className="flex-1 rounded-xl bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 rounded-xl bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
             >
               {submitting ? 'Submitting...' : 'Submit Review'}
             </button>
@@ -235,7 +235,7 @@ export default function ReviewBox({ roomId, ownerId }: Props) {
             <div key={review.id} className="rounded-2xl border border-gray-100 p-4 dark:border-gray-700">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-xs font-semibold text-teal-700 dark:bg-teal-900/40 dark:text-teal-400">
                     {review.profiles?.avatar_url ? (
                       <img src={review.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
                     ) : initials(review.profiles?.full_name)}

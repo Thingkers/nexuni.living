@@ -170,7 +170,7 @@ export default function ListingDetailsPage() {
                   key={image}
                   onClick={() => setActiveImage(index)}
                   className={`relative h-20 overflow-hidden rounded-xl border-2 transition-all ${
-                    activeImage === index ? 'border-blue-600 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'
+                    activeImage === index ? 'border-teal-600 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'
                   }`}
                 >
                   <Image src={image} alt={`Image ${index + 1}`} fill className="object-cover" />
@@ -222,15 +222,15 @@ export default function ListingDetailsPage() {
             )}
 
             {/* Pricing breakdown */}
-            <div className="mb-5 rounded-2xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-              <p className="mb-3 text-xs font-semibold text-blue-700 dark:text-blue-400">💰 Pricing</p>
+            <div className="mb-5 rounded-2xl border border-teal-100 bg-teal-50 p-4 dark:border-teal-800 dark:bg-teal-900/20">
+              <p className="mb-3 text-xs font-semibold text-teal-700 dark:text-teal-400">💰 Pricing</p>
               <div className="flex flex-col gap-2">
                 <div className="flex items-end justify-between">
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {isSharedRoom(room.type) ? 'Rent per seat' : 'Monthly rent'}
                     </p>
-                    <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">
+                    <p className="text-3xl font-extrabold text-teal-600 dark:text-teal-400">
                       ৳{room.rent.toLocaleString('en-US')}
                       <span className="ml-1 text-sm font-normal text-gray-400">/month</span>
                     </p>
@@ -245,7 +245,7 @@ export default function ListingDetailsPage() {
 
                 {/* Additional costs */}
                 {((room.electricity_bill ?? 0) > 0 || (room.maid_bill ?? 0) > 0 || (room.other_bill ?? 0) > 0) && (
-                  <div className="mt-1 border-t border-blue-200 pt-2 dark:border-blue-700">
+                  <div className="mt-1 border-t border-teal-200 pt-2 dark:border-teal-700">
                     <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">Additional monthly costs:</p>
                     <div className="flex flex-col gap-1">
                       {(room.electricity_bill ?? 0) > 0 && (
@@ -266,11 +266,11 @@ export default function ListingDetailsPage() {
                           <span className="font-medium text-gray-700 dark:text-gray-300">৳{(room.other_bill!).toLocaleString('en-US')}</span>
                         </div>
                       )}
-                      <div className="flex justify-between border-t border-blue-200 pt-1 text-xs dark:border-blue-700">
+                      <div className="flex justify-between border-t border-teal-200 pt-1 text-xs dark:border-teal-700">
                         <span className="font-semibold text-gray-700 dark:text-gray-300">
                           Total {isSharedRoom(room.type) ? 'per seat' : ''}/month
                         </span>
-                        <span className="font-bold text-blue-600 dark:text-blue-400">
+                        <span className="font-bold text-teal-600 dark:text-teal-400">
                           ৳{(room.rent + (room.electricity_bill ?? 0) + (room.maid_bill ?? 0) + (room.other_bill ?? 0)).toLocaleString('en-US')}
                         </span>
                       </div>
@@ -301,7 +301,7 @@ export default function ListingDetailsPage() {
                       key={amenity.key}
                       className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium ${
                         available
-                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          ? 'bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'
                           : 'bg-gray-50 text-gray-300 line-through dark:bg-gray-800 dark:text-gray-600'
                       }`}
                     >
@@ -322,7 +322,7 @@ export default function ListingDetailsPage() {
                 {room.description.length > 200 && (
                   <button
                     onClick={() => setDescExpanded((p) => !p)}
-                    className="mt-2 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                    className="mt-2 text-xs font-medium text-teal-600 hover:text-teal-700 dark:text-teal-400"
                   >
                     {descExpanded ? '▲ Show less' : '▼ Read more'}
                   </button>
@@ -339,7 +339,7 @@ export default function ListingDetailsPage() {
           <div className="w-full shrink-0 md:w-72">
             <div className="sticky top-20 rounded-2xl border border-gray-100 p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 font-semibold text-blue-700">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 font-semibold text-teal-700">
                   {room.profiles?.avatar_url ? (
                     <img src={room.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
                   ) : initials}
@@ -384,7 +384,7 @@ export default function ListingDetailsPage() {
                     <button
                       disabled={isBooked}
                       onClick={() => setShowBooking(true)}
-                      className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {isBooked ? 'Booking Closed' : 'Request Booking'}
                     </button>
@@ -396,7 +396,7 @@ export default function ListingDetailsPage() {
                     Message Owner
                   </Link>
                   {existingBooking && (
-                    <Link href="/dashboard/my-bookings" className="text-center text-xs text-blue-600 hover:underline dark:text-blue-400">
+                    <Link href="/dashboard/my-bookings" className="text-center text-xs text-teal-600 hover:underline dark:text-teal-400">
                       View booking status →
                     </Link>
                   )}
@@ -418,7 +418,7 @@ export default function ListingDetailsPage() {
               {!currentUser && (
                 <Link
                   href="/auth/login"
-                  className="block w-full rounded-xl bg-blue-600 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700"
+                  className="block w-full rounded-xl bg-teal-600 py-3 text-center text-sm font-semibold text-white hover:bg-teal-700"
                 >
                   Login to Request Booking
                 </Link>

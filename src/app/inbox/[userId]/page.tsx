@@ -207,7 +207,7 @@ export default function ChatPage() {
           </svg>
         </Link>
 
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-blue-400 to-blue-600 text-sm font-semibold text-white">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-teal-400 to-teal-600 text-sm font-semibold text-white">
           {otherUser?.avatar_url
             ? <img src={otherUser.avatar_url} alt="" className="h-full w-full object-cover" />
             : otherInitials}
@@ -230,7 +230,7 @@ export default function ChatPage() {
       <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 dark:bg-gray-950">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-teal-50">
               <span className="text-2xl">👋</span>
             </div>
             <p className="text-sm font-medium text-gray-700">Say hello to {otherUser?.full_name}!</p>
@@ -267,7 +267,7 @@ export default function ChatPage() {
 
                   <div className={`flex items-end gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}>
                     {!isMine && (
-                      <div className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-blue-400 to-blue-600 text-xs font-semibold text-white">
+                      <div className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-teal-400 to-teal-600 text-xs font-semibold text-white">
                         {otherUser?.avatar_url
                           ? <img src={otherUser.avatar_url} alt="" className="h-full w-full object-cover" />
                           : otherInitials}
@@ -276,11 +276,11 @@ export default function ChatPage() {
 
                     <div className={`max-w-[70%] rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
                       isMine
-                        ? 'rounded-br-sm bg-blue-600 text-white'
+                        ? 'rounded-br-sm bg-teal-600 text-white'
                         : 'rounded-bl-sm bg-white text-gray-800 dark:bg-gray-800 dark:text-gray-100'
                     }`}>
                       <p className="leading-relaxed">{message.content}</p>
-                      <p className={`mt-1 text-right text-[10px] ${isMine ? 'text-blue-200' : 'text-gray-400'}`}>
+                      <p className={`mt-1 text-right text-[10px] ${isMine ? 'text-teal-200' : 'text-gray-400'}`}>
                         {new Date(message.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
@@ -299,7 +299,7 @@ export default function ChatPage() {
 
             {typingUsers.length > 0 && (
               <div className="flex items-end gap-2">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-blue-400 to-blue-600 text-xs font-semibold text-white">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-teal-400 to-teal-600 text-xs font-semibold text-white">
                   {otherUser?.avatar_url
                     ? <img src={otherUser.avatar_url} alt="" className="h-full w-full object-cover" />
                     : otherInitials}
@@ -327,12 +327,12 @@ export default function ChatPage() {
             onChange={(e) => { setContent(e.target.value); sendTyping(profile?.full_name || 'Someone') }}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
             placeholder="Write a message..."
-            className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:bg-white transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:bg-gray-800"
+            className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:bg-white transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:bg-gray-800"
           />
           <button
             onClick={sendMessage}
             disabled={sending || !content.trim()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm hover:bg-blue-700 disabled:opacity-40 transition-colors"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white shadow-sm hover:bg-teal-700 disabled:opacity-40 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
               <line x1="22" y1="2" x2="11" y2="13"/>

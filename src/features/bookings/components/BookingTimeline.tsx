@@ -59,7 +59,7 @@ export default function BookingTimeline({ bookingId }: Props) {
         {events.map((event, index) => (
           <div key={event.id} className="flex gap-3">
             <div className="flex flex-col items-center">
-              <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
+              <span className="h-2.5 w-2.5 rounded-full bg-teal-600" />
               {index !== events.length - 1 && (
                 <span className="mt-1 h-full min-h-6 w-px bg-gray-200" />
               )}

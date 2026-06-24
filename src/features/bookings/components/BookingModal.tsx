@@ -130,8 +130,8 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
                     onClick={() => setSeats(n)}
                     className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-medium transition-colors ${
                       seats === n
-                        ? 'border-blue-600 bg-blue-600 text-white'
-                        : 'border-gray-200 text-gray-600 hover:border-blue-300 dark:border-gray-700 dark:text-gray-400'
+                        ? 'border-teal-600 bg-teal-600 text-white'
+                        : 'border-gray-200 text-gray-600 hover:border-teal-300 dark:border-gray-700 dark:text-gray-400'
                     }`}
                   >
                     {n}
@@ -181,7 +181,7 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
               )}
               <div className="flex justify-between">
                 <span className="font-semibold text-gray-800 dark:text-gray-200">Total / month</span>
-                <span className="font-bold text-blue-600 dark:text-blue-400">৳{totalRent.toLocaleString('en-US')}</span>
+                <span className="font-bold text-teal-600 dark:text-teal-400">৳{totalRent.toLocaleString('en-US')}</span>
               </div>
             </div>
           </div>
@@ -192,7 +192,7 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
               type="date"
               value={moveInDate}
               onChange={(e) => setMoveInDate(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-teal-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
 
@@ -203,7 +203,7 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Write a short message to the owner..."
-              className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+              className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-teal-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
             />
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="flex-1 rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
           >
             {loading ? 'Sending...' : 'Send Request'}
           </button>

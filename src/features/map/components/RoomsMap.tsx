@@ -75,7 +75,7 @@ export default function RoomsMap({ rooms }: Props) {
 
                 <Link
                   href={`/listings/${room.id}`}
-                  className="mt-3 inline-block text-sm font-medium text-blue-600 hover:text-blue-700"
+                  className="mt-3 inline-block text-sm font-medium text-teal-600 hover:text-teal-700"
                 >
                   View Details →
                 </Link>

@@ -65,9 +65,9 @@ export default function PopularLocations() {
             href={`/listings?q=${encodeURIComponent(
               item.location_name,
             )}`}
-            className="group rounded-2xl border border-gray-100 bg-white px-5 py-4 transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+            className="group rounded-2xl border border-gray-100 bg-white px-5 py-4 transition-all hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md"
           >
-            <p className="font-medium text-gray-900 group-hover:text-blue-600">
+            <p className="font-medium text-gray-900 group-hover:text-teal-600">
               {item.location_name}
             </p>
 

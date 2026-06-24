@@ -220,7 +220,7 @@ export default function ProfilePage() {
             </div>
           </div>
         ) : (
-          <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-xl font-semibold text-blue-700">
+          <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-teal-100 text-xl font-semibold text-teal-700">
             {initials}
             {/* hover overlay */}
             <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -228,7 +228,7 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
-        <div className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white">
+        <div className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-teal-600 text-white">
           {avatarUploading ? (
             <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
@@ -273,7 +273,7 @@ export default function ProfilePage() {
             onClick={() => setTab(item.key as Tab)}
             className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               tab === item.key
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-teal-500 text-teal-600'
                 : 'border-transparent text-gray-400 hover:text-gray-700'
             }`}
           >
@@ -297,13 +297,13 @@ export default function ProfilePage() {
               <input
                 type={field.type}
                 value={(profile as any)[field.key] ?? ''}
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-teal-500"
                 onChange={(e) => setProfile({ ...profile, [field.key]: e.target.value } as Profile)}
               />
             </div>
           ))}
 
-          <div className="rounded-xl bg-blue-50 px-4 py-3 text-xs text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+          <div className="rounded-xl bg-teal-50 px-4 py-3 text-xs text-teal-700 dark:bg-teal-900/20 dark:text-teal-400">
             💡 Add your bKash/Nagad number so tenants can send payment after booking confirmation.
           </div>
 
@@ -320,7 +320,7 @@ export default function ProfilePage() {
           <button
             onClick={saveProfile}
             disabled={saving}
-            className="rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
           >
             {saving ? 'Saving...' : saved ? '✓ Saved successfully' : 'Save Changes'}
           </button>
@@ -335,7 +335,7 @@ export default function ProfilePage() {
 
             {/* ✅ Only verified users can post */}
             {isVerified ? (
-              <Link href="/post-room" className="rounded-xl bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
+              <Link href="/post-room" className="rounded-xl bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700">
                 + New Listing
               </Link>
             ) : (
@@ -449,7 +449,7 @@ export default function ProfilePage() {
                           )}
                           {ownerProfile?.phone && (
                             <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
-                              Contact owner: <a href={`tel:${ownerProfile.phone}`} className="text-blue-600 hover:underline">{ownerProfile.phone}</a>
+                              Contact owner: <a href={`tel:${ownerProfile.phone}`} className="text-teal-600 hover:underline">{ownerProfile.phone}</a>
                             </p>
                           )}
                         </div>
@@ -457,7 +457,7 @@ export default function ProfilePage() {
                     )}
 
                     {booking.status === 'confirmed' && !hasPayment && (
-                      <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                      <div className="mt-3 rounded-xl border border-teal-100 bg-teal-50 px-3 py-2.5 text-xs text-teal-700 dark:border-teal-800 dark:bg-teal-900/20 dark:text-teal-400">
                         ✅ Booking confirmed! Contact the owner to arrange payment.
                         {ownerProfile?.phone && (
                           <a href={`tel:${ownerProfile.phone}`} className="ml-1 font-medium underline">{ownerProfile.phone}</a>
@@ -469,7 +469,7 @@ export default function ProfilePage() {
                     {booking.status === 'confirmed' && booking.expires_at && (
                       <div className="mt-2">
                         <BookingCountdown expiresAt={booking.expires_at} />
-                        <Link href={`/inbox/${booking.rooms?.owner_id}`} className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
+                        <Link href={`/inbox/${booking.rooms?.owner_id}`} className="mt-2 inline-flex items-center gap-1 text-xs text-teal-600 hover:underline dark:text-teal-400">
                           💬 Message Owner
                         </Link>
                       </div>

@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
           </p>
           <Link
             href="/auth/login"
-            className="mt-6 inline-block rounded-xl bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700"
+            className="mt-6 inline-block rounded-xl bg-teal-600 px-6 py-3 text-sm font-medium text-white hover:bg-teal-700"
           >
             Back to Login
           </Link>
@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
     <main className="min-h-screen bg-gray-50 px-4 py-10 dark:bg-gray-950">
       <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-2xl">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-600 text-2xl">
             🔑
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Forgot Password</h1>
@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
             <input
               type="email"
               placeholder="your@email.com"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
           >
             {loading ? 'Sending...' : 'Send Reset Link'}
           </button>
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
 
         <p className="mt-6 text-center text-sm text-gray-500">
           Remember your password?{' '}
-          <Link href="/auth/login" className="font-medium text-blue-600 hover:underline">
+          <Link href="/auth/login" className="font-medium text-teal-600 hover:underline">
             Login
           </Link>
         </p>

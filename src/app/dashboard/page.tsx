@@ -115,7 +115,7 @@ export default function DashboardPage() {
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <p className="text-xs text-gray-400">My Listings</p>
-          <p className="mt-1 text-3xl font-bold text-blue-600">{stats.listings}</p>
+          <p className="mt-1 text-3xl font-bold text-teal-600">{stats.listings}</p>
         </div>
         <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <p className="text-xs text-gray-400">Pending Requests</p>
@@ -141,8 +141,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
 
         {isVerified ? (
-          <Link href="/post-room" className="group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-600">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl dark:bg-blue-900/30">➕</span>
+          <Link href="/post-room" className="group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-600">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-xl dark:bg-teal-900/30">➕</span>
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">Post a Room</p>
               <p className="text-xs text-gray-400">Create a new listing</p>
@@ -188,11 +188,11 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        <Link href="/dashboard/my-bookings" className="group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-600">
-          <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl dark:bg-blue-900/30">
+        <Link href="/dashboard/my-bookings" className="group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-600">
+          <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-xl dark:bg-teal-900/30">
             🗓
             {stats.myBookings > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white">
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-[10px] font-bold text-white">
                 {stats.myBookings}
               </span>
             )}
@@ -228,8 +228,8 @@ export default function DashboardPage() {
                 <p className="text-xs text-gray-400">Platform stats</p>
               </div>
             </Link>
-            <Link href="/admin/users" className="group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl dark:bg-blue-900/30">🛡️</span>
+            <Link href="/admin/users" className="group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-xl dark:bg-teal-900/30">🛡️</span>
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Admin Users</p>
                 <p className="text-xs text-gray-400">Verify & manage users</p>

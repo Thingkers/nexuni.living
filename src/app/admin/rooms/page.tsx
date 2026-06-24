@@ -149,7 +149,7 @@ export default function AdminRoomsPage() {
                 <div className="min-w-0">
                   <Link
                     href={`/listings/${room.id}`}
-                    className="text-base font-semibold text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 sm:text-lg"
+                    className="text-base font-semibold text-gray-900 hover:text-teal-600 dark:text-white dark:hover:text-teal-400 sm:text-lg"
                   >
                     {room.title}
                   </Link>
@@ -168,7 +168,7 @@ export default function AdminRoomsPage() {
                     }`}>
                       {room.status}
                     </span>
-                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                    <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
                       {owner?.full_name || 'Unknown Owner'}
                     </span>
                     <span className="text-xs text-gray-400">

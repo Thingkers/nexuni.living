@@ -115,7 +115,7 @@ export default function LoginPage() {
             onClick={() => { setLoginType('email'); setError('') }}
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
               loginType === 'email'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-teal-600 text-white'
                 : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             }`}
           >
@@ -125,7 +125,7 @@ export default function LoginPage() {
             onClick={() => { setLoginType('id'); setError('') }}
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
               loginType === 'id'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-teal-600 text-white'
                 : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             }`}
           >
@@ -147,7 +147,7 @@ export default function LoginPage() {
               <input
                 type="email"
                 placeholder="your@gmail.com"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -157,7 +157,7 @@ export default function LoginPage() {
               <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Student ID</label>
               <input
                 placeholder="xx-xxxxx-x"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
               />
@@ -173,7 +173,7 @@ export default function LoginPage() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Your password"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
@@ -204,7 +204,7 @@ export default function LoginPage() {
           <div className="flex justify-end">
             <Link
               href="/auth/forgot-password"
-              className="text-xs text-blue-600 hover:underline"
+              className="text-xs text-teal-600 hover:underline"
             >
               Forgot password?
             </Link>
@@ -213,7 +213,7 @@ export default function LoginPage() {
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="rounded-xl bg-blue-600 py-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-xl bg-teal-600 py-3 text-sm font-medium text-white transition hover:bg-teal-700 disabled:opacity-50"
           >
             {loading ? 'Logging in...' : 'Login →'}
           </button>
@@ -223,7 +223,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/register" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
+          <Link href="/auth/register" className="font-medium text-teal-600 hover:underline dark:text-teal-400">
             Register
           </Link>
         </p>

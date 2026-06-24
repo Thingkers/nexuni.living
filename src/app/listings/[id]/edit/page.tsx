@@ -26,7 +26,7 @@ const AMENITIES = [
   { key: 'cctv',          icon: '📷', label: 'CCTV' },
 ]
 
-const inputCls = 'w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100'
+const inputCls = 'w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-teal-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100'
 
 export default function EditListingPage() {
   const params = useParams<{ id: string }>()
@@ -222,8 +222,8 @@ export default function EditListingPage() {
         </div>
 
         {/* Pricing */}
-        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-          <p className="mb-3 text-xs font-semibold text-blue-700 dark:text-blue-400">💰 Pricing</p>
+        <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4 dark:border-teal-800 dark:bg-teal-900/20">
+          <p className="mb-3 text-xs font-semibold text-teal-700 dark:text-teal-400">💰 Pricing</p>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
@@ -298,7 +298,7 @@ export default function EditListingPage() {
             <label className="text-xs text-gray-500 dark:text-gray-400">
               Map Location {form.latitude && form.longitude && <span className="text-green-600">✓ Set</span>}
             </label>
-            <button type="button" onClick={() => setShowMap((p) => !p)} className="text-xs text-blue-600 hover:text-blue-700">
+            <button type="button" onClick={() => setShowMap((p) => !p)} className="text-xs text-teal-600 hover:text-teal-700">
               {showMap ? 'Hide Map' : 'Pick on Map'}
             </button>
           </div>
@@ -348,7 +348,7 @@ export default function EditListingPage() {
                 onClick={() => updateField(item.key, !form[item.key])}
                 className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-sm transition-colors ${
                   form[item.key]
-                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    ? 'border-teal-500 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'
                     : 'border-gray-200 text-gray-400 dark:border-gray-700 dark:text-gray-500'
                 }`}
               >
@@ -399,7 +399,7 @@ export default function EditListingPage() {
               {newPreviews.map((src, index) => (
                 <div key={src} className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
                   <Image src={src} alt={`New ${index + 1}`} fill className="object-cover" />
-                  <span className="absolute left-1 top-1 rounded bg-blue-600 px-1 text-[9px] text-white">New</span>
+                  <span className="absolute left-1 top-1 rounded bg-teal-600 px-1 text-[9px] text-white">New</span>
                   <button type="button" onClick={() => removeNew(index)}
                     className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs text-red-500 shadow">×</button>
                 </div>
@@ -408,7 +408,7 @@ export default function EditListingPage() {
           )}
 
           {totalImages < 4 && (
-            <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-5 text-center hover:border-blue-400 hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-blue-900/10">
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-5 text-center hover:border-teal-400 hover:bg-teal-50 dark:border-gray-700 dark:hover:bg-teal-900/10">
               <span className="text-2xl">📷</span>
               <span className="mt-1 text-xs font-medium text-gray-600 dark:text-gray-300">
                 Add photos ({4 - totalImages} remaining)
@@ -428,7 +428,7 @@ export default function EditListingPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="flex-1 rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>

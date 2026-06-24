@@ -99,7 +99,7 @@ View this room on Student Hostel:`
               onClick={shareFacebook}
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-base text-white">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-600 text-base text-white">
                 👥
               </span>
               <span className="font-medium text-gray-800 dark:text-gray-200">Facebook</span>

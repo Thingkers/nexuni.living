@@ -48,7 +48,7 @@ export default function AvailabilityCalendar({ availableFrom }: Props) {
                 isAvailable
                   ? 'bg-green-50 text-green-700'
                   : 'bg-gray-50 text-gray-300'
-              } ${isToday ? 'ring-2 ring-blue-400' : ''}`}
+              } ${isToday ? 'ring-2 ring-teal-400' : ''}`}
             >
               <p className="text-[10px] sm:text-xs font-medium">
                 {format(day, 'EEE')}

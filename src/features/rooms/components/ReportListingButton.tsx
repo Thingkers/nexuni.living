@@ -101,7 +101,7 @@ export default function ReportListingButton({ roomId }: Props) {
               <select
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-teal-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
               >
                 {REASONS.map((item) => (
                   <option key={item} value={item}>
@@ -121,7 +121,7 @@ export default function ReportListingButton({ roomId }: Props) {
                 value={details}
                 onChange={(event) => setDetails(event.target.value)}
                 placeholder="Write more details..."
-                className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500"
+                className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-teal-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500"
               />
             </div>
 

@@ -58,7 +58,7 @@ const inputCls = (err?: string) =>
   `w-full rounded-xl border px-4 py-3 text-sm outline-none transition-colors bg-white dark:bg-gray-800 dark:text-gray-100 ${
     err
       ? 'border-red-300 focus:border-red-500'
-      : 'border-gray-200 focus:border-blue-500 dark:border-gray-700'
+      : 'border-gray-200 focus:border-teal-500 dark:border-gray-700'
   }`
 
 export default function PostRoomPage() {
@@ -226,7 +226,7 @@ export default function PostRoomPage() {
 
       <div className="mb-8 h-1.5 rounded-full bg-gray-100 dark:bg-gray-700">
         <div
-          className="h-full rounded-full bg-blue-600 transition-all"
+          className="h-full rounded-full bg-teal-600 transition-all"
           style={{ width: step === 1 ? '50%' : '100%' }}
         />
       </div>
@@ -274,8 +274,8 @@ export default function PostRoomPage() {
           </div>
 
           {/* Pricing */}
-          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-            <p className="mb-3 text-xs font-semibold text-blue-700 dark:text-blue-400">
+          <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4 dark:border-teal-800 dark:bg-teal-900/20">
+            <p className="mb-3 text-xs font-semibold text-teal-700 dark:text-teal-400">
               💰 Pricing
             </p>
 
@@ -316,7 +316,7 @@ export default function PostRoomPage() {
             </div>
 
             {shared && form.rent && (
-              <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+              <p className="mt-2 text-xs text-teal-600 dark:text-teal-400">
                 ✨ Tenants will see: ৳{Number(form.rent).toLocaleString('en-US')} per seat/month
               </p>
             )}
@@ -387,7 +387,7 @@ export default function PostRoomPage() {
               type="button"
               onClick={findLocationOnMap}
               disabled={findingLocation}
-              className="mt-2 rounded-xl border border-blue-200 px-4 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-800 dark:hover:bg-blue-900/20"
+              className="mt-2 rounded-xl border border-teal-200 px-4 py-2 text-xs font-medium text-teal-600 hover:bg-teal-50 disabled:opacity-50 dark:border-teal-800 dark:hover:bg-teal-900/20"
             >
               {findingLocation ? '⏳ Finding...' : '📍 Find on Map'}
             </button>
@@ -417,7 +417,7 @@ export default function PostRoomPage() {
 
           <button
             onClick={() => { if (validateStep1()) setStep(2) }}
-            className="w-full rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700"
+            className="w-full rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700"
           >
             Next: Facilities & Photos →
           </button>
@@ -439,7 +439,7 @@ export default function PostRoomPage() {
                   onClick={() => updateField(item.key, !(form as any)[item.key])}
                   className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-sm transition-colors ${
                     (form as any)[item.key]
-                      ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                      ? 'border-teal-500 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'
                       : 'border-gray-200 text-gray-400 dark:border-gray-700 dark:text-gray-500'
                   }`}
                 >
@@ -469,7 +469,7 @@ export default function PostRoomPage() {
           {/* Images */}
           <div>
             <label className="mb-2 block text-xs text-gray-500 dark:text-gray-400">Room Photos (up to 4)</label>
-            <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center hover:border-blue-400 hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-blue-900/10">
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center hover:border-teal-400 hover:bg-teal-50 dark:border-gray-700 dark:hover:bg-teal-900/10">
               <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
               <span className="text-3xl">📷</span>
               <span className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -516,7 +516,7 @@ export default function PostRoomPage() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
             >
               {loading ? 'Posting...' : 'Post Room ✓'}
             </button>

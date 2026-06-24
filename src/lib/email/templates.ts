@@ -48,7 +48,7 @@ export function bookingConfirmedTemplate({
           style="
             display: inline-block;
             margin-top: 20px;
-            background: #2563eb;
+            background: #0d9488;
             color: white;
             text-decoration: none;
             padding: 12px 18px;
@@ -93,7 +93,7 @@ export function bookingRejectedTemplate({
         </p>
         <a
           href="${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'}/listings"
-          style="display: inline-block; margin-top: 20px; background: #2563eb; color: white; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 600;"
+          style="display: inline-block; margin-top: 20px; background: #0d9488; color: white; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 600;"
         >
           Browse Other Rooms
         </a>
@@ -135,7 +135,7 @@ export function newMessageTemplate({
 
         <a
           href="${inboxUrl}"
-          style="display: inline-block; margin-top: 20px; background: #2563eb; color: white; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 600;"
+          style="display: inline-block; margin-top: 20px; background: #0d9488; color: white; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 600;"
         >
           Reply Now
         </a>

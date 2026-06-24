@@ -98,8 +98,8 @@ export default function InboxPage() {
   return (
     <main className="mx-auto max-w-md px-0 sm:px-4 py-0 sm:py-6">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-gray-100 bg-white px-4 py-4 sm:rounded-t-2xl">
-        <h1 className="text-xl font-bold text-gray-900">Messages</h1>
+      <div className="sticky top-0 z-10 border-b border-gray-100 bg-white px-4 py-4 sm:rounded-t-2xl dark:border-gray-800 dark:bg-gray-900">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Messages</h1>
         {threads.length > 0 && (
           <p className="text-xs text-gray-400">{threads.length} conversation{threads.length > 1 ? 's' : ''}</p>
         )}
@@ -116,7 +116,7 @@ export default function InboxPage() {
           <p className="mt-1 text-xs text-gray-400">Start a conversation from a listing</p>
         </div>
       ) : (
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-gray-50 dark:divide-gray-800">
           {threads.map((thread) => {
             const initials = thread.otherName[0]?.toUpperCase() || 'U'
             const timeStr = new Date(thread.lastTime).toLocaleDateString('en-US', {
@@ -127,7 +127,7 @@ export default function InboxPage() {
               <Link
                 key={thread.otherId}
                 href={`/inbox/${thread.otherId}`}
-                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 active:bg-gray-100"
+                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-gray-800 dark:active:bg-gray-700"
               >
                 {/* Avatar */}
                 <div className="relative shrink-0">

@@ -89,8 +89,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-950">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
 
         {/* Header */}
         <div className="mb-6 text-center">
@@ -105,18 +105,18 @@ export default function LoginPage() {
           />
         </div>
           
-          <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="mt-1 text-sm text-gray-500">Student Hostel</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome Back</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Student Hostel</p>
         </div>
 
         {/* Login Type Toggle */}
-        <div className="mb-5 flex rounded-xl border border-gray-200 p-1">
+        <div className="mb-5 flex rounded-xl border border-gray-200 p-1 dark:border-gray-700">
           <button
             onClick={() => { setLoginType('email'); setError('') }}
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
               loginType === 'email'
                 ? 'bg-blue-600 text-white'
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             }`}
           >
             📧 Email
@@ -126,7 +126,7 @@ export default function LoginPage() {
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
               loginType === 'id'
                 ? 'bg-blue-600 text-white'
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             }`}
           >
             🪪 Student ID
@@ -143,21 +143,21 @@ export default function LoginPage() {
 
           {loginType === 'email' ? (
             <div>
-              <label className="mb-1 block text-xs text-gray-500">AIUB Email</label>
+              <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">AIUB Email</label>
               <input
                 type="email"
                 placeholder="your@gmail.com"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           ) : (
             <div>
-              <label className="mb-1 block text-xs text-gray-500">Student ID</label>
+              <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Student ID</label>
               <input
                 placeholder="xx-xxxxx-x"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
               />
@@ -166,14 +166,14 @@ export default function LoginPage() {
 
           <div>
 
-            <label className="mb-1 block text-xs text-gray-500">Password</label>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Password</label>
 
             <div className="relative">
 
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Your password"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
@@ -221,9 +221,9 @@ export default function LoginPage() {
           
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/register" className="font-medium text-blue-600 hover:underline">
+          <Link href="/auth/register" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
             Register
           </Link>
         </p>

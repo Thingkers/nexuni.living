@@ -47,9 +47,9 @@ export default function ResetPasswordPage() {
 
   return (
 
-    <main className="min-h-screen bg-gray-50 px-4 py-10">
+    <main className="min-h-screen bg-gray-50 px-4 py-10 dark:bg-gray-950">
 
-      <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
 
         <div className="mb-6 text-center">
 

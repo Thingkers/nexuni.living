@@ -66,7 +66,7 @@ View this room on Student Hostel:`
     <div className="relative">
       <button
         onClick={nativeShare}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
       >
         {copied ? '✓ Link copied' : '↗ Share'}
       </button>
@@ -80,41 +80,41 @@ View this room on Student Hostel:`
             onClick={() => setOpen(false)}
           />
 
-          <div className="absolute right-0 top-12 z-20 w-56 rounded-2xl border border-gray-100 bg-white p-2 shadow-xl">
-            <p className="px-3 py-1.5 text-xs text-gray-400">
+          <div className="absolute right-0 top-12 z-20 w-56 rounded-2xl border border-gray-100 bg-white p-2 shadow-xl dark:border-gray-700 dark:bg-gray-800">
+            <p className="px-3 py-1.5 text-xs text-gray-400 dark:text-gray-500">
               Share this room
             </p>
 
             <button
               onClick={shareWhatsApp}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-base text-white">
                 📱
               </span>
-              <span className="font-medium text-gray-800">WhatsApp</span>
+              <span className="font-medium text-gray-800 dark:text-gray-200">WhatsApp</span>
             </button>
 
             <button
               onClick={shareFacebook}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-base text-white">
                 👥
               </span>
-              <span className="font-medium text-gray-800">Facebook</span>
+              <span className="font-medium text-gray-800 dark:text-gray-200">Facebook</span>
             </button>
 
-            <div className="my-1 h-px bg-gray-100" />
+            <div className="my-1 h-px bg-gray-100 dark:bg-gray-700" />
 
             <button
               onClick={copyLink}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-base">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-base dark:bg-gray-700">
                 🔗
               </span>
-              <span className="font-medium text-gray-800">Copy Link</span>
+              <span className="font-medium text-gray-800 dark:text-gray-200">Copy Link</span>
             </button>
           </div>
         </>

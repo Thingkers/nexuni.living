@@ -106,7 +106,7 @@ export default function ListingDetailsPage() {
   return (
     <>
       <main className="mx-auto max-w-4xl px-4 py-6">
-        <Link href="/listings" className="mb-4 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700">
+        <Link href="/listings" className="mb-4 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
           ← All Listings
         </Link>
 
@@ -353,7 +353,7 @@ export default function ListingDetailsPage() {
               {room.profiles?.phone && isVerified && (
                 <a
                   href={`tel:${room.profiles.phone}`}
-                  className="mb-3 flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100"
+                  className="mb-3 flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 >
                   📞 {room.profiles.phone}
                 </a>
@@ -365,7 +365,7 @@ export default function ListingDetailsPage() {
               </div>
 
               {currentUser && !isVerified && !isOwner && (
-                <div className="rounded-xl bg-yellow-50 px-4 py-3 text-center text-xs text-yellow-700">
+                <div className="rounded-xl bg-yellow-50 px-4 py-3 text-center text-xs text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
                   ⏳ Account verify হলে booking ও contact করতে পারবেন
                 </div>
               )}
@@ -407,7 +407,7 @@ export default function ListingDetailsPage() {
                 <div className="flex flex-col gap-2">
                   <Link
                     href={`/listings/${room.id}/edit`}
-                    className="w-full rounded-xl border border-gray-200 py-3 text-center text-sm font-medium hover:bg-gray-50"
+                    className="w-full rounded-xl border border-gray-200 py-3 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
                   >
                     Edit Listing
                   </Link>

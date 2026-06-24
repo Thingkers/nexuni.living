@@ -61,93 +61,102 @@ export function useNotification() {
       .channel(`notify-message-${userId}`)
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id=eq.${userId}`,
-        },
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${userId}` },
         async (payload) => {
-          const message = payload.new as {
-            sender_id: string
-            content: string
-          }
-
+          const message = payload.new as { sender_id: string; content: string }
           const { data: sender } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', message.sender_id)
-            .maybeSingle()
-
+            .from('profiles').select('full_name').eq('id', message.sender_id).maybeSingle()
+          const name = sender?.full_name ?? 'Someone'
           push({
             type: 'message',
-            title: 'New message',
-            body: `${sender?.full_name ?? 'Someone'}: ${message.content.slice(0, 60)}`,
+            title: `💬 ${name}`,
+            body: message.content.slice(0, 80),
             href: `/inbox/${message.sender_id}`,
           })
-
-          // ✅ ADDED pushNotification
-          pushNotification({
-            title: 'New Message',
-            body: `${sender?.full_name ?? 'Someone'} sent you a message`,
-          })
+          pushNotification({ title: `New message from ${name}`, body: message.content.slice(0, 80) })
         },
       )
       .subscribe()
 
     // =========================
-    // BOOKING NOTIFICATION
+    // TENANT: booking status changed
     // =========================
-    const bookingChannel = supabase
-      .channel(`notify-booking-${userId}`)
+    const bookingStatusChannel = supabase
+      .channel(`notify-booking-status-${userId}`)
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'bookings',
-          filter: `user_id=eq.${userId}`,
-        },
+        { event: 'UPDATE', schema: 'public', table: 'bookings', filter: `user_id=eq.${userId}` },
         async (payload) => {
           const oldBooking = payload.old as { status: string }
-          const newBooking = payload.new as {
-            status: string
-            room_id: string
-          }
-
+          const newBooking = payload.new as { status: string; room_id: string }
           if (newBooking.status === oldBooking.status) return
 
-          const isConfirmed = newBooking.status === 'confirmed'
-
           const { data: room } = await supabase
-            .from('rooms')
-            .select('title')
-            .eq('id', newBooking.room_id)
-            .maybeSingle()
+            .from('rooms').select('title').eq('id', newBooking.room_id).maybeSingle()
+          const title = room?.title ?? 'Your booking'
+
+          const map: Record<string, { label: string; emoji: string }> = {
+            confirmed: { label: 'Booking Confirmed', emoji: '🎉' },
+            rejected:  { label: 'Booking Rejected',  emoji: '❌' },
+            cancelled: { label: 'Booking Cancelled', emoji: '🚫' },
+          }
+          const info = map[newBooking.status]
+          if (!info) return
 
           push({
-            type: 'booking',
-            title: isConfirmed
-              ? 'Booking confirmed 🎉'
-              : 'Booking cancelled',
-            body: room?.title ?? 'Your booking request has been updated',
-            href: '/profile',
+            type: newBooking.status === 'confirmed' ? 'booking' : 'error',
+            title: `${info.emoji} ${info.label}`,
+            body: title,
+            href: '/dashboard/my-bookings',
           })
-
-          // ✅ ADDED pushNotification
-          pushNotification({
-            title: isConfirmed
-              ? 'Booking Confirmed 🎉'
-              : 'Booking Cancelled',
-            body: room?.title ?? 'Room update',
-          })
+          pushNotification({ title: `${info.emoji} ${info.label}`, body: title })
         },
       )
       .subscribe()
+
+    // =========================
+    // OWNER: new booking request on my rooms
+    // =========================
+    let ownerBookingChannel: ReturnType<typeof supabase.channel> | null = null
+
+    supabase.from('rooms').select('id').eq('owner_id', userId).then(({ data: myRooms }) => {
+      if (!myRooms || myRooms.length === 0) return
+
+      const roomIds = myRooms.map((r) => r.id)
+
+      ownerBookingChannel = supabase
+        .channel(`notify-owner-booking-${userId}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'bookings' },
+          async (payload) => {
+            const booking = payload.new as { room_id: string; user_id: string }
+            if (!roomIds.includes(booking.room_id)) return
+
+            const [{ data: room }, { data: tenant }] = await Promise.all([
+              supabase.from('rooms').select('title').eq('id', booking.room_id).maybeSingle(),
+              supabase.from('profiles').select('full_name').eq('id', booking.user_id).maybeSingle(),
+            ])
+
+            push({
+              type: 'booking',
+              title: '📋 New Booking Request',
+              body: `${tenant?.full_name ?? 'Someone'} → ${room?.title ?? 'your room'}`,
+              href: '/dashboard/bookings',
+            })
+            pushNotification({
+              title: 'New Booking Request',
+              body: `${tenant?.full_name ?? 'Someone'} wants to book ${room?.title ?? 'your room'}`,
+            })
+          },
+        )
+        .subscribe()
+    })
 
     return () => {
       supabase.removeChannel(messageChannel)
-      supabase.removeChannel(bookingChannel)
+      supabase.removeChannel(bookingStatusChannel)
+      if (ownerBookingChannel) supabase.removeChannel(ownerBookingChannel)
     }
   }, [userId, push])
 

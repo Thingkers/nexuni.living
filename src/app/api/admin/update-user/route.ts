@@ -4,11 +4,10 @@ import { Resend } from 'resend'
 import { rateLimit } from '@/lib/rateLimit'
 import { profileVerifiedTemplate, profileRejectedTemplate } from '@/lib/email/templates'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 type Action = 'approve' | 'reject' | 'toggle-verify' | 'toggle-admin'
 
 export async function PATCH(req: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY)
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

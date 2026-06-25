@@ -39,6 +39,7 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [pendingBookingCount, setPendingBookingCount] = useState(0)
   const [myBookingCount, setMyBookingCount] = useState(0)
+  const [isOwner, setIsOwner] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
   // Read initial theme from DOM (set by inline script)
@@ -86,6 +87,7 @@ export default function Navbar() {
           .eq('owner_id', data.user.id)
 
         const roomIds = myRooms?.map((r) => r.id) ?? []
+        setIsOwner(roomIds.length > 0)
 
         if (roomIds.length > 0) {
           const { count: bookingCount } = await supabase
@@ -110,6 +112,7 @@ export default function Navbar() {
         setProfile(null)
         setUnreadCount(0)
         setPendingBookingCount(0)
+        setIsOwner(false)
       } else {
         // Re-fetch profile so isVerified updates immediately after login
         const { data: profileData } = await supabase
@@ -131,6 +134,7 @@ export default function Navbar() {
           .select('id')
           .eq('owner_id', session.user.id)
         const roomIds = myRooms?.map((r) => r.id) ?? []
+        setIsOwner(roomIds.length > 0)
         if (roomIds.length > 0) {
           const { count: bookingCount } = await supabase
             .from('bookings')
@@ -349,26 +353,33 @@ export default function Navbar() {
                     </Link>
                   )}
 
-                  {isVerified && (
-                    <Link href="/dashboard/bookings" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
-                      <span>Booking Requests</span>
-                      {pendingBookingCount > 0 && (
-                        <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
-                      )}
-                    </Link>
+                  {/* Owner section — only shown if user has posted rooms */}
+                  {isVerified && isOwner && (
+                    <>
+                      <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
+                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Listings</p>
+                      <Link href="/dashboard/bookings" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
+                        <span>Requests Received</span>
+                        {pendingBookingCount > 0 && (
+                          <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
+                        )}
+                      </Link>
+                    </>
                   )}
 
+                  {/* Tenant section — always shown */}
                   {isVerified && (
-                    <Link href="/dashboard/my-bookings" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={goToMyBookings}>
-                      <span>My Bookings</span>
-                      {myBookingCount > 0 && (
-                        <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
-                      )}
-                    </Link>
-                  )}
-
-                  {isVerified && (
-                    <Link href="/dashboard/saved" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>Saved Rooms</Link>
+                    <>
+                      <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
+                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Renting</p>
+                      <Link href="/dashboard/my-bookings" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={goToMyBookings}>
+                        <span>My Bookings</span>
+                        {myBookingCount > 0 && (
+                          <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
+                        )}
+                      </Link>
+                      <Link href="/dashboard/saved" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>Saved Rooms</Link>
+                    </>
                   )}
 
                   {profile?.role === 'admin' && (
@@ -443,14 +454,28 @@ export default function Navbar() {
                           <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
                         )}
                       </Link>
+                    </>
+                  )}
+
+                  {/* Owner section — only shown if user has posted rooms */}
+                  {isVerified && isOwner && (
+                    <>
+                      <p className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Listings</p>
                       <Link href="/dashboard/bookings" className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
-                        <span>📋 Booking Requests</span>
+                        <span>📥 Requests Received</span>
                         {pendingBookingCount > 0 && (
                           <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
                         )}
                       </Link>
+                    </>
+                  )}
+
+                  {/* Tenant section — always shown */}
+                  {isVerified && (
+                    <>
+                      <p className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Renting</p>
                       <Link href="/dashboard/my-bookings" className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={goToMyBookings}>
-                        <span>📋 My Bookings</span>
+                        <span>🏠 My Bookings</span>
                         {myBookingCount > 0 && (
                           <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
                         )}

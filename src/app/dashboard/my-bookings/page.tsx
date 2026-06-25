@@ -9,17 +9,19 @@ import BookingTimeline from '@/features/bookings/components/BookingTimeline'
 import BookingCountdown from '@/features/bookings/components/BookingCountdown'
 
 const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
-  pending:   { label: 'Pending',   cls: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' },
-  confirmed: { label: 'Confirmed', cls: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' },
-  cancelled: { label: 'Cancelled', cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
-  rejected:  { label: 'Rejected',  cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
+  pending:   { label: 'Pending',        cls: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' },
+  confirmed: { label: 'On Hold (24h)',  cls: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' },
+  active:    { label: '✅ Active',       cls: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' },
+  cancelled: { label: 'Cancelled',      cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
+  rejected:  { label: 'Rejected',       cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
+  expired:   { label: '⏰ Expired',      cls: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400' },
 }
 
 export default function MyBookingsPage() {
   const router = useRouter()
   const [bookings, setBookings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'rejected'>('all')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'active' | 'rejected' | 'expired'>('all')
   const [cancelling, setCancelling] = useState<string | null>(null)
   const [confirmCancel, setConfirmCancel] = useState<string | null>(null)
 
@@ -95,7 +97,9 @@ export default function MyBookingsPage() {
         {[
           { key: 'all',       label: 'All' },
           { key: 'pending',   label: '⏳ Pending' },
-          { key: 'confirmed', label: '✅ Confirmed' },
+          { key: 'confirmed', label: '🔵 On Hold' },
+          { key: 'active',    label: '✅ Active' },
+          { key: 'expired',   label: '⏰ Expired' },
           { key: 'rejected',  label: '❌ Rejected' },
         ].map((tab) => (
           <button
@@ -173,7 +177,24 @@ export default function MyBookingsPage() {
                   </p>
                 )}
 
-                {/* Payment info on confirmed */}
+                {/* Active: advance paid, booking locked */}
+                {booking.status === 'active' && (
+                  <div className="mt-3 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 dark:border-green-800 dark:bg-green-900/20">
+                    <p className="text-xs font-semibold text-green-800 dark:text-green-400">🎉 Booking Active — Advance Received!</p>
+                    <p className="mt-0.5 text-xs text-green-700 dark:text-green-500">Your booking is confirmed and locked. You may now move in.</p>
+                  </div>
+                )}
+
+                {/* Expired: 24h passed without advance */}
+                {booking.status === 'expired' && (
+                  <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 dark:border-gray-600 dark:bg-gray-700">
+                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">⏰ Booking Expired</p>
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">The 24h hold passed without advance payment. The room is now available again.</p>
+                    <Link href={`/listings/${booking.rooms?.id}`} className="mt-1 inline-block text-xs text-teal-600 hover:underline dark:text-teal-400">Book again →</Link>
+                  </div>
+                )}
+
+                {/* Payment info on confirmed (on hold) */}
                 {booking.status === 'confirmed' && (hasBkash || hasNagad) && (
                   <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
                     <p className="mb-2 text-xs font-semibold text-green-800 dark:text-green-400">💸 Send payment to owner</p>
@@ -206,8 +227,8 @@ export default function MyBookingsPage() {
                 )}
 
                 {booking.status === 'confirmed' && !hasBkash && !hasNagad && (
-                  <div className="mt-3 rounded-xl border border-teal-100 bg-teal-50 px-3 py-2.5 text-xs text-teal-700 dark:border-teal-800 dark:bg-teal-900/20 dark:text-teal-400">
-                    ✅ Booking confirmed! Contact the owner to arrange payment.
+                  <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                    🔵 Room held for 24h — contact the owner to pay advance and confirm.
                     {owner?.phone && (
                       <a href={`tel:${owner.phone}`} className="ml-1 font-medium underline">{owner.phone}</a>
                     )}
@@ -233,7 +254,8 @@ export default function MyBookingsPage() {
                     Submitted {new Date(booking.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                   </p>
                   <div className="flex items-center gap-3">
-                    {booking.status === 'pending' && (
+                    {/* Cancel allowed for pending and confirmed (on-hold), NOT active */}
+                    {(booking.status === 'pending' || booking.status === 'confirmed') && (
                       confirmCancel === booking.id ? (
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500">Cancel?</span>
@@ -254,6 +276,10 @@ export default function MyBookingsPage() {
                           Cancel
                         </button>
                       )
+                    )}
+                    {/* Active bookings cannot be cancelled by tenant */}
+                    {booking.status === 'active' && (
+                      <span className="text-xs text-gray-400">Contact owner to cancel</span>
                     )}
                     <Link
                       href={`/listings/${booking.rooms?.id}`}

@@ -10,7 +10,7 @@ import { bookingConfirmedTemplate, bookingRejectedTemplate } from '@/lib/email/t
 import { isSharedRoom } from '@/features/rooms/types/room.types'
 import type { RoomType } from '@/features/rooms/types/room.types'
 
-type FilterStatus = 'all' | 'pending' | 'confirmed' | 'cancelled' | 'rejected'
+type FilterStatus = 'all' | 'pending' | 'confirmed' | 'active' | 'cancelled' | 'rejected' | 'expired'
 
 function isExpired(expiresAt: string | null | undefined): boolean {
   if (!expiresAt) return false
@@ -18,22 +18,12 @@ function isExpired(expiresAt: string | null | undefined): boolean {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  pending: {
-    label: 'Pending',
-    className: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  },
-  confirmed: {
-    label: 'Confirmed',
-    className: 'bg-green-50 text-green-700 border-green-200',
-  },
-  cancelled: {
-    label: 'Cancelled',
-    className: 'bg-red-50 text-red-600 border-red-200',
-  },
-  rejected: {
-    label: 'Rejected',
-    className: 'bg-red-50 text-red-600 border-red-200',
-  },
+  pending:   { label: 'Pending',         className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  confirmed: { label: 'Hold (24h)',      className: 'bg-blue-50 text-blue-700 border-blue-200' },
+  active:    { label: '✅ Active',        className: 'bg-green-50 text-green-700 border-green-200' },
+  cancelled: { label: 'Cancelled',       className: 'bg-red-50 text-red-600 border-red-200' },
+  rejected:  { label: 'Rejected',        className: 'bg-red-50 text-red-600 border-red-200' },
+  expired:   { label: '⏰ Expired',       className: 'bg-gray-100 text-gray-500 border-gray-200' },
 }
 
 export default function BookingRequestsPage() {
@@ -78,7 +68,7 @@ export default function BookingRequestsPage() {
 
   async function handleAction(
     bookingId: string,
-    action: 'confirmed' | 'cancelled' | 'rejected',
+    action: 'confirmed' | 'cancelled' | 'rejected' | 'active',
   ) {
     setActing(bookingId)
 
@@ -121,7 +111,8 @@ export default function BookingRequestsPage() {
     )
 
     toast.success(
-      action === 'confirmed' ? 'Booking confirmed!' :
+      action === 'confirmed' ? 'Booking confirmed! 24h hold started.' :
+      action === 'active'    ? '✅ Advance marked received! Booking is now active.' :
       action === 'rejected'  ? 'Booking rejected.' :
       'Booking cancelled.',
     )
@@ -180,11 +171,13 @@ export default function BookingRequestsPage() {
       : bookings.filter((booking) => booking.status === filter)
 
   const counts = {
-    all: bookings.length,
-    pending: bookings.filter((booking) => booking.status === 'pending').length,
-    confirmed: bookings.filter((booking) => booking.status === 'confirmed').length,
-    cancelled: bookings.filter((booking) => booking.status === 'cancelled').length,
-    rejected: bookings.filter((booking) => booking.status === 'rejected').length,
+    all:       bookings.length,
+    pending:   bookings.filter((b) => b.status === 'pending').length,
+    confirmed: bookings.filter((b) => b.status === 'confirmed').length,
+    active:    bookings.filter((b) => b.status === 'active').length,
+    cancelled: bookings.filter((b) => b.status === 'cancelled').length,
+    rejected:  bookings.filter((b) => b.status === 'rejected').length,
+    expired:   bookings.filter((b) => b.status === 'expired').length,
   }
 
   if (loading) {
@@ -223,11 +216,13 @@ export default function BookingRequestsPage() {
 
       <div className="mb-6 flex flex-wrap gap-2">
         {[
-          { key: 'all', label: 'All' },
-          { key: 'pending', label: 'Pending' },
-          { key: 'confirmed', label: 'Confirmed' },
+          { key: 'all',       label: 'All' },
+          { key: 'pending',   label: 'Pending' },
+          { key: 'confirmed', label: 'On Hold' },
+          { key: 'active',    label: '✅ Active' },
+          { key: 'expired',   label: '⏰ Expired' },
           { key: 'cancelled', label: 'Cancelled' },
-          { key: 'rejected', label: 'Rejected' },
+          { key: 'rejected',  label: 'Rejected' },
         ].map((item) => (
           <button
             key={item.key}
@@ -358,42 +353,69 @@ export default function BookingRequestsPage() {
                   </p>
                 )}
 
+                {/* PENDING: Confirm or Reject */}
                 {isPending && (
                   <div className="flex gap-2">
                     <button
                       disabled={!!isActing}
-                      onClick={() =>
-                        handleAction(booking.id, 'confirmed')
-                      }
+                      onClick={() => handleAction(booking.id, 'confirmed')}
                       className="flex-1 rounded-xl bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
                     >
-                      {isActing ? 'Processing...' : '✓ Confirm'}
+                      {isActing ? 'Processing...' : '✓ Confirm & Hold 24h'}
                     </button>
-
                     <button
                       disabled={!!isActing}
-                      onClick={() =>
-                        handleAction(booking.id, 'cancelled')
-                      }
+                      onClick={() => handleAction(booking.id, 'rejected')}
                       className="flex-1 rounded-xl border border-red-200 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 disabled:opacity-50"
                     >
-                      {isActing ? 'Processing...' : '✕ Cancel'}
+                      {isActing ? 'Processing...' : '✕ Reject'}
                     </button>
                   </div>
                 )}
 
+                {/* CONFIRMED (on hold, not expired): Mark Advance Received */}
+                {booking.status === 'confirmed' && !isExpired(booking.expires_at) && (
+                  <div className="space-y-2">
+                    <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-xs text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                      ⏳ Waiting for tenant to arrange advance payment. Once received, mark below.
+                    </div>
+                    <button
+                      disabled={!!isActing}
+                      onClick={() => handleAction(booking.id, 'active')}
+                      className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {isActing ? 'Processing...' : '✅ Mark Advance Received — Confirm Booking'}
+                    </button>
+                  </div>
+                )}
+
+                {/* CONFIRMED but expired (tenant didn't respond in 24h) */}
                 {booking.status === 'confirmed' && isExpired(booking.expires_at) && (
-                  <div className="mt-1">
-                    <div className="mb-2 rounded-xl bg-orange-50 px-3 py-2 text-xs text-orange-700">
-                      ⏰ Booking window expired — tenant did not complete payment in time.
+                  <div className="space-y-2">
+                    <div className="rounded-xl bg-orange-50 px-3 py-2 text-xs text-orange-700">
+                      ⏰ 24h hold expired — tenant did not arrange payment in time.
                     </div>
                     <button
                       disabled={!!isActing}
                       onClick={() => reactivateRoom(booking.id, booking.rooms?.id)}
-                      className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                      className="w-full rounded-xl bg-gray-600 py-2.5 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
                     >
-                      {isActing ? 'Processing...' : '🔄 Re-activate Listing'}
+                      {isActing ? 'Processing...' : '🔄 Re-open Listing'}
                     </button>
+                  </div>
+                )}
+
+                {/* ACTIVE: fully booked, advance received */}
+                {booking.status === 'active' && (
+                  <div className="rounded-xl bg-green-50 px-3 py-2.5 text-xs text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                    🎉 Booking active — advance received. Room is occupied by this tenant.
+                  </div>
+                )}
+
+                {/* EXPIRED (auto-cancelled by cron) */}
+                {booking.status === 'expired' && (
+                  <div className="rounded-xl bg-gray-100 px-3 py-2 text-xs text-gray-500 dark:bg-gray-700">
+                    ⏰ Automatically expired after 24h. Room has been re-opened.
                   </div>
                 )}
               </div>

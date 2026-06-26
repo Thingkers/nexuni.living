@@ -10,7 +10,10 @@ import { bookingConfirmedTemplate, bookingRejectedTemplate } from '@/lib/email/t
 import { isSharedRoom } from '@/features/rooms/types/room.types'
 import type { RoomType } from '@/features/rooms/types/room.types'
 
-type FilterStatus = 'all' | 'pending' | 'confirmed' | 'active' | 'cancelled' | 'rejected' | 'expired' | 'completed'
+type FilterStatus = 'all' | 'pending' | 'confirmed' | 'active'
+
+const ACTIVE_STATUSES = ['pending', 'confirmed', 'active']
+const HISTORY_STATUSES = ['completed', 'cancelled', 'rejected', 'expired']
 
 function isExpired(expiresAt: string | null | undefined): boolean {
   if (!expiresAt) return false
@@ -33,6 +36,7 @@ export default function BookingRequestsPage() {
   const [bookings, setBookings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterStatus>('all')
+  const [showHistory, setShowHistory] = useState(false)
   const [acting, setActing] = useState<string | null>(null)
   const [pageError, setPageError] = useState('')
 
@@ -198,20 +202,19 @@ export default function BookingRequestsPage() {
     setActing(null)
   }
 
+  const activeBookings  = bookings.filter((b) => ACTIVE_STATUSES.includes(b.status))
+  const historyBookings = bookings.filter((b) => HISTORY_STATUSES.includes(b.status))
+
   const filteredBookings =
     filter === 'all'
-      ? bookings
-      : bookings.filter((booking) => booking.status === filter)
+      ? activeBookings
+      : activeBookings.filter((booking) => booking.status === filter)
 
   const counts = {
-    all:       bookings.length,
-    pending:   bookings.filter((b) => b.status === 'pending').length,
-    confirmed: bookings.filter((b) => b.status === 'confirmed').length,
-    active:    bookings.filter((b) => b.status === 'active').length,
-    cancelled: bookings.filter((b) => b.status === 'cancelled').length,
-    rejected:  bookings.filter((b) => b.status === 'rejected').length,
-    expired:   bookings.filter((b) => b.status === 'expired').length,
-    completed: bookings.filter((b) => b.status === 'completed').length,
+    all:       activeBookings.length,
+    pending:   activeBookings.filter((b) => b.status === 'pending').length,
+    confirmed: activeBookings.filter((b) => b.status === 'confirmed').length,
+    active:    activeBookings.filter((b) => b.status === 'active').length,
   }
 
   if (loading) {
@@ -254,10 +257,6 @@ export default function BookingRequestsPage() {
           { key: 'pending',   label: 'Pending' },
           { key: 'confirmed', label: 'On Hold' },
           { key: 'active',    label: '✅ Active' },
-          { key: 'expired',   label: '⏰ Expired' },
-          { key: 'cancelled',  label: 'Cancelled' },
-          { key: 'rejected',   label: 'Rejected' },
-          { key: 'completed',  label: '🏁 Completed' },
         ].map((item) => (
           <button
             key={item.key}
@@ -279,7 +278,7 @@ export default function BookingRequestsPage() {
       {filteredBookings.length === 0 ? (
         <div className="py-16 text-center text-gray-400">
           <p className="mb-3 text-4xl">📋</p>
-          <p className="text-sm">No booking requests found</p>
+          <p className="text-sm">No active booking requests</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
@@ -465,6 +464,55 @@ export default function BookingRequestsPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Past bookings collapsible */}
+      {historyBookings.length > 0 && (
+        <div className="mt-8">
+          <button
+            onClick={() => setShowHistory((v) => !v)}
+            className="flex w-full items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          >
+            <span>📜 Past Bookings ({historyBookings.length})</span>
+            <span className="text-lg">{showHistory ? '▲' : '▼'}</span>
+          </button>
+
+          {showHistory && (
+            <div className="mt-3 flex flex-col gap-4">
+              {historyBookings.map((booking: any) => {
+                const status = STATUS_CONFIG[booking.status] ?? STATUS_CONFIG.pending
+                return (
+                  <div key={booking.id} className="rounded-2xl border border-gray-100 p-5 opacity-80">
+                    <div className="mb-3 flex items-start justify-between">
+                      <div>
+                        <Link href={`/listings/${booking.rooms?.id}`} className="text-sm font-medium text-gray-700 hover:text-teal-600">
+                          🏠 {booking.rooms?.title}
+                        </Link>
+                        <p className="mt-0.5 text-xs text-gray-400">
+                          ৳{booking.rooms?.rent}/month · {booking.rooms?.location_name}
+                        </p>
+                      </div>
+                      <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${status.className}`}>
+                        {status.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-600">
+                        {booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">{booking.profiles?.full_name || 'User'}</p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(booking.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
     </main>

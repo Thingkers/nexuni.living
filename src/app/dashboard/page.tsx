@@ -3,11 +3,10 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { User, Plus, ClipboardList, MessageSquare, CalendarCheck, BarChart2, ShieldCheck } from 'lucide-react'
+import { User, Plus, ClipboardList, MessageSquare, CalendarCheck, BarChart2, ShieldCheck, Building2, Flag } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type Stats = {
-  listings: number
   pendingBookings: number
   unreadMessages: number
   activeBookings: number
@@ -20,7 +19,6 @@ export default function DashboardPage() {
   const [isOwner, setIsOwner] = useState(false)
   const [profile, setProfile] = useState<{ full_name: string | null; role: string | null } | null>(null)
   const [stats, setStats] = useState<Stats>({
-    listings: 0,
     pendingBookings: 0,
     unreadMessages: 0,
     activeBookings: 0,
@@ -43,11 +41,9 @@ export default function DashboardPage() {
       setIsVerified(verified)
 
       const [
-        { count: listings },
         { count: unreadMessages },
         { count: activeBookings },
       ] = await Promise.all([
-        supabase.from('rooms').select('*', { count: 'exact', head: true }).eq('owner_id', userId),
         supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', userId).eq('is_read', false),
         supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('user_id', userId).in('status', ['pending', 'confirmed', 'active']),
       ])
@@ -63,7 +59,6 @@ export default function DashboardPage() {
       }
 
       setStats({
-        listings: listings ?? 0,
         pendingBookings,
         unreadMessages: unreadMessages ?? 0,
         activeBookings: activeBookings ?? 0,
@@ -94,12 +89,19 @@ export default function DashboardPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
 
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Hi, {firstName} 👋</h1>
-        <p className="mt-0.5 text-sm text-gray-400">
-          {isVerified ? 'Your account is verified.' : 'Your account is pending verification.'}
-        </p>
+      {/* Header — profile card */}
+      <div className="mb-6 flex items-center gap-4 rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <Link href="/profile" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400 hover:bg-teal-100 transition">
+          <User className="h-5 w-5" />
+        </Link>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-gray-900 dark:text-white">
+            {profile?.full_name ?? 'My Profile'}
+            {isVerified && <span className="ml-2 rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">Verified</span>}
+          </p>
+          <p className="text-xs text-gray-400">{isVerified ? 'Your account is verified' : '⏳ Pending verification'}</p>
+        </div>
+        <Link href="/profile" className="text-sm text-gray-400 hover:text-teal-600 dark:hover:text-teal-400">›</Link>
       </div>
 
       {!isVerified && (
@@ -107,37 +109,6 @@ export default function DashboardPage() {
           ⏳ Admin verify করার পর সব features access করতে পারবেন।
         </div>
       )}
-
-      {/* Profile quick link */}
-      <Link
-        href="/profile"
-        className="mb-6 flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm transition hover:border-gray-200 dark:border-gray-700 dark:bg-gray-800"
-      >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-          <User className="h-4 w-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">{profile?.full_name ?? 'My Profile'}</p>
-          <p className="text-xs text-gray-400">Edit profile & my rooms</p>
-        </div>
-        <span className="text-gray-300 dark:text-gray-600">›</span>
-      </Link>
-
-      {/* Stats */}
-      <div className="mb-8 grid grid-cols-3 gap-3">
-        <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <p className="text-xs text-gray-400">My Rooms</p>
-          <p className="mt-1 text-3xl font-bold text-teal-600">{stats.listings}</p>
-        </div>
-        <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <p className="text-xs text-gray-400">Pending Requests</p>
-          <p className="mt-1 text-3xl font-bold text-yellow-500">{stats.pendingBookings}</p>
-        </div>
-        <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <p className="text-xs text-gray-400">Unread Messages</p>
-          <p className="mt-1 text-3xl font-bold text-green-600">{stats.unreadMessages}</p>
-        </div>
-      </div>
 
       {/* Owner section */}
       {isVerified && (
@@ -252,6 +223,30 @@ export default function DashboardPage() {
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Admin Users</p>
                 <p className="text-xs text-gray-400">Verify & manage users</p>
+              </div>
+            </Link>
+            <Link
+              href="/admin/rooms"
+              className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                <Building2 className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white">Admin Rooms</p>
+                <p className="text-xs text-gray-400">Manage all listings</p>
+              </div>
+            </Link>
+            <Link
+              href="/admin/reports"
+              className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400">
+                <Flag className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white">Report Listings</p>
+                <p className="text-xs text-gray-400">Review flagged rooms</p>
               </div>
             </Link>
           </div>

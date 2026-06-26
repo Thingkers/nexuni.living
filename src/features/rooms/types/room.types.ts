@@ -32,18 +32,30 @@ export type Room = {
   electricity: boolean
 
   // Extended facilities
-  ac?: boolean
   attached_bath?: boolean
   study_table?: boolean
-  parking?: boolean
-  laundry?: boolean
-  cctv?: boolean
+  generator?: boolean
+  lift?: boolean
+  fridge?: boolean
+  maid_service?: boolean
+  security?: boolean
+  water_filter?: boolean
+  balcony?: boolean
 
   // Additional monthly costs
   electricity_bill?: number | null
   maid_bill?: number | null
   other_bill?: number | null
   other_bill_label?: string | null
+
+  // New fields
+  advance_deposit?: string | null
+  rent_inclusive?: boolean
+  university_priority?: string | null
+  house_rules?: string[] | null
+  washroom_sharing?: number | null
+  meal_available?: boolean
+  landmarks?: { name: string; time: string }[] | null
 
   images: string[] | null
   description?: string | null

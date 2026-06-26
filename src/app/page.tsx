@@ -86,10 +86,11 @@ export default function HomePage() {
           {/* Search bar */}
           <div className="relative mx-auto flex max-w-xl overflow-visible rounded-2xl bg-white/10 p-1.5 backdrop-blur-sm ring-1 ring-white/20 focus-within:ring-white/40">
             <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
               <input
                 type="text"
                 placeholder="Search by area, university or room type..."
-                className="w-full rounded-xl bg-transparent px-4 py-3 text-sm text-white placeholder-white/50 outline-none"
+                className="w-full rounded-xl bg-transparent py-3 pl-10 pr-4 text-sm text-white placeholder-white/50 outline-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}

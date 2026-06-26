@@ -82,7 +82,6 @@ function ListingsContent() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [page, setPage] = useState(1)
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid')
   const [mapRooms, setMapRooms] = useState<{ id: string; title: string; rent: number; latitude: number | null; longitude: number | null; location_name: string | null }[]>([])
@@ -123,7 +122,6 @@ function ListingsContent() {
     if (type) qb = qb.eq('type', type)
     if (maxRent) qb = qb.lte('rent', Number(maxRent))
     if (availableMonth) qb = qb.lte('available_from', `${availableMonth}-01`)
-    if (currentUserId) qb = qb.neq('owner_id', currentUserId)
 
     if (sort === 'price_asc') {
       qb = qb.order('rent', { ascending: true })
@@ -149,7 +147,7 @@ function ListingsContent() {
     }
     setLoading(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, location, gender, type, maxRent, sort, availableMonth, currentUserId])
+  }, [query, location, gender, type, maxRent, sort, availableMonth])
 
   async function loadMore() {
     setLoadingMore(true)
@@ -169,12 +167,6 @@ function ListingsContent() {
   useEffect(() => {
     fetchRooms()
   }, [fetchRooms])
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id ?? null)
-    })
-  }, [])
 
   // Infinite scroll — auto-load next page when sentinel enters viewport
   useEffect(() => {
@@ -213,14 +205,13 @@ function ListingsContent() {
     if (type)             qb = qb.eq('type', type)
     if (maxRent)          qb = qb.lte('rent', Number(maxRent))
     if (availableMonth)   qb = qb.lte('available_from', `${availableMonth}-01`)
-    if (currentUserId)    qb = qb.neq('owner_id', currentUserId)
 
     qb.then(({ data }) => {
       setMapRooms((data ?? []) as typeof mapRooms)
       setLoadingMap(false)
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, query, location, gender, type, maxRent, availableMonth, currentUserId])
+  }, [viewMode, query, location, gender, type, maxRent, availableMonth])
 
   // Location autocomplete — fetch matching location_name values from DB
   useEffect(() => {
@@ -546,14 +537,14 @@ function ListingsContent() {
       {viewMode === 'map' && (
         <div className="mb-8">
           {loadingMap ? (
-            <div className="flex h-[500px] items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex h-125 items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
               <svg className="h-6 w-6 animate-spin text-teal-500" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
             </div>
           ) : mapRooms.length === 0 ? (
-            <div className="flex h-[500px] flex-col items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex h-125 flex-col items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
               <p className="text-2xl">🗺️</p>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">No rooms with location data found</p>
             </div>

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Home, LayoutGrid, UtensilsCrossed, BedDouble, Key,
   LayoutDashboard, MessageSquare, Inbox, CalendarCheck,
-  Plus, LogOut, BarChart2, ShieldCheck, User,
+  Plus, LogOut, BarChart2, ShieldCheck, User, Flag, Building2,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -403,11 +403,18 @@ export default function Navbar() {
                   {profile?.role === 'admin' && (
                     <>
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
+                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Admin</p>
                       <Link href="/dashboard/analytics" className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
                         <BarChart2 className="h-3.5 w-3.5 opacity-50" />Analytics
                       </Link>
                       <Link href="/admin/users" className="flex items-center gap-2.5 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
                         <ShieldCheck className="h-3.5 w-3.5" />Admin Users
+                      </Link>
+                      <Link href="/admin/rooms" className="flex items-center gap-2.5 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
+                        <Building2 className="h-3.5 w-3.5" />Admin Rooms
+                      </Link>
+                      <Link href="/admin/reports" className="flex items-center gap-2.5 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
+                        <Flag className="h-3.5 w-3.5" />Report Listings
                       </Link>
                     </>
                   )}
@@ -526,6 +533,12 @@ export default function Navbar() {
                       </Link>
                       <Link href="/admin/users" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
                         <ShieldCheck className="h-4 w-4 shrink-0" />Admin Users
+                      </Link>
+                      <Link href="/admin/rooms" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
+                        <Building2 className="h-4 w-4 shrink-0" />Admin Rooms
+                      </Link>
+                      <Link href="/admin/reports" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
+                        <Flag className="h-4 w-4 shrink-0" />Report Listings
                       </Link>
                     </>
                   )}

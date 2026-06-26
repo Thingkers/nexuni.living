@@ -8,16 +8,17 @@ import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase'
 import type { Booking, Profile, Room } from '@/types'
 import RoomCard from '@/features/rooms/components/RoomCard'
-import BookingTimeline from '@/features/bookings/components/BookingTimeline'
-import BookingCountdown from '@/features/bookings/components/BookingCountdown'
 
 type Tab = 'info' | 'rooms' | 'bookings' | 'saved'
 
 const BOOKING_STATUS: Record<string, { label: string; className: string }> = {
-  pending:   { label: 'Pending',   className: 'bg-yellow-50 text-yellow-700' },
-  confirmed: { label: 'Confirmed', className: 'bg-green-50 text-green-700' },
-  cancelled: { label: 'Cancelled', className: 'bg-red-50 text-red-600' },
-  rejected:  { label: 'Rejected',  className: 'bg-red-50 text-red-600' },
+  pending:   { label: 'Pending',       className: 'bg-yellow-50 text-yellow-700' },
+  confirmed: { label: 'On Hold (24h)', className: 'bg-blue-50 text-blue-700' },
+  active:    { label: '✅ Active',      className: 'bg-green-50 text-green-700' },
+  cancelled: { label: 'Cancelled',     className: 'bg-red-50 text-red-600' },
+  rejected:  { label: 'Rejected',      className: 'bg-red-50 text-red-600' },
+  expired:   { label: '⏰ Expired',     className: 'bg-gray-100 text-gray-500' },
+  completed: { label: '🏁 Completed',  className: 'bg-purple-50 text-purple-700' },
 }
 
 export default function ProfilePage() {
@@ -265,7 +266,7 @@ export default function ProfilePage() {
         {[
           { key: 'info',     label: 'Profile' },
           { key: 'rooms',    label: `My Listings (${myRooms.length})` },
-          { key: 'bookings', label: `Bookings (${bookings.length})` },
+          { key: 'bookings', label: `Bookings (${bookings.filter(b => ['pending','confirmed','active'].includes(b.status)).length})` },
           { key: 'saved',    label: `Saved (${savedRooms.length})` },
         ].map((item) => (
           <button
@@ -399,87 +400,48 @@ export default function ProfilePage() {
       {/* BOOKINGS */}
       {tab === 'bookings' && (
         <div>
-          {!isVerified ? (
-            <div className="py-16 text-center text-gray-400">
-              <p className="mb-3 text-4xl">⏳</p>
-              <p className="text-sm">Account verify হলে booking দেখতে পারবেন।</p>
-            </div>
-          ) : bookings.length === 0 ? (
-            <div className="py-16 text-center text-gray-400">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-gray-500">Active bookings</p>
+            <Link href="/dashboard/my-bookings" className="text-sm text-teal-600 hover:underline">
+              View all →
+            </Link>
+          </div>
+
+          {bookings.filter(b => ['pending','confirmed','active'].includes(b.status)).length === 0 ? (
+            <div className="py-12 text-center text-gray-400">
               <p className="mb-3 text-4xl">📋</p>
-              <p className="text-sm">No booking requests found</p>
+              <p className="text-sm">No active bookings</p>
+              <Link href="/listings" className="mt-3 inline-block text-sm text-teal-600 hover:underline">Browse rooms →</Link>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {bookings.map((booking: any) => {
-                const status = BOOKING_STATUS[booking.status] ?? BOOKING_STATUS.pending
-                const ownerProfile = booking.rooms?.profiles
-                const hasBkash = ownerProfile?.bkash_number
-                const hasNagad = ownerProfile?.nagad_number
-                const hasPayment = hasBkash || hasNagad
-                return (
-                  <div key={booking.id} className="rounded-2xl border border-gray-100 dark:border-gray-700 p-4 dark:bg-gray-800">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{booking.rooms?.title}</p>
-                        <p className="mt-0.5 text-xs text-gray-400">৳{booking.rooms?.rent}/month · {booking.rooms?.location_name}</p>
-                        {booking.move_in_date && (
-                          <p className="mt-1 text-xs text-gray-400">🗓 Move-in date: {new Date(booking.move_in_date).toLocaleDateString('en-US')}</p>
-                        )}
-                      </div>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}>{status.label}</span>
-                    </div>
-
-                    {booking.status === 'confirmed' && hasPayment && (
-                      <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-                        <p className="mb-2 text-xs font-semibold text-green-800 dark:text-green-400">💸 Payment Info</p>
-                        <p className="mb-1.5 text-xs text-gray-500 dark:text-gray-400">Send your advance/first-month rent to the owner:</p>
-                        <div className="flex flex-col gap-1.5">
-                          {hasBkash && (
-                            <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
-                              <span className="text-xs font-medium text-pink-600">📱 bKash</span>
-                              <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{ownerProfile.bkash_number}</span>
-                            </div>
-                          )}
-                          {hasNagad && (
-                            <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
-                              <span className="text-xs font-medium text-orange-600">📱 Nagad</span>
-                              <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{ownerProfile.nagad_number}</span>
-                            </div>
-                          )}
-                          {ownerProfile?.phone && (
-                            <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
-                              Contact owner: <a href={`tel:${ownerProfile.phone}`} className="text-teal-600 hover:underline">{ownerProfile.phone}</a>
+              {bookings
+                .filter(b => ['pending','confirmed','active'].includes(b.status))
+                .map((booking: any) => {
+                  const status = BOOKING_STATUS[booking.status] ?? BOOKING_STATUS.pending
+                  return (
+                    <div key={booking.id} className="rounded-2xl border border-gray-100 p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="min-w-0 flex-1">
+                          <Link href={`/listings/${booking.rooms?.id}`} className="truncate text-sm font-medium text-gray-900 hover:text-teal-600">
+                            🏠 {booking.rooms?.title}
+                          </Link>
+                          <p className="mt-0.5 text-xs text-gray-400">
+                            ৳{booking.rooms?.rent}/month · {booking.rooms?.location_name}
+                          </p>
+                          {booking.move_in_date && (
+                            <p className="mt-0.5 text-xs text-gray-400">
+                              🗓 {new Date(booking.move_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </p>
                           )}
                         </div>
+                        <span className={`ml-2 shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}>
+                          {status.label}
+                        </span>
                       </div>
-                    )}
-
-                    {booking.status === 'confirmed' && !hasPayment && (
-                      <div className="mt-3 rounded-xl border border-teal-100 bg-teal-50 px-3 py-2.5 text-xs text-teal-700 dark:border-teal-800 dark:bg-teal-900/20 dark:text-teal-400">
-                        ✅ Booking confirmed! Contact the owner to arrange payment.
-                        {ownerProfile?.phone && (
-                          <a href={`tel:${ownerProfile.phone}`} className="ml-1 font-medium underline">{ownerProfile.phone}</a>
-                        )}
-                      </div>
-                    )}
-
-                    <BookingTimeline bookingId={booking.id} />
-                    {booking.status === 'confirmed' && booking.expires_at && (
-                      <div className="mt-2">
-                        <BookingCountdown expiresAt={booking.expires_at} />
-                        <Link href={`/inbox/${booking.rooms?.owner_id}`} className="mt-2 inline-flex items-center gap-1 text-xs text-teal-600 hover:underline dark:text-teal-400">
-                          💬 Message Owner
-                        </Link>
-                      </div>
-                    )}
-                    {booking.message && (
-                      <p className="mt-2 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-400 dark:bg-gray-700">"{booking.message}"</p>
-                    )}
-                  </div>
-                )
-              })}
+                    </div>
+                  )
+                })}
             </div>
           )}
         </div>

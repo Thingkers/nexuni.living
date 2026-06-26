@@ -377,14 +377,14 @@ export default function BookingRequestsPage() {
                 {booking.status === 'confirmed' && !isExpired(booking.expires_at) && (
                   <div className="space-y-2">
                     <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-xs text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-                      ⏳ Waiting for tenant to arrange advance payment. Once received, mark below.
+                      ⏳ Tenant এর কাছ থেকে advance নেওয়ার পর নিচের বাটনে ক্লিক করুন।
                     </div>
                     <button
                       disabled={!!isActing}
                       onClick={() => handleAction(booking.id, 'active')}
                       className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
                     >
-                      {isActing ? 'Processing...' : '✅ Mark Advance Received — Confirm Booking'}
+                      {isActing ? 'Processing...' : '💵 Advance নিয়েছি — Booking Confirm করুন'}
                     </button>
                   </div>
                 )}

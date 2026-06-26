@@ -382,7 +382,7 @@ export default function BookingRequestsPage() {
                     <button
                       disabled={!!isActing}
                       onClick={() => handleAction(booking.id, 'active')}
-                      className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                      className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                     >
                       {isActing ? 'Processing...' : '💵 Advance নিয়েছি — Booking Confirm করুন'}
                     </button>

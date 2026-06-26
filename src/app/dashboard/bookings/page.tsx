@@ -10,7 +10,7 @@ import { bookingConfirmedTemplate, bookingRejectedTemplate } from '@/lib/email/t
 import { isSharedRoom } from '@/features/rooms/types/room.types'
 import type { RoomType } from '@/features/rooms/types/room.types'
 
-type FilterStatus = 'all' | 'pending' | 'confirmed' | 'active' | 'cancelled' | 'rejected' | 'expired'
+type FilterStatus = 'all' | 'pending' | 'confirmed' | 'active' | 'cancelled' | 'rejected' | 'expired' | 'completed'
 
 function isExpired(expiresAt: string | null | undefined): boolean {
   if (!expiresAt) return false
@@ -24,6 +24,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   cancelled: { label: 'Cancelled',       className: 'bg-red-50 text-red-600 border-red-200' },
   rejected:  { label: 'Rejected',        className: 'bg-red-50 text-red-600 border-red-200' },
   expired:   { label: '⏰ Expired',       className: 'bg-gray-100 text-gray-500 border-gray-200' },
+  completed: { label: '🏁 Completed',     className: 'bg-purple-50 text-purple-700 border-purple-200' },
 }
 
 export default function BookingRequestsPage() {
@@ -145,6 +146,38 @@ export default function BookingRequestsPage() {
     setActing(null)
   }
 
+  async function endTenancy(bookingId: string, roomId: string) {
+    setActing(bookingId)
+    const booking = bookings.find((b) => b.id === bookingId)
+    const roomType = booking?.rooms?.type as RoomType
+
+    const { error: bookingError } = await supabase
+      .from('bookings').update({ status: 'completed' }).eq('id', bookingId)
+
+    if (bookingError) { toast.error(bookingError.message); setActing(null); return }
+
+    let roomError: { message: string } | null = null
+    if (isSharedRoom(roomType)) {
+      const current  = booking?.rooms?.available_seats ?? 0
+      const total    = booking?.rooms?.total_seats ?? 999
+      const restored = Math.min(current + (booking?.seats ?? 1), total)
+      const { error } = await supabase
+        .from('rooms').update({ available_seats: restored, status: 'open' }).eq('id', roomId)
+      roomError = error
+    } else {
+      const { error } = await supabase.from('rooms').update({ status: 'open' }).eq('id', roomId)
+      roomError = error
+    }
+
+    if (roomError) {
+      toast.error(roomError.message)
+    } else {
+      setBookings((prev) => prev.map((b) => b.id === bookingId ? { ...b, status: 'completed' } : b))
+      toast.success('🏁 Tenancy ended — room is now open again!')
+    }
+    setActing(null)
+  }
+
   async function reactivateRoom(bookingId: string, roomId: string) {
     setActing(bookingId)
 
@@ -178,6 +211,7 @@ export default function BookingRequestsPage() {
     cancelled: bookings.filter((b) => b.status === 'cancelled').length,
     rejected:  bookings.filter((b) => b.status === 'rejected').length,
     expired:   bookings.filter((b) => b.status === 'expired').length,
+    completed: bookings.filter((b) => b.status === 'completed').length,
   }
 
   if (loading) {
@@ -221,8 +255,9 @@ export default function BookingRequestsPage() {
           { key: 'confirmed', label: 'On Hold' },
           { key: 'active',    label: '✅ Active' },
           { key: 'expired',   label: '⏰ Expired' },
-          { key: 'cancelled', label: 'Cancelled' },
-          { key: 'rejected',  label: 'Rejected' },
+          { key: 'cancelled',  label: 'Cancelled' },
+          { key: 'rejected',   label: 'Rejected' },
+          { key: 'completed',  label: '🏁 Completed' },
         ].map((item) => (
           <button
             key={item.key}
@@ -407,8 +442,17 @@ export default function BookingRequestsPage() {
 
                 {/* ACTIVE: fully booked, advance received */}
                 {booking.status === 'active' && (
-                  <div className="rounded-xl bg-green-50 px-3 py-2.5 text-xs text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                    🎉 Booking active — advance received. Room is occupied by this tenant.
+                  <div className="space-y-2">
+                    <div className="rounded-xl bg-green-50 px-3 py-2.5 text-xs text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                      🎉 Booking active — advance received. Room is occupied by this tenant.
+                    </div>
+                    <button
+                      disabled={!!isActing}
+                      onClick={() => endTenancy(booking.id, booking.rooms?.id)}
+                      className="w-full rounded-xl border border-purple-200 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 disabled:opacity-50"
+                    >
+                      {isActing ? 'Processing...' : '🏁 Tenant চলে গেছে — Tenancy শেষ করুন'}
+                    </button>
                   </div>
                 )}
 

@@ -15,13 +15,14 @@ const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
   cancelled: { label: 'Cancelled',      cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
   rejected:  { label: 'Rejected',       cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
   expired:   { label: '⏰ Expired',      cls: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400' },
+  completed: { label: '🏁 Completed',    cls: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400' },
 }
 
 export default function MyBookingsPage() {
   const router = useRouter()
   const [bookings, setBookings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'active' | 'rejected' | 'expired'>('all')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'active' | 'rejected' | 'expired' | 'completed'>('all')
   const [cancelling, setCancelling] = useState<string | null>(null)
   const [confirmCancel, setConfirmCancel] = useState<string | null>(null)
 
@@ -99,8 +100,9 @@ export default function MyBookingsPage() {
           { key: 'pending',   label: '⏳ Pending' },
           { key: 'confirmed', label: '🔵 On Hold' },
           { key: 'active',    label: '✅ Active' },
-          { key: 'expired',   label: '⏰ Expired' },
-          { key: 'rejected',  label: '❌ Rejected' },
+          { key: 'expired',    label: '⏰ Expired' },
+          { key: 'completed',  label: '🏁 Completed' },
+          { key: 'rejected',   label: '❌ Rejected' },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -182,6 +184,15 @@ export default function MyBookingsPage() {
                   <div className="mt-3 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 dark:border-green-800 dark:bg-green-900/20">
                     <p className="text-xs font-semibold text-green-800 dark:text-green-400">🎉 Booking Active — Advance Received!</p>
                     <p className="mt-0.5 text-xs text-green-700 dark:text-green-500">Your booking is confirmed and locked. You may now move in.</p>
+                  </div>
+                )}
+
+                {/* Completed: tenancy ended by owner */}
+                {booking.status === 'completed' && (
+                  <div className="mt-3 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2.5 dark:border-purple-800 dark:bg-purple-900/20">
+                    <p className="text-xs font-semibold text-purple-800 dark:text-purple-400">🏁 Tenancy Completed</p>
+                    <p className="mt-0.5 text-xs text-purple-700 dark:text-purple-500">Your stay has ended. Thank you for using Student Hostel!</p>
+                    <Link href="/listings" className="mt-1 inline-block text-xs text-teal-600 hover:underline dark:text-teal-400">Find a new room →</Link>
                   </div>
                 )}
 

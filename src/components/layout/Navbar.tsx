@@ -341,7 +341,6 @@ export default function Navbar() {
                     </div>
                   </div>
 
-                  <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>My Profile</Link>
                   <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>Dashboard</Link>
 
                   {isVerified && (
@@ -378,7 +377,6 @@ export default function Navbar() {
                           <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
                         )}
                       </Link>
-                      <Link href="/dashboard/saved" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>Saved Rooms</Link>
                     </>
                   )}
 
@@ -443,7 +441,6 @@ export default function Navbar() {
                     </Link>
                   )}
 
-                  <Link href="/profile" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>👤 My Profile</Link>
                   <Link href="/dashboard" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>🗂 Dashboard</Link>
 
                   {isVerified && (
@@ -480,7 +477,6 @@ export default function Navbar() {
                           <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
                         )}
                       </Link>
-                      <Link href="/dashboard/saved" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>🤍 Saved Rooms</Link>
                     </>
                   )}
 

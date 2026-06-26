@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase'
 import type { Booking, Profile, Room } from '@/types'
 import RoomCard from '@/features/rooms/components/RoomCard'
 
-type Tab = 'info' | 'rooms' | 'bookings' | 'saved'
+type Tab = 'info' | 'rooms'
 
 const BOOKING_STATUS: Record<string, { label: string; className: string }> = {
   pending:   { label: 'Pending',       className: 'bg-yellow-50 text-yellow-700' },
@@ -28,8 +28,6 @@ export default function ProfilePage() {
   const [tab, setTab]             = useState<Tab>('info')
   const [profile, setProfile]     = useState<Profile | null>(null)
   const [myRooms, setMyRooms]     = useState<Room[]>([])
-  const [bookings, setBookings]   = useState<any[]>([])
-  const [savedRooms, setSavedRooms] = useState<any[]>([])
   const [saving, setSaving]       = useState(false)
   const [saved, setSaved]         = useState(false)
   const [userId, setUserId]       = useState<string | null>(null)
@@ -56,13 +54,9 @@ export default function ProfilePage() {
       const [
         { data: profileData, error: profileError },
         { data: roomData },
-        { data: bookingData },
-        { data: savedData },
       ] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
         supabase.from('rooms').select('*').eq('owner_id', uid).order('created_at', { ascending: false }),
-        supabase.from('bookings').select('*, rooms(title, rent, location_name, owner_id, profiles(full_name, phone, bkash_number, nagad_number))').eq('user_id', uid).order('created_at', { ascending: false }),
-        supabase.from('saved_rooms').select('*, rooms(*, profiles(full_name, avatar_url))').eq('user_id', uid).order('created_at', { ascending: false }),
       ])
 
       if (profileError) {
@@ -80,8 +74,6 @@ export default function ProfilePage() {
       setProfile(profileData as Profile)
       setIsVerified(profileData.verification_status === 'approved')
       setMyRooms((roomData ?? []) as Room[])
-      setBookings(bookingData ?? [])
-      setSavedRooms((savedData ?? []).map((item: any) => item.rooms))
       setLoading(false)
     }
 
@@ -264,10 +256,8 @@ export default function ProfilePage() {
 
       <div className="mb-6 flex gap-1 border-b border-gray-100">
         {[
-          { key: 'info',     label: 'Profile' },
-          { key: 'rooms',    label: `My Listings (${myRooms.length})` },
-          { key: 'bookings', label: `Bookings (${bookings.filter(b => ['pending','confirmed','active'].includes(b.status)).length})` },
-          { key: 'saved',    label: `Saved (${savedRooms.length})` },
+          { key: 'info',  label: 'Profile' },
+          { key: 'rooms', label: `My Rooms (${myRooms.length})` },
         ].map((item) => (
           <button
             key={item.key}
@@ -397,73 +387,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* BOOKINGS */}
-      {tab === 'bookings' && (
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-gray-500">Active bookings</p>
-            <Link href="/dashboard/my-bookings" className="text-sm text-teal-600 hover:underline">
-              View all →
-            </Link>
-          </div>
-
-          {bookings.filter(b => ['pending','confirmed','active'].includes(b.status)).length === 0 ? (
-            <div className="py-12 text-center text-gray-400">
-              <p className="mb-3 text-4xl">📋</p>
-              <p className="text-sm">No active bookings</p>
-              <Link href="/listings" className="mt-3 inline-block text-sm text-teal-600 hover:underline">Browse rooms →</Link>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {bookings
-                .filter(b => ['pending','confirmed','active'].includes(b.status))
-                .map((booking: any) => {
-                  const status = BOOKING_STATUS[booking.status] ?? BOOKING_STATUS.pending
-                  return (
-                    <div key={booking.id} className="rounded-2xl border border-gray-100 p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="min-w-0 flex-1">
-                          <Link href={`/listings/${booking.rooms?.id}`} className="truncate text-sm font-medium text-gray-900 hover:text-teal-600">
-                            🏠 {booking.rooms?.title}
-                          </Link>
-                          <p className="mt-0.5 text-xs text-gray-400">
-                            ৳{booking.rooms?.rent}/month · {booking.rooms?.location_name}
-                          </p>
-                          {booking.move_in_date && (
-                            <p className="mt-0.5 text-xs text-gray-400">
-                              🗓 {new Date(booking.move_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </p>
-                          )}
-                        </div>
-                        <span className={`ml-2 shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}>
-                          {status.label}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* SAVED */}
-      {tab === 'saved' && (
-        <div>
-          {savedRooms.length === 0 ? (
-            <div className="py-16 text-center text-gray-400">
-              <p className="mb-3 text-4xl">❤️</p>
-              <p className="text-sm">No saved rooms yet</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {savedRooms.map((room) => (
-                <RoomCard key={room.id} room={room} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
     </main>
 

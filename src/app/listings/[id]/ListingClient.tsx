@@ -9,7 +9,6 @@ import type { Room } from '@/features/rooms/types/room.types'
 import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.types'
 import BookingModal from '@/features/bookings/components/BookingModal'
 import ReportListingButton from '@/features/rooms/components/ReportListingButton'
-import ReviewBox from '@/features/reviews/components/ReviewBox'
 import SimilarRooms from '@/features/rooms/components/SimilarRooms'
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
@@ -420,7 +419,6 @@ export default function ListingClient({ id }: { id: string }) {
           </div>
         </div>
 
-        <ReviewBox roomId={room.id} ownerId={room.owner_id} />
 
         <SimilarRooms
           currentRoomId={room.id}

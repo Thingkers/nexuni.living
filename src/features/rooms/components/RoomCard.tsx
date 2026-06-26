@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useSaved } from '@/hooks/useSaved'
 import type { Room } from '@/features/rooms/types/room.types'
 import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.types'
 import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
@@ -21,7 +20,6 @@ const AMENITIES = [
 
 export default function RoomCard({ room }: { room: Room }) {
   const isBooked = room.status === 'booked' || room.status === 'closed'
-  const { isSaved, toggleSaved } = useSaved(room.id)
 
   const [activeImage, setActiveImage] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
@@ -103,15 +101,7 @@ export default function RoomCard({ room }: { room: Room }) {
 
         <div className="absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent" />
 
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSaved() }}
-          className="absolute bottom-2.5 left-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-base shadow-sm transition-transform hover:scale-110 hover:bg-white"
-        >
-          {isSaved ? '❤️' : '🤍'}
-        </button>
-
-        {images.length > 1 && (
+{images.length > 1 && (
           <>
             <button
               type="button"

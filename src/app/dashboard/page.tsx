@@ -107,6 +107,19 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Profile quick link */}
+      <Link
+        href="/profile"
+        className="mb-6 flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm transition hover:border-gray-200 dark:border-gray-700 dark:bg-gray-800"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-lg dark:bg-gray-700">👤</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">{profile?.full_name ?? 'My Profile'}</p>
+          <p className="text-xs text-gray-400">Edit profile & my rooms</p>
+        </div>
+        <span className="text-gray-300 dark:text-gray-600">›</span>
+      </Link>
+
       {/* Stats */}
       <div className="mb-8 grid grid-cols-3 gap-3">
         <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -203,16 +216,6 @@ export default function DashboardPage() {
               </div>
             </Link>
 
-            <Link
-              href="/profile"
-              className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-gray-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-            >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-xl dark:bg-gray-700">👤</span>
-              <div>
-                <p className="font-semibold text-gray-900 dark:text-white">My Profile</p>
-                <p className="text-xs text-gray-400">Update personal information</p>
-              </div>
-            </Link>
           </div>
         </div>
       )}

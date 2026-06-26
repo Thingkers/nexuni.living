@@ -368,7 +368,7 @@ function ListingsContent() {
                     syncURL({ search: query, location: s, gender, type, rent: maxRent, sort, month: availableMonth })
                   }}
                 >
-                  <span className="text-gray-400">📍</span>
+                  <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 21c-4-4-8-8-8-13a8 8 0 1 1 16 0c0 5-4 9-8 13z" /><circle cx="12" cy="8" r="2" /></svg>
                   <span className="truncate">{s}</span>
                 </button>
               ))}
@@ -476,7 +476,7 @@ function ListingsContent() {
           )}
           {location && (
             <button onClick={() => { setLocation(''); setLocationInput(''); syncURL({ search: query, location: '', gender, type, rent: maxRent, sort, month: availableMonth }) }} className="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400">
-              📍 {location} <span className="ml-0.5 font-bold">×</span>
+              {location} <span className="ml-0.5 font-bold">×</span>
             </button>
           )}
           {gender && (

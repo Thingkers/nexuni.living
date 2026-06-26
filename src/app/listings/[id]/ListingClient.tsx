@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import {
+  MapPin, User, Users, Wifi, Zap, Flame, Wind, ShowerHead,
+  BookOpen, Car, Shirt, Camera, FileText, Calendar, Tag, Home,
+} from 'lucide-react'
 import ShareButton from '@/features/rooms/components/ShareButton'
 import { supabase } from '@/lib/supabase'
 import type { Room } from '@/features/rooms/types/room.types'
@@ -150,7 +154,7 @@ export default function ListingClient({ id }: { id: string }) {
                 </span>
               </>
             ) : (
-              <div className="flex h-full items-center justify-center text-6xl">🏠</div>
+              <div className="flex h-full items-center justify-center text-gray-300 dark:text-gray-600"><Home className="h-16 w-16" /></div>
             )}
           </div>
 
@@ -181,37 +185,46 @@ export default function ListingClient({ id }: { id: string }) {
               </span>
             </div>
 
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                📍 {room.location_name || 'Location not added'}
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                {room.location_name || 'Location not added'}
               </span>
               <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                 {ROOM_TYPE_LABELS[room.type] ?? room.type}
               </span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                {room.gender_type === 'male' ? '👨 Male' : room.gender_type === 'female' ? '👩 Female' : '👥 Any'}
+            </div>
+            <div className="mb-4">
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                room.gender_type === 'male'
+                  ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+                  : room.gender_type === 'female'
+                  ? 'bg-pink-50 text-pink-600 dark:bg-pink-900/20 dark:text-pink-400'
+                  : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+              }`}>
+                {room.gender_type === 'male'
+                  ? <><User className="h-3.5 w-3.5" /> Male only</>
+                  : room.gender_type === 'female'
+                  ? <><User className="h-3.5 w-3.5" /> Female only</>
+                  : <><Users className="h-3.5 w-3.5" /> Any gender</>}
               </span>
-              {(room.views ?? 0) > 0 && (
-                <span className="flex items-center gap-1 rounded-full bg-gray-50 px-3 py-1 text-xs text-gray-400 dark:bg-gray-800">
-                  👁 {room.views} view{room.views !== 1 ? 's' : ''}
-                </span>
-              )}
             </div>
 
             {isSharedRoom(room.type) && (
               <div className="mb-4 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-800">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <p className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className={`h-2 w-2 rounded-full ${availableSeats === 0 ? 'bg-red-500' : availableSeats === totalSeats ? 'bg-green-500' : 'bg-yellow-400'}`} />
                   {availableSeats === 0
-                    ? '🔴 No seats available'
+                    ? 'No seats available'
                     : availableSeats === totalSeats
-                      ? `🟢 All ${totalSeats} seats available`
-                      : `🟡 ${availableSeats} of ${totalSeats} seats available`}
+                      ? `All ${totalSeats} seats available`
+                      : `${availableSeats} of ${totalSeats} seats available`}
                 </p>
               </div>
             )}
 
             <div className="mb-5 rounded-2xl border border-teal-100 bg-teal-50 p-4 dark:border-teal-800 dark:bg-teal-900/20">
-              <p className="mb-3 text-xs font-semibold text-teal-700 dark:text-teal-400">💰 Pricing</p>
+              <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-teal-700 dark:text-teal-400"><Tag className="h-3.5 w-3.5" /> Pricing</p>
               <div className="flex flex-col gap-2">
                 <div className="flex items-end justify-between">
                   <div>
@@ -237,19 +250,19 @@ export default function ListingClient({ id }: { id: string }) {
                     <div className="flex flex-col gap-1">
                       {(room.electricity_bill ?? 0) > 0 && (
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">💡 Electricity bill</span>
+                          <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><Zap className="h-3 w-3" /> Electricity bill</span>
                           <span className="font-medium text-gray-700 dark:text-gray-300">৳{(room.electricity_bill!).toLocaleString('en-US')}</span>
                         </div>
                       )}
                       {(room.maid_bill ?? 0) > 0 && (
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">🧹 Maid bill</span>
+                          <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><Shirt className="h-3 w-3" /> Maid bill</span>
                           <span className="font-medium text-gray-700 dark:text-gray-300">৳{(room.maid_bill!).toLocaleString('en-US')}</span>
                         </div>
                       )}
                       {(room.other_bill ?? 0) > 0 && (
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">➕ {room.other_bill_label || 'Other'}</span>
+                          <span className="text-gray-500 dark:text-gray-400">{room.other_bill_label || 'Other'}</span>
                           <span className="font-medium text-gray-700 dark:text-gray-300">৳{(room.other_bill!).toLocaleString('en-US')}</span>
                         </div>
                       )}
@@ -270,28 +283,28 @@ export default function ListingClient({ id }: { id: string }) {
             <div className="mb-5">
               <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">Facilities</p>
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { key: 'wifi',          icon: '📶', label: 'WiFi' },
-                  { key: 'electricity',   icon: '💡', label: 'Electricity' },
-                  { key: 'gas',           icon: '🔥', label: 'Gas' },
-                  { key: 'ac',            icon: '❄️', label: 'AC' },
-                  { key: 'attached_bath', icon: '🚿', label: 'Attached Bath' },
-                  { key: 'study_table',   icon: '📚', label: 'Study Table' },
-                  { key: 'parking',       icon: '🅿️', label: 'Parking' },
-                  { key: 'laundry',       icon: '👕', label: 'Laundry' },
-                  { key: 'cctv',          icon: '📷', label: 'CCTV' },
-                ].filter((a) => room[a.key as keyof Room] !== undefined).map((amenity) => {
-                  const available = room[amenity.key as keyof Room]
+                {([
+                  { key: 'wifi',          Icon: Wifi,        label: 'WiFi' },
+                  { key: 'electricity',   Icon: Zap,         label: 'Electricity' },
+                  { key: 'gas',           Icon: Flame,       label: 'Gas' },
+                  { key: 'ac',            Icon: Wind,        label: 'AC' },
+                  { key: 'attached_bath', Icon: ShowerHead,  label: 'Attached Bath' },
+                  { key: 'study_table',   Icon: BookOpen,    label: 'Study Table' },
+                  { key: 'parking',       Icon: Car,         label: 'Parking' },
+                  { key: 'laundry',       Icon: Shirt,       label: 'Laundry' },
+                  { key: 'cctv',          Icon: Camera,      label: 'CCTV' },
+                ] as const).filter((a) => room[a.key as keyof Room] !== undefined).map(({ key, Icon, label }) => {
+                  const available = room[key as keyof Room]
                   return (
                     <div
-                      key={amenity.key}
+                      key={key}
                       className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium ${
                         available
                           ? 'bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'
                           : 'bg-gray-50 text-gray-300 line-through dark:bg-gray-800 dark:text-gray-600'
                       }`}
                     >
-                      {amenity.icon} {amenity.label}
+                      <Icon className="h-4 w-4 shrink-0" /> {label}
                     </div>
                   )
                 })}
@@ -300,7 +313,7 @@ export default function ListingClient({ id }: { id: string }) {
 
             {room.description && (
               <div className="mb-5 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-4 dark:border-gray-700 dark:bg-gray-800">
-                <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">📝 Description</p>
+                <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200"><FileText className="h-4 w-4" /> Description</p>
                 <p className={`text-sm leading-relaxed text-gray-600 dark:text-gray-400 ${!descExpanded && room.description.length > 200 ? 'line-clamp-4' : ''}`}>
                   {room.description}
                 </p>
@@ -316,7 +329,9 @@ export default function ListingClient({ id }: { id: string }) {
             )}
 
             {availableText && (
-              <p className="text-sm text-gray-400 dark:text-gray-500">🗓 {availableText}</p>
+              <p className="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500">
+                <Calendar className="h-3.5 w-3.5 shrink-0" />{availableText}
+              </p>
             )}
           </div>
 

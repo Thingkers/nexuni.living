@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { MapPin, Wifi, Flame, Zap, Calendar, User, Users } from 'lucide-react'
 import type { Room } from '@/features/rooms/types/room.types'
 import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.types'
 import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
@@ -13,9 +14,9 @@ const STATUS_CONFIG = {
 } as const
 
 const AMENITIES = [
-  { key: 'wifi',        icon: '📶', label: 'WiFi' },
-  { key: 'gas',         icon: '🔥', label: 'Gas' },
-  { key: 'electricity', icon: '💡', label: 'Electricity' },
+  { key: 'wifi',        Icon: Wifi,  label: 'WiFi' },
+  { key: 'gas',         Icon: Flame, label: 'Gas' },
+  { key: 'electricity', Icon: Zap,   label: 'Electricity' },
 ] as const
 
 export default function RoomCard({ room }: { room: Room }) {
@@ -138,16 +139,29 @@ export default function RoomCard({ room }: { room: Room }) {
           </Link>
         </div>
 
-        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
           <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-            📍 {room.location_name || 'Location not added'}
+            <MapPin className="h-3 w-3 shrink-0" />
+            {room.location_name || 'Location not added'}
           </span>
           <span className="text-gray-300 dark:text-gray-600">·</span>
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
             {ROOM_TYPE_LABELS[room.type] ?? room.type}
           </span>
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-            {room.gender_type === 'male' ? '👨 Male' : room.gender_type === 'female' ? '👩 Female' : '👥 Any'}
+        </div>
+        <div className="mb-2">
+          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+            room.gender_type === 'male'
+              ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+              : room.gender_type === 'female'
+              ? 'bg-pink-50 text-pink-600 dark:bg-pink-900/20 dark:text-pink-400'
+              : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+          }`}>
+            {room.gender_type === 'male'
+              ? <><User className="h-3 w-3" /> Male only</>
+              : room.gender_type === 'female'
+              ? <><User className="h-3 w-3" /> Female only</>
+              : <><Users className="h-3 w-3" /> Any gender</>}
           </span>
         </div>
 
@@ -182,16 +196,17 @@ export default function RoomCard({ room }: { room: Room }) {
         )}
 
         <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {AMENITIES.filter((a) => room[a.key]).map((a) => (
-            <span key={a.key} className="rounded-full bg-teal-50 px-2 py-0.5 text-xs text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
-              {a.icon} {a.label}
+          {AMENITIES.filter((a) => room[a.key]).map(({ key, Icon, label }) => (
+            <span key={key} className="flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-xs text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
+              <Icon className="h-3 w-3 shrink-0" /> {label}
             </span>
           ))}
         </div>
 
         {availableDate && (
-          <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-            🗓 {isAvailableNow ? 'Available now' : `From ${availableDate}`}
+          <p className="mt-2 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+            <Calendar className="h-3 w-3 shrink-0" />
+            {isAvailableNow ? 'Available now' : `From ${availableDate}`}
           </p>
         )}
       </div>

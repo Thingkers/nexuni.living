@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { User, Plus, ClipboardList, MessageSquare, CalendarCheck, BarChart2, ShieldCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type Stats = {
@@ -112,7 +113,9 @@ export default function DashboardPage() {
         href="/profile"
         className="mb-6 flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm transition hover:border-gray-200 dark:border-gray-700 dark:bg-gray-800"
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-lg dark:bg-gray-700">👤</span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+          <User className="h-4 w-4" />
+        </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-gray-900 dark:text-white">{profile?.full_name ?? 'My Profile'}</p>
           <p className="text-xs text-gray-400">Edit profile & my rooms</p>
@@ -145,7 +148,9 @@ export default function DashboardPage() {
               href="/post-room"
               className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-xl dark:bg-teal-900/30">➕</span>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
+                <Plus className="h-5 w-5" />
+              </span>
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Post a Room</p>
                 <p className="text-xs text-gray-400">Create a new listing</p>
@@ -157,8 +162,8 @@ export default function DashboardPage() {
                 href="/dashboard/bookings"
                 className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-yellow-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
               >
-                <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-yellow-50 text-xl dark:bg-yellow-900/30">
-                  📋
+                <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-yellow-50 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400">
+                  <ClipboardList className="h-5 w-5" />
                   {stats.pendingBookings > 0 && (
                     <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-yellow-500 text-[10px] font-bold text-white">
                       {stats.pendingBookings}
@@ -176,8 +181,8 @@ export default function DashboardPage() {
               href="/inbox"
               className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
             >
-              <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-50 text-xl dark:bg-green-900/30">
-                💬
+              <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                <MessageSquare className="h-5 w-5" />
                 {stats.unreadMessages > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-white">
                     {stats.unreadMessages}
@@ -202,8 +207,8 @@ export default function DashboardPage() {
               href="/dashboard/my-bookings"
               className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
             >
-              <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-xl dark:bg-teal-900/30">
-                🗓
+              <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
+                <CalendarCheck className="h-5 w-5" />
                 {stats.activeBookings > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-[10px] font-bold text-white">
                     {stats.activeBookings}
@@ -229,7 +234,9 @@ export default function DashboardPage() {
               href="/dashboard/analytics"
               className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-purple-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-xl dark:bg-purple-900/30">📊</span>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+                <BarChart2 className="h-5 w-5" />
+              </span>
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Analytics</p>
                 <p className="text-xs text-gray-400">Platform stats</p>
@@ -239,7 +246,9 @@ export default function DashboardPage() {
               href="/admin/users"
               className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-xl dark:bg-teal-900/30">🛡️</span>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
+                <ShieldCheck className="h-5 w-5" />
+              </span>
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">Admin Users</p>
                 <p className="text-xs text-gray-400">Verify & manage users</p>

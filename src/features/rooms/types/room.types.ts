@@ -59,9 +59,9 @@ export function isSharedRoom(type: RoomType): boolean {
 }
 
 export const ROOM_TYPE_LABELS: Record<RoomType, string> = {
-  mess: '🍳 Mess',
-  bachelor: '🛋 Bachelor',
-  sublet: '🔑 Sublet',
-  single: '🛏 Single Room',
-  master_bedroom: '🏠 Master Bedroom',
+  mess: 'Mess',
+  bachelor: 'Bachelor',
+  sublet: 'Sublet',
+  single: 'Single Room',
+  master_bedroom: 'Master Bedroom',
 }

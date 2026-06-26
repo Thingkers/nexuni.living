@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import {
+  Home, LayoutGrid, UtensilsCrossed, BedDouble, Key,
+  LayoutDashboard, MessageSquare, Inbox, CalendarCheck,
+  Plus, LogOut, BarChart2, ShieldCheck, User,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type Profile = {
@@ -257,20 +262,33 @@ export default function Navbar() {
   )
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
-      <div className="flex items-center justify-between px-4 py-3 md:px-6">
+    <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95">
+      <div className="flex items-center justify-between px-4 py-3 md:px-8">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white" onClick={closeMenus}>
-          <span className="h-2 w-2 rounded-full bg-teal-600" />
-          Student Hostel
+        <Link href="/" className="flex items-center gap-2.5" onClick={closeMenus}>
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-600 text-white shadow-sm">
+            <Home className="h-4 w-4" />
+          </div>
+          <span className="text-base font-bold text-gray-900 dark:text-white">Students Home </span>
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden items-center gap-6 text-sm text-gray-500 dark:text-gray-400 md:flex">
-          <Link href="/listings" className="hover:text-gray-900 dark:hover:text-white">All Listings</Link>
-          <Link href="/listings?type=mess" className="hover:text-gray-900 dark:hover:text-white">Mess</Link>
-          <Link href="/listings?type=bachelor" className="hover:text-gray-900 dark:hover:text-white">Bachelor</Link>
+        <div className="hidden items-center gap-0.5 text-sm md:flex">
+          {[
+            { href: '/listings', label: 'All Rooms' },
+            { href: '/listings?type=mess', label: 'Mess' },
+            { href: '/listings?type=bachelor', label: 'Bachelor' },
+            { href: '/listings?type=sublet', label: 'Sublet' },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="relative rounded-xl px-3.5 py-2 font-medium text-gray-500 transition-colors hover:bg-teal-50 hover:text-teal-700 dark:text-gray-400 dark:hover:bg-teal-900/20 dark:hover:text-teal-400"
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
 
         {/* Right side */}
@@ -341,11 +359,13 @@ export default function Navbar() {
                     </div>
                   </div>
 
-                  <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>Dashboard</Link>
+                  <Link href="/dashboard" className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
+                    <LayoutDashboard className="h-3.5 w-3.5 opacity-50" />Dashboard
+                  </Link>
 
                   {isVerified && (
                     <Link href="/inbox" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
-                      <span>Inbox</span>
+                      <span className="flex items-center gap-2.5"><MessageSquare className="h-3.5 w-3.5 opacity-50" />Inbox</span>
                       {unreadCount > 0 && (
                         <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
                       )}
@@ -358,7 +378,7 @@ export default function Navbar() {
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                       <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Listings</p>
                       <Link href="/dashboard/bookings" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
-                        <span>Requests Received</span>
+                        <span className="flex items-center gap-2.5"><Inbox className="h-3.5 w-3.5 opacity-50" />Requests Received</span>
                         {pendingBookingCount > 0 && (
                           <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
                         )}
@@ -372,7 +392,7 @@ export default function Navbar() {
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                       <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Renting</p>
                       <Link href="/dashboard/my-bookings" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={goToMyBookings}>
-                        <span>My Bookings</span>
+                        <span className="flex items-center gap-2.5"><CalendarCheck className="h-3.5 w-3.5 opacity-50" />My Bookings</span>
                         {myBookingCount > 0 && (
                           <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
                         )}
@@ -383,16 +403,18 @@ export default function Navbar() {
                   {profile?.role === 'admin' && (
                     <>
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
-                      <Link href="/dashboard/analytics" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>Analytics 📊</Link>
-                      <Link href="/admin/reports" className="block px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={closeMenus}>Admin Reports</Link>
-                      <Link href="/admin/users" className="block px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>Admin Users</Link>
-                      <Link href="/admin/rooms" className="block px-4 py-2 text-sm text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20" onClick={closeMenus}>Admin Rooms</Link>
+                      <Link href="/dashboard/analytics" className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
+                        <BarChart2 className="h-3.5 w-3.5 opacity-50" />Analytics
+                      </Link>
+                      <Link href="/admin/users" className="flex items-center gap-2.5 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
+                        <ShieldCheck className="h-3.5 w-3.5" />Admin Users
+                      </Link>
                     </>
                   )}
 
                   <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
-                  <button onClick={handleLogout} className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800">
-                    Logout
+                  <button onClick={handleLogout} className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <LogOut className="h-3.5 w-3.5" />Logout
                   </button>
                 </div>
               )}
@@ -413,9 +435,22 @@ export default function Navbar() {
             <div className="flex flex-col gap-1.5">
 
               <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Browse</p>
-              <Link href="/listings" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>🏠 All Listings</Link>
-              <Link href="/listings?type=mess" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>🍳 Mess</Link>
-              <Link href="/listings?type=bachelor" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>🛋 Bachelor</Link>
+              {([
+                { href: '/listings', Icon: LayoutGrid, label: 'All Rooms' },
+                { href: '/listings?type=mess', Icon: UtensilsCrossed, label: 'Mess' },
+                { href: '/listings?type=bachelor', Icon: BedDouble, label: 'Bachelor' },
+                { href: '/listings?type=sublet', Icon: Key, label: 'Sublet' },
+              ] as const).map(({ href, Icon, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-teal-50 hover:text-teal-700 dark:text-gray-300 dark:hover:bg-teal-900/20 dark:hover:text-teal-400"
+                  onClick={closeMenus}
+                >
+                  <Icon className="h-4 w-4 shrink-0 opacity-60" />
+                  {label}
+                </Link>
+              ))}
 
               <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
 
@@ -436,30 +471,32 @@ export default function Navbar() {
                   <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Account</p>
 
                   {isVerified && (
-                    <Link href="/post-room" className="rounded-xl bg-teal-50 px-3 py-2.5 text-sm font-medium text-teal-600 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40" onClick={closeMenus}>
-                      ➕ Post Room
+                    <Link href="/post-room" className="flex items-center gap-3 rounded-xl bg-teal-50 px-3 py-2.5 text-sm font-medium text-teal-600 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40" onClick={closeMenus}>
+                      <Plus className="h-4 w-4 shrink-0" />
+                      Post Room
                     </Link>
                   )}
 
-                  <Link href="/dashboard" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>🗂 Dashboard</Link>
+                  <Link href="/dashboard" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
+                    <LayoutDashboard className="h-4 w-4 shrink-0 opacity-60" />
+                    Dashboard
+                  </Link>
 
                   {isVerified && (
-                    <>
-                      <Link href="/inbox" className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
-                        <span>💬 Inbox</span>
-                        {unreadCount > 0 && (
-                          <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
-                        )}
-                      </Link>
-                    </>
+                    <Link href="/inbox" className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
+                      <span className="flex items-center gap-3"><MessageSquare className="h-4 w-4 shrink-0 opacity-60" />Inbox</span>
+                      {unreadCount > 0 && (
+                        <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
+                      )}
+                    </Link>
                   )}
 
                   {/* Owner section — only shown if user has posted rooms */}
                   {isVerified && isOwner && (
                     <>
                       <p className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Listings</p>
-                      <Link href="/dashboard/bookings" className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
-                        <span>📥 Requests Received</span>
+                      <Link href="/dashboard/bookings" className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
+                        <span className="flex items-center gap-3"><Inbox className="h-4 w-4 shrink-0 opacity-60" />Requests Received</span>
                         {pendingBookingCount > 0 && (
                           <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
                         )}
@@ -471,8 +508,8 @@ export default function Navbar() {
                   {isVerified && (
                     <>
                       <p className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Renting</p>
-                      <Link href="/dashboard/my-bookings" className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={goToMyBookings}>
-                        <span>🏠 My Bookings</span>
+                      <Link href="/dashboard/my-bookings" className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={goToMyBookings}>
+                        <span className="flex items-center gap-3"><CalendarCheck className="h-4 w-4 shrink-0 opacity-60" />My Bookings</span>
                         {myBookingCount > 0 && (
                           <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
                         )}
@@ -484,16 +521,19 @@ export default function Navbar() {
                     <>
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                       <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Admin</p>
-                      <Link href="/dashboard/analytics" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>Analytics 📊</Link>
-                      <Link href="/admin/reports" className="rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-500 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40" onClick={closeMenus}>Admin Reports</Link>
-                      <Link href="/admin/users" className="rounded-xl bg-teal-50 px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40" onClick={closeMenus}>Admin Users</Link>
-                      <Link href="/admin/rooms" className="rounded-xl bg-green-50 px-3 py-2.5 text-sm text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40" onClick={closeMenus}>Admin Rooms</Link>
+                      <Link href="/dashboard/analytics" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
+                        <BarChart2 className="h-4 w-4 shrink-0 opacity-60" />Analytics
+                      </Link>
+                      <Link href="/admin/users" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
+                        <ShieldCheck className="h-4 w-4 shrink-0" />Admin Users
+                      </Link>
                     </>
                   )}
 
                   <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
-                  <button onClick={handleLogout} className="rounded-xl bg-red-50 px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40">
-                    🚪 Logout
+                  <button onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <LogOut className="h-4 w-4 shrink-0" />
+                    Logout
                   </button>
                 </>
               ) : (

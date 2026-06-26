@@ -1,18 +1,12 @@
 'use client'
 
-import dynamic from 'next/dynamic'
 import { toast } from 'sonner'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase'
 import { isSharedRoom } from '@/features/rooms/types/room.types'
-
-const LocationPicker = dynamic(
-  () => import('@/features/map/components/LocationPicker'),
-  { ssr: false },
-)
 
 const INITIAL_FORM = {
   title: '',
@@ -23,8 +17,6 @@ const INITIAL_FORM = {
   location_name: '',
   available_from: '',
   description: '',
-  latitude: '',
-  longitude: '',
   // Amenities
   wifi: false,
   gas: false,
@@ -71,7 +63,6 @@ export default function PostRoomPage() {
   const [step, setStep] = useState(1)
   const [images, setImages] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
-  const [findingLocation, setFindingLocation] = useState(false)
 
   const shared = isSharedRoom(form.type as any)
 
@@ -110,28 +101,6 @@ export default function PostRoomPage() {
     URL.revokeObjectURL(previews[index])
     setImages((prev) => prev.filter((_, i) => i !== index))
     setPreviews((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  async function findLocationOnMap() {
-    if (!form.location_name.trim()) {
-      setErrors((prev) => ({ ...prev, location_name: 'Please enter a location first' }))
-      return
-    }
-    setFindingLocation(true)
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(form.location_name + ', Bangladesh')}&limit=1`,
-      )
-      const results = await res.json()
-      if (!results?.length) { toast.error('Location not found. Try a more specific address.'); return }
-      updateField('latitude', results[0].lat)
-      updateField('longitude', results[0].lon)
-      toast.success('Location found on map')
-    } catch {
-      toast.error('Failed to find location.')
-    } finally {
-      setFindingLocation(false)
-    }
   }
 
   function validateStep1() {
@@ -177,8 +146,6 @@ export default function PostRoomPage() {
         location_name: form.location_name,
         available_from: form.available_from,
         description: form.description,
-        latitude: form.latitude ? Number(form.latitude) : null,
-        longitude: form.longitude ? Number(form.longitude) : null,
         owner_id: userId,
         status: 'open',
         images: [],
@@ -382,24 +349,7 @@ export default function PostRoomPage() {
               value={form.location_name}
               onChange={(e) => updateField('location_name', e.target.value)}
             />
-            <button
-              type="button"
-              onClick={findLocationOnMap}
-              disabled={findingLocation}
-              className="mt-2 rounded-xl border border-teal-200 px-4 py-2 text-xs font-medium text-teal-600 hover:bg-teal-50 disabled:opacity-50 dark:border-teal-800 dark:hover:bg-teal-900/20"
-            >
-              {findingLocation ? '⏳ Finding...' : '📍 Find on Map'}
-            </button>
             {errors.location_name && <p className="mt-1 text-xs text-red-500">{errors.location_name}</p>}
-          </div>
-
-          <div>
-            <label className="mb-2 block text-xs text-gray-500 dark:text-gray-400">Pin Location on Map</label>
-            <LocationPicker
-              latitude={form.latitude ? Number(form.latitude) : null}
-              longitude={form.longitude ? Number(form.longitude) : null}
-              onChange={(lat, lng) => { updateField('latitude', String(lat)); updateField('longitude', String(lng)) }}
-            />
           </div>
 
           {/* Available from */}

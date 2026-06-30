@@ -28,6 +28,12 @@ type AdminRoom = {
   profiles: RoomOwner | null
 }
 
+// Shape returned directly from Supabase before normalizing `profiles`
+// (Supabase can return a joined relation as an object or an array depending on the relationship)
+type RawAdminRoom = Omit<AdminRoom, 'profiles'> & {
+  profiles: RoomOwner | RoomOwner[] | null
+}
+
 const TYPE_TABS = [
   { key: 'all',            label: 'All Rooms' },
   { key: 'mess',           label: 'Mess' },
@@ -89,9 +95,9 @@ export default function AdminRoomsPage() {
         .select('id, title, rent, location_name, status, type, gender_type, created_at, profiles(full_name, email)')
         .order('created_at', { ascending: false })
 
-      const clean = (data ?? []).map((item: any) => ({
+      const clean = ((data ?? []) as unknown as RawAdminRoom[]).map((item) => ({
         ...item,
-        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles,
+        profiles: Array.isArray(item.profiles) ? item.profiles[0] ?? null : item.profiles,
       })) as AdminRoom[]
 
       setRooms(clean)

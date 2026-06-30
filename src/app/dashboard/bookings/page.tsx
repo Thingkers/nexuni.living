@@ -12,6 +12,34 @@ import type { RoomType } from '@/features/rooms/types/room.types'
 
 type FilterStatus = 'all' | 'pending' | 'confirmed' | 'active'
 
+type Booking = {
+  id: string
+  status: string
+  expires_at: string | null
+  seats: number | null
+  move_in_date: string | null
+  message: string | null
+  created_at: string
+  rooms: {
+    id: string
+    title: string
+    rent: number
+    location_name: string | null
+    owner_id: string
+    type: RoomType
+    available_seats: number | null
+    total_seats: number | null
+  } | null
+  profiles: {
+    id: string
+    full_name: string | null
+    email: string | null
+    phone: string | null
+    university: string | null
+    gender: string | null
+  } | null
+}
+
 const ACTIVE_STATUSES = ['pending', 'confirmed', 'active']
 const HISTORY_STATUSES = ['completed', 'cancelled', 'rejected', 'expired']
 
@@ -33,7 +61,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 export default function BookingRequestsPage() {
   const router = useRouter()
 
-  const [bookings, setBookings] = useState<any[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterStatus>('all')
   const [showHistory, setShowHistory] = useState(false)
@@ -62,7 +90,7 @@ export default function BookingRequestsPage() {
       if (error) {
         setPageError(error.message)
       } else {
-        setBookings(data ?? [])
+        setBookings((data as Booking[]) ?? [])
       }
 
       setLoading(false)
@@ -140,8 +168,8 @@ export default function BookingRequestsPage() {
               ? 'Your booking has been confirmed 🎉'
               : 'Update on your booking request',
             html: action === 'confirmed'
-              ? bookingConfirmedTemplate({ userName: tenantName, roomTitle: booking.rooms.title, roomLocation: booking.rooms.location_name })
-              : bookingRejectedTemplate({ userName: tenantName, roomTitle: booking.rooms.title, roomLocation: booking.rooms.location_name }),
+              ? bookingConfirmedTemplate({ userName: tenantName, roomTitle: booking?.rooms?.title ?? 'your room', roomLocation: booking?.rooms?.location_name })
+              : bookingRejectedTemplate({ userName: tenantName, roomTitle: booking?.rooms?.title ?? 'your room', roomLocation: booking?.rooms?.location_name }),
           }),
         })
       }
@@ -282,7 +310,7 @@ export default function BookingRequestsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {filteredBookings.map((booking: any) => {
+          {filteredBookings.map((booking) => {
             const status =
               STATUS_CONFIG[booking.status] ?? STATUS_CONFIG.pending
 
@@ -431,7 +459,7 @@ export default function BookingRequestsPage() {
                     </div>
                     <button
                       disabled={!!isActing}
-                      onClick={() => reactivateRoom(booking.id, booking.rooms?.id)}
+                      onClick={() => reactivateRoom(booking.id, booking.rooms?.id ?? '')}
                       className="w-full rounded-xl bg-gray-600 py-2.5 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
                     >
                       {isActing ? 'Processing...' : '🔄 Re-open Listing'}
@@ -447,7 +475,7 @@ export default function BookingRequestsPage() {
                     </div>
                     <button
                       disabled={!!isActing}
-                      onClick={() => endTenancy(booking.id, booking.rooms?.id)}
+                      onClick={() => endTenancy(booking.id, booking.rooms?.id ?? '')}
                       className="w-full rounded-xl border border-purple-200 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 disabled:opacity-50"
                     >
                       {isActing ? 'Processing...' : '🏁 Tenant চলে গেছে — Tenancy শেষ করুন'}
@@ -480,7 +508,7 @@ export default function BookingRequestsPage() {
 
           {showHistory && (
             <div className="mt-3 flex flex-col gap-4">
-              {historyBookings.map((booking: any) => {
+              {historyBookings.map((booking) => {
                 const status = STATUS_CONFIG[booking.status] ?? STATUS_CONFIG.pending
                 return (
                   <div key={booking.id} className="rounded-2xl border border-gray-100 p-5 opacity-80">

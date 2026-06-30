@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
 import {
   Home, LayoutGrid, UtensilsCrossed, BedDouble, Key,
   LayoutDashboard, MessageSquare, Inbox, CalendarCheck,
-  Plus, LogOut, BarChart2, ShieldCheck, User, Flag, Building2,
+  Plus, LogOut, BarChart2, ShieldCheck, Flag, Building2,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -33,25 +34,53 @@ function MoonIcon() {
   )
 }
 
+// Moved outside the component so it isn't re-created on every render
+// (React flags components defined inside another component's render body).
+function Avatar({
+  size = 8,
+  avatarUrl,
+  initials,
+}: {
+  size?: number
+  avatarUrl?: string | null
+  initials: string
+}) {
+  return (
+    <div
+      className={`flex h-${size} w-${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-xs font-semibold text-teal-700`}
+    >
+      {avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+      ) : (
+        initials
+      )}
+    </div>
+  )
+}
+
 export default function Navbar() {
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
 
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [pendingBookingCount, setPendingBookingCount] = useState(0)
-  const [myBookingCount, setMyBookingCount] = useState(0)
-  const [isOwner, setIsOwner] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
-  // Read initial theme from DOM (set by inline script)
-  useEffect(() => {
-    setTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light')
-    setMyBookingCount(parseInt(localStorage.getItem('my_booking_updates') || '0', 10))
-  }, [])
+  // Lazily read initial values from the browser (DOM / localStorage) once,
+  // instead of setting state inside a useEffect after mount.
+  const [myBookingCount, setMyBookingCount] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0
+    return parseInt(localStorage.getItem('my_booking_updates') || '0', 10)
+  })
+  const [isOwner, setIsOwner] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof document === 'undefined') return 'light'
+    return document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+  })
 
   // Close desktop dropdown when clicking outside
   useEffect(() => {
@@ -249,18 +278,6 @@ export default function Navbar() {
 
   const isVerified = profile?.verification_status === 'approved'
 
-  const Avatar = ({ size = 8 }: { size?: number }) => (
-    <div
-      className={`flex h-${size} w-${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-xs font-semibold text-teal-700`}
-    >
-      {profile?.avatar_url ? (
-        <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
-      ) : (
-        initials
-      )}
-    </div>
-  )
-
   return (
     <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95">
       <div className="flex items-center justify-between px-4 py-3 md:px-8">
@@ -341,7 +358,7 @@ export default function Navbar() {
                 onClick={() => setMenuOpen((prev) => !prev)}
                 className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full hover:ring-2 hover:ring-teal-300"
               >
-                <Avatar size={8} />
+                <Avatar size={8} avatarUrl={profile?.avatar_url} initials={initials} />
                 {(unreadCount > 0 || pendingBookingCount > 0 || myBookingCount > 0) && (
                   <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-1 ring-white" />
                 )}
@@ -350,7 +367,7 @@ export default function Navbar() {
               {menuOpen && (
                 <div className="absolute right-0 top-10 z-50 w-56 rounded-xl border border-gray-100 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900">
                   <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-2.5 dark:border-gray-700">
-                    <Avatar size={7} />
+                    <Avatar size={7} avatarUrl={profile?.avatar_url} initials={initials} />
                     <div className="min-w-0">
                       <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200">{profile?.full_name || user.email}</p>
                       {!isVerified && (
@@ -464,7 +481,7 @@ export default function Navbar() {
               {user ? (
                 <>
                   <div className="flex items-center gap-3 rounded-xl bg-teal-50 px-3 py-2.5 dark:bg-teal-900/20">
-                    <Avatar size={9} />
+                    <Avatar size={9} avatarUrl={profile?.avatar_url} initials={initials} />
                     <div className="flex min-w-0 flex-col">
                       <span className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">{profile?.full_name || user.email}</span>
                       {!isVerified ? (

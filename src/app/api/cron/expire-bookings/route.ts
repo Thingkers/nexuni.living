@@ -2,6 +2,17 @@ import { createClient } from '@supabase/supabase-js'
 import type { RoomType } from '@/features/rooms/types/room.types'
 import { isSharedRoom } from '@/features/rooms/types/room.types'
 
+type ExpiredBookingRow = {
+  id: string
+  room_id: string
+  seats: number | null
+  rooms: {
+    type: RoomType
+    available_seats: number | null
+    total_seats: number | null
+  } | null
+}
+
 export async function GET(req: Request) {
   // Vercel Cron sends: Authorization: Bearer {CRON_SECRET}
   const authHeader = req.headers.get('authorization')
@@ -25,7 +36,7 @@ export async function GET(req: Request) {
   if (error) return Response.json({ error: error.message }, { status: 500 })
   if (!expired?.length) return Response.json({ success: true, expired: 0 })
 
-  for (const booking of expired) {
+  for (const booking of expired as unknown as ExpiredBookingRow[]) {
     // Mark booking as expired
     await supabaseAdmin
       .from('bookings')
@@ -33,10 +44,10 @@ export async function GET(req: Request) {
       .eq('id', booking.id)
 
     // Reopen the room
-    const roomType = (booking.rooms as any)?.type as RoomType
+    const roomType = booking.rooms?.type as RoomType
     if (isSharedRoom(roomType)) {
-      const current = (booking.rooms as any)?.available_seats ?? 0
-      const total   = (booking.rooms as any)?.total_seats ?? 999
+      const current = booking.rooms?.available_seats ?? 0
+      const total   = booking.rooms?.total_seats ?? 999
       const restored = Math.min(current + (booking.seats ?? 1), total)
       await supabaseAdmin
         .from('rooms')

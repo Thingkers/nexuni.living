@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
 type Props = {
@@ -10,7 +11,7 @@ type Props = {
 
 export function useTypingIndicator({ roomId, currentUserId }: Props) {
   const [typingUsers, setTypingUsers] = useState<string[]>([])
-  const channelRef = useRef<any>(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
 
   useEffect(() => {
     if (!roomId || !currentUserId) return

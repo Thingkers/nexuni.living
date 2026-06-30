@@ -1,12 +1,39 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { newMessageTemplate } from '@/lib/email/templates'
 import { supabase } from '@/lib/supabase'
 import { useTypingIndicator } from '@/hooks/useTypingIndicator'
+
+type ChatProfile = {
+  id: string
+  full_name: string | null
+  university: string | null
+  avatar_url: string | null
+  email?: string | null
+}
+
+type Message = {
+  id: string
+  sender_id: string
+  receiver_id: string
+  content: string
+  is_read: boolean
+  created_at: string
+}
+
+function getDateLabel(dateStr: string) {
+  const date = new Date(dateStr)
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  if (date.toDateString() === today.toDateString()) return 'Today'
+  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday'
+  return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })
+}
 
 export default function ChatPage() {
   const params = useParams<{ userId: string }>()
@@ -17,9 +44,9 @@ export default function ChatPage() {
   const MSG_PAGE_SIZE = 50
 
   const [myId, setMyId] = useState('')
-  const [profile, setProfile] = useState<any>(null)
-  const [otherUser, setOtherUser] = useState<any>(null)
-  const [messages, setMessages] = useState<any[]>([])
+  const [profile, setProfile] = useState<ChatProfile | null>(null)
+  const [otherUser, setOtherUser] = useState<ChatProfile | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
@@ -101,7 +128,7 @@ export default function ChatPage() {
 
     const channel = supabase.channel('chat-messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
-        const msg: any = payload.new
+        const msg = payload.new as Message
         const isCurrentChat =
           (msg.sender_id === myId && msg.receiver_id === otherUserId) ||
           (msg.sender_id === otherUserId && msg.receiver_id === myId)
@@ -162,15 +189,17 @@ export default function ChatPage() {
     if (error) { toast.error(error.message); setContent(text) }
   }
 
-  function getDateLabel(dateStr: string) {
-    const date = new Date(dateStr)
-    const today = new Date()
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-    if (date.toDateString() === today.toDateString()) return 'Today'
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday'
-    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })
-  }
+  // Pre-compute which messages need a date-separator label, instead of mutating
+  // a `let` variable while mapping inside JSX (which React's compiler flags as
+  // an unsafe render-time reassignment).
+  const messagesWithDateLabels = useMemo(() => {
+  return messages.map((message, index) => {
+    const dateLabel = getDateLabel(message.created_at)
+    const previousDateLabel = index > 0 ? getDateLabel(messages[index - 1].created_at) : null
+    const showDateLabel = dateLabel !== previousDateLabel
+    return { message, dateLabel, showDateLabel }
+  })
+}, [messages])
 
   if (loading) {
     return (
@@ -191,7 +220,6 @@ export default function ChatPage() {
 
   const myInitials = profile?.full_name?.[0]?.toUpperCase() || 'M'
   const otherInitials = otherUser?.full_name?.[0]?.toUpperCase() || 'U'
-  let lastDateLabel = ''
 
   return (
     <div className="mx-auto flex h-[calc(100vh-64px)] max-w-2xl flex-col">
@@ -249,11 +277,8 @@ export default function ChatPage() {
                 </button>
               </div>
             )}
-            {messages.map((message) => {
+            {messagesWithDateLabels.map(({ message, dateLabel, showDateLabel }) => {
               const isMine = message.sender_id === myId
-              const dateLabel = getDateLabel(message.created_at)
-              const showDateLabel = dateLabel !== lastDateLabel
-              if (showDateLabel) lastDateLabel = dateLabel
 
               return (
                 <div key={message.id}>

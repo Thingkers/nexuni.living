@@ -63,7 +63,7 @@ export default function AdminReportsPage() {
       if (error) {
         toast.error('Failed to load reports: ' + error.message)
       } else if (data) {
-        setReports(data as any)
+        setReports(data as unknown as Report[])
       }
 
       setLoading(false)

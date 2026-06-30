@@ -6,20 +6,20 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase'
-import type { Booking, Profile, Room } from '@/types'
-import RoomCard from '@/features/rooms/components/RoomCard'
+import type { Profile, Room } from '@/types'
 
 type Tab = 'info' | 'rooms'
 
-const BOOKING_STATUS: Record<string, { label: string; className: string }> = {
-  pending:   { label: 'Pending',       className: 'bg-yellow-50 text-yellow-700' },
-  confirmed: { label: 'On Hold (24h)', className: 'bg-blue-50 text-blue-700' },
-  active:    { label: '✅ Active',      className: 'bg-green-50 text-green-700' },
-  cancelled: { label: 'Cancelled',     className: 'bg-red-50 text-red-600' },
-  rejected:  { label: 'Rejected',      className: 'bg-red-50 text-red-600' },
-  expired:   { label: '⏰ Expired',     className: 'bg-gray-100 text-gray-500' },
-  completed: { label: '🏁 Completed',  className: 'bg-purple-50 text-purple-700' },
-}
+// Editable text fields on the profile form — typed as a const tuple so
+// `field.key` narrows to a literal keyof Profile instead of a bare string,
+// which lets us index `profile[field.key]` safely without `any`.
+const EDITABLE_FIELDS = [
+  { key: 'full_name',    label: 'Full Name',       type: 'text' },
+  { key: 'phone',        label: 'Phone Number',    type: 'text' },
+  { key: 'university',   label: 'University',      type: 'text' },
+  { key: 'bkash_number', label: 'bKash Number (for payment)', type: 'text' },
+  { key: 'nagad_number', label: 'Nagad Number (for payment)', type: 'text' },
+] as const satisfies readonly { key: keyof Profile; label: string; type: string }[]
 
 export default function ProfilePage() {
 
@@ -96,47 +96,41 @@ export default function ProfilePage() {
     setTimeout(() => setSaved(false), 2500)
   }
 
-
-  
-
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-  const file = e.target.files?.[0]
-  if (!file || !userId) return
+    const file = e.target.files?.[0]
+    if (!file || !userId) return
 
-  setAvatarUploading(true)
+    setAvatarUploading(true)
 
-  try {
-    const compressed = await compressImage(file)
+    try {
+      const compressed = await compressImage(file)
 
-    const ext = file.name.split('.').pop()
-    const path = `${userId}/avatar.${ext}`
+      const ext = file.name.split('.').pop()
+      const path = `${userId}/avatar.${ext}`
 
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(path, compressed, { upsert: true })
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, compressed, { upsert: true })
 
-    if (uploadError) throw new Error(uploadError.message)
+      if (uploadError) throw new Error(uploadError.message)
 
-    const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path)
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ avatar_url: data.publicUrl })
-      .eq('id', userId)
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: data.publicUrl })
+        .eq('id', userId)
 
-    if (updateError) throw new Error(updateError.message)
+      if (updateError) throw new Error(updateError.message)
 
-    setProfile((prev) => prev ? { ...prev, avatar_url: data.publicUrl } : prev)
-  } catch (err: any) {
-    setPageError(err.message)
-  } finally {
-    setAvatarUploading(false)
+      setProfile((prev) => prev ? { ...prev, avatar_url: data.publicUrl } : prev)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Avatar upload failed'
+      setPageError(message)
+    } finally {
+      setAvatarUploading(false)
+    }
   }
-}
-
-
-
-
 
   async function toggleRoomStatus(room: Room) {
     const nextStatus = room.status === 'open' ? 'closed' : 'open'
@@ -276,20 +270,14 @@ export default function ProfilePage() {
       {/* PROFILE INFO */}
       {tab === 'info' && (
         <div className="flex flex-col gap-4">
-          {[
-            { key: 'full_name',    label: 'Full Name',       type: 'text' },
-            { key: 'phone',        label: 'Phone Number',    type: 'text' },
-            { key: 'university',   label: 'University',      type: 'text' },
-            { key: 'bkash_number', label: 'bKash Number (for payment)', type: 'text' },
-            { key: 'nagad_number', label: 'Nagad Number (for payment)', type: 'text' },
-          ].map((field) => (
+          {EDITABLE_FIELDS.map((field) => (
             <div key={field.key}>
               <label className="mb-1 block text-xs text-gray-500">{field.label}</label>
               <input
                 type={field.type}
-                value={(profile as any)[field.key] ?? ''}
+                value={profile[field.key] ?? ''}
                 className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-teal-500"
-                onChange={(e) => setProfile({ ...profile, [field.key]: e.target.value } as Profile)}
+                onChange={(e) => setProfile({ ...profile, [field.key]: e.target.value })}
               />
             </div>
           ))}

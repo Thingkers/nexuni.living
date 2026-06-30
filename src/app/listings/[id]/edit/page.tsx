@@ -12,6 +12,7 @@ import {
 import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase'
 import { isSharedRoom } from '@/features/rooms/types/room.types'
+import type { RoomType } from '@/features/rooms/types/room.types'
 
 const LocationPicker = dynamic(
   () => import('@/features/map/components/LocationPicker'),
@@ -37,12 +38,47 @@ const HOUSE_RULES = ['No Smoking', 'No Drugs', 'No Pets', 'No Male Visitors', 'N
 
 const inputCls = 'w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-teal-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100'
 
+type Landmark = { name: string; time: string }
+
+// The edit form mirrors the `rooms` row plus a few normalized fields
+// (house_rules/landmarks default to [], washroom_sharing to ''). Inputs write
+// strings even for numeric fields (e.g. rent), so those are typed loosely.
+// The index signature lets the AMENITIES list toggle boolean fields by key
+// without needing `any` to do the dynamic lookup.
+type RoomForm = {
+  owner_id?: string
+  title?: string
+  type?: string
+  gender_type?: string
+  rent?: string | number
+  total_seats?: string | number
+  available_seats?: string | number
+  location_name?: string
+  latitude?: string | number | null
+  longitude?: string | number | null
+  available_from?: string | null
+  description?: string
+  status?: string
+  electricity_bill?: string | number
+  maid_bill?: string | number
+  other_bill?: string | number
+  other_bill_label?: string
+  advance_deposit?: string | number
+  rent_inclusive?: boolean
+  university_priority?: string
+  washroom_sharing?: string | number
+  meal_available?: boolean
+  house_rules?: string[]
+  landmarks?: Landmark[]
+  [key: string]: unknown
+}
+
 export default function EditListingPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const roomId = params.id
 
-  const [form, setForm] = useState<any>(null)
+  const [form, setForm] = useState<RoomForm | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showMap, setShowMap] = useState(false)
@@ -80,8 +116,8 @@ export default function EditListingPage() {
     return () => newPreviews.forEach((url) => URL.revokeObjectURL(url))
   }, [newPreviews])
 
-  function updateField(key: string, value: any) {
-    setForm((prev: any) => ({ ...prev, [key]: value }))
+  function updateField(key: string, value: unknown) {
+    setForm((prev) => (prev ? { ...prev, [key]: value } : prev))
   }
 
   async function handleNewImages(e: React.ChangeEvent<HTMLInputElement>) {
@@ -101,6 +137,7 @@ export default function EditListingPage() {
   }
 
   async function handleSave() {
+    if (!form) return
     if (!form.title?.trim() || !form.rent || !form.location_name?.trim()) {
       toast.error('Title, rent and location are required')
       return
@@ -123,7 +160,7 @@ export default function EditListingPage() {
         ...uploadedUrls,
       ]
 
-      const shared = isSharedRoom(form.type)
+      const shared = isSharedRoom(form.type as RoomType)
       const totalSeats = Number(form.total_seats)
       const availableSeats = Math.min(Number(form.available_seats ?? totalSeats), totalSeats)
 
@@ -173,8 +210,9 @@ export default function EditListingPage() {
 
       toast.success('Listing updated!')
       router.push(`/listings/${roomId}`)
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to save changes')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save changes'
+      toast.error(message)
     } finally {
       setSaving(false)
     }
@@ -190,7 +228,7 @@ export default function EditListingPage() {
     )
   }
 
-  const shared = isSharedRoom(form.type)
+  const shared = isSharedRoom(form.type as RoomType)
   const totalAdditional =
     (Number(form.electricity_bill) || 0) +
     (Number(form.maid_bill) || 0) +
@@ -256,7 +294,7 @@ export default function EditListingPage() {
                 type="number" min={1}
                 disabled={!shared}
                 className={`${inputCls} ${!shared ? 'cursor-not-allowed opacity-60' : ''}`}
-                value={shared ? (form.total_seats ?? 1) : 1}
+                value={shared ? (form.total_seats ?? 1) as number | string : 1}
                 onChange={(e) => updateField('total_seats', e.target.value)}
               />
             </div>
@@ -269,7 +307,7 @@ export default function EditListingPage() {
             <input
               type="number" min={0}
               className={inputCls}
-              value={form.available_seats ?? 0}
+              value={(form.available_seats ?? 0) as number | string}
               onChange={(e) => updateField('available_seats', e.target.value)}
             />
           </div>
@@ -352,8 +390,8 @@ export default function EditListingPage() {
           {showMap && (
             <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
               <LocationPicker
-                latitude={form.latitude ?? null}
-                longitude={form.longitude ?? null}
+                latitude={form.latitude ? Number(form.latitude) : null}
+                longitude={form.longitude ? Number(form.longitude) : null}
                 onChange={(lat, lng) => { updateField('latitude', lat); updateField('longitude', lng) }}
               />
             </div>
@@ -407,7 +445,7 @@ export default function EditListingPage() {
         </div>
 
         {/* Washroom sharing — shown when Attached Bath is selected */}
-        {form.attached_bath && (
+        {Boolean(form.attached_bath) && (
           <div>
             <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Washroom shared with how many people?</label>
             <select className={inputCls} value={form.washroom_sharing ?? ''} onChange={(e) => updateField('washroom_sharing', e.target.value)}>
@@ -465,14 +503,14 @@ export default function EditListingPage() {
         <div>
           <label className="mb-2 block text-xs font-medium text-gray-600 dark:text-gray-400">Nearby Landmarks <span className="font-normal text-gray-400">(optional)</span></label>
           <div className="flex flex-col gap-2">
-            {(form.landmarks ?? []).map((lm: { name: string; time: string }, idx: number) => (
+            {(form.landmarks ?? []).map((lm: Landmark, idx: number) => (
               <div key={idx} className="flex items-center gap-2">
                 <input
                   placeholder="e.g. AIUB main gate"
                   className={`flex-1 ${inputCls}`}
                   value={lm.name}
                   onChange={(e) => {
-                    const updated = [...form.landmarks]
+                    const updated = [...(form.landmarks ?? [])]
                     updated[idx] = { ...updated[idx], name: e.target.value }
                     updateField('landmarks', updated)
                   }}
@@ -482,14 +520,14 @@ export default function EditListingPage() {
                   className={`w-24 ${inputCls}`}
                   value={lm.time}
                   onChange={(e) => {
-                    const updated = [...form.landmarks]
+                    const updated = [...(form.landmarks ?? [])]
                     updated[idx] = { ...updated[idx], time: e.target.value }
                     updateField('landmarks', updated)
                   }}
                 />
                 <button
                   type="button"
-                  onClick={() => updateField('landmarks', form.landmarks.filter((_: any, i: number) => i !== idx))}
+                  onClick={() => updateField('landmarks', (form.landmarks ?? []).filter((_: Landmark, i: number) => i !== idx))}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500 dark:border-gray-700"
                 >
                   <Trash2 className="h-4 w-4" />

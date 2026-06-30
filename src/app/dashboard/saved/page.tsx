@@ -6,6 +6,13 @@ import { supabase } from '@/lib/supabase'
 import RoomCard from '@/features/rooms/components/RoomCard'
 import type { Room } from '@/features/rooms/types/room.types'
 
+// Shape of each row returned by the `saved_rooms` join query before we
+// flatten it down to just the nested `rooms` object.
+type SavedRoomRow = {
+  room_id: string
+  rooms: Room | null
+}
+
 export default function SavedRoomsPage() {
   const router = useRouter()
   const [rooms, setRooms] = useState<Room[]>([])
@@ -22,8 +29,8 @@ export default function SavedRoomsPage() {
         .eq('user_id', authData.user.id)
         .order('created_at', { ascending: false })
 
-      const saved = (data ?? [])
-        .map((row: any) => row.rooms)
+      const saved = ((data ?? []) as unknown as SavedRoomRow[])
+        .map((row) => row.rooms)
         .filter(Boolean) as Room[]
 
       setRooms(saved)

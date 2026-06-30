@@ -12,6 +12,9 @@ import {
 import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase'
 import { isSharedRoom } from '@/features/rooms/types/room.types'
+import type { RoomType } from '@/features/rooms/types/room.types'
+
+type LandmarkItem = { name: string; time: string }
 
 const INITIAL_FORM = {
   title: '',
@@ -49,8 +52,12 @@ const INITIAL_FORM = {
   // Washroom
   washroom_sharing: '',
   // Landmarks
-  landmarks: [] as { name: string; time: string }[],
+  landmarks: [] as LandmarkItem[],
 }
+
+// Every value updateField is ever called with falls into one of these shapes —
+// typing it this way (instead of `any`) keeps the dynamic [key] assignment safe.
+type FormValue = string | boolean | string[] | LandmarkItem[]
 
 const AMENITIES = [
   { key: 'wifi',          Icon: Wifi,        label: 'WiFi' },
@@ -93,7 +100,7 @@ export default function PostRoomPage() {
   const [images, setImages] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
 
-  const shared = isSharedRoom(form.type as any)
+  const shared = isSharedRoom(form.type as RoomType)
 
   useEffect(() => {
     async function checkUser() {
@@ -107,13 +114,14 @@ export default function PostRoomPage() {
   useEffect(() => {
     // Single / master bedroom = always 1 seat
     if (!shared) updateField('total_seats', '1')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.type])
 
   useEffect(() => {
     return () => previews.forEach((url) => URL.revokeObjectURL(url))
   }, [previews])
 
-  function updateField(key: string, value: any) {
+  function updateField(key: keyof typeof INITIAL_FORM, value: FormValue) {
     setForm((prev) => ({ ...prev, [key]: value }))
     if (errors[key]) setErrors((prev) => { const e = { ...prev }; delete e[key]; return e })
   }
@@ -213,9 +221,10 @@ export default function PostRoomPage() {
         await supabase.from('rooms').update({ images: imageUrls }).eq('id', room.id)
       }
       router.push(`/listings/${room.id}`)
-    } catch (err: any) {
+    } catch (err) {
       setLoading(false)
-      toast.error(err.message || 'Image upload failed')
+      const message = err instanceof Error ? err.message : 'Image upload failed'
+      toast.error(message)
     }
   }
 
@@ -461,9 +470,9 @@ export default function PostRoomPage() {
                 <button
                   key={item.key}
                   type="button"
-                  onClick={() => updateField(item.key, !(form as any)[item.key])}
+                  onClick={() => updateField(item.key, !form[item.key])}
                   className={`flex flex-col items-center gap-2 rounded-xl border p-4 transition-colors ${
-                    (form as any)[item.key]
+                    form[item.key]
                       ? 'border-teal-500 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'
                       : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
                   }`}

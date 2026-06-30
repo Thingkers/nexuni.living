@@ -14,6 +14,13 @@ type Props = {
   onSuccess?: () => void
 }
 
+// Minimal shape we need from room.profiles (the room owner) here — narrows
+// the dynamic join result instead of reaching for `any`.
+type RoomOwner = {
+  email?: string | null
+  full_name?: string | null
+}
+
 export default function BookingModal({ room, userId, onClose, onSuccess }: Props) {
   const [moveInDate, setMoveInDate] = useState('')
   const [message, setMessage] = useState('')
@@ -76,7 +83,8 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
     onClose()
 
     // Notify owner via email
-    const ownerEmail = (room.profiles as any)?.email
+    const owner = room.profiles as RoomOwner | null | undefined
+    const ownerEmail = owner?.email
     if (ownerEmail) {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.access_token) {
@@ -92,7 +100,7 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
             to: ownerEmail,
             subject: 'New Booking Request 📩',
             html: newBookingRequestTemplate({
-              ownerName: (room.profiles as any)?.full_name,
+              ownerName: owner?.full_name,
               tenantName: tenantProfile?.full_name,
               roomTitle: room.title,
               moveInDate: moveInDate,

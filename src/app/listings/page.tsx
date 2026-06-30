@@ -42,11 +42,6 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-function getCurrentYearMonth() {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
-
 function buildMonthOptions() {
   const options: { value: string; label: string }[] = []
   const now = new Date()
@@ -165,6 +160,11 @@ function ListingsContent() {
   }
 
   useEffect(() => {
+    // Data-fetch-on-mount/filter-change pattern — fetchRooms sets loading/rooms state
+    // internally via an async call. This is the React-recommended shape for syncing
+    // server data into state, so the synchronous-setState lint rule is intentionally
+    // suppressed here rather than restructured.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRooms()
   }, [fetchRooms])
 
@@ -188,6 +188,10 @@ function ListingsContent() {
   // Map view — fetch all filtered rooms with coordinates (up to 300)
   useEffect(() => {
     if (viewMode !== 'map') return
+
+    // Same data-fetching pattern as above: setLoadingMap(true) kicks off the async
+    // Supabase query below, and the result is applied once it resolves.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingMap(true)
 
     let qb = supabase
@@ -216,6 +220,9 @@ function ListingsContent() {
   // Location autocomplete — fetch matching location_name values from DB
   useEffect(() => {
     if (locationInput.trim().length < 2) {
+      // Clearing suggestions synchronously when the input is too short to search —
+      // intentional, immediate UI reset rather than a data-fetch side effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([])
       setShowSuggestions(false)
       return

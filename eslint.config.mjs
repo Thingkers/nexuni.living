@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Auto-generated PWA files (Workbox / service worker) — not hand-written code
+    "public/**",
   ]),
 ]);
 

@@ -5,11 +5,31 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+type PublicProfile = {
+  id: string
+  full_name: string | null
+  university: string | null
+  phone: string | null
+  gender: string | null
+  avatar_url: string | null
+  is_verified: boolean
+  created_at: string
+}
+
+type PublicRoom = {
+  id: string
+  title: string
+  rent: number
+  location_name: string | null
+  status: string
+  type: string
+}
+
 export default function UserProfilePage() {
   const { id } = useParams()
   const router = useRouter()
-  const [profile, setProfile] = useState<any>(null)
-  const [rooms, setRooms] = useState<any[]>([])
+  const [profile, setProfile] = useState<PublicProfile | null>(null)
+  const [rooms, setRooms] = useState<PublicRoom[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

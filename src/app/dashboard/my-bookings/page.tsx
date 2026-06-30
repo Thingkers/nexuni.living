@@ -8,6 +8,33 @@ import { supabase } from '@/lib/supabase'
 import BookingTimeline from '@/features/bookings/components/BookingTimeline'
 import BookingCountdown from '@/features/bookings/components/BookingCountdown'
 
+type BookingOwner = {
+  full_name: string | null
+  phone: string | null
+  bkash_number: string | null
+  nagad_number: string | null
+}
+
+type BookingRoom = {
+  id: string
+  title: string
+  rent: number
+  location_name: string | null
+  images: string[] | null
+  type: string
+  profiles: (BookingOwner & { id?: string }) | null
+}
+
+type Booking = {
+  id: string
+  status: string
+  move_in_date: string | null
+  message: string | null
+  created_at: string
+  expires_at: string | null
+  rooms: BookingRoom | null
+}
+
 const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
   pending:   { label: 'Pending',        cls: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' },
   confirmed: { label: 'On Hold (24h)',  cls: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' },
@@ -25,7 +52,7 @@ type ActiveFilter = 'all' | 'pending' | 'confirmed' | 'active'
 
 export default function MyBookingsPage() {
   const router = useRouter()
-  const [bookings, setBookings] = useState<any[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<ActiveFilter>('all')
   const [showHistory, setShowHistory] = useState(false)
@@ -49,7 +76,7 @@ export default function MyBookingsPage() {
         .eq('user_id', authData.user.id)
         .order('created_at', { ascending: false })
 
-      setBookings(data ?? [])
+      setBookings((data as unknown as Booking[]) ?? [])
       setLoading(false)
     }
 
@@ -188,7 +215,7 @@ function BookingCard({
   cancelBooking,
   copyToClipboard,
 }: {
-  booking: any
+  booking: Booking
   confirmCancel: string | null
   cancelling: string | null
   setConfirmCancel: (id: string | null) => void
@@ -241,7 +268,7 @@ function BookingCard({
 
       {booking.message && (
         <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-          "{booking.message}"
+          &quot;{booking.message}&quot;
         </p>
       )}
 
@@ -276,8 +303,8 @@ function BookingCard({
               <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
                 <span className="text-xs font-medium text-pink-600">📱 bKash</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner.bkash_number}</span>
-                  <button onClick={() => copyToClipboard(owner.bkash_number, 'bKash number')} className="text-xs text-gray-400 hover:text-pink-600">Copy</button>
+                  <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner?.bkash_number}</span>
+                  <button onClick={() => owner?.bkash_number && copyToClipboard(owner.bkash_number, 'bKash number')} className="text-xs text-gray-400 hover:text-pink-600">Copy</button>
                 </div>
               </div>
             )}
@@ -285,8 +312,8 @@ function BookingCard({
               <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
                 <span className="text-xs font-medium text-orange-600">📱 Nagad</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner.nagad_number}</span>
-                  <button onClick={() => copyToClipboard(owner.nagad_number, 'Nagad number')} className="text-xs text-gray-400 hover:text-orange-600">Copy</button>
+                  <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner?.nagad_number}</span>
+                  <button onClick={() => owner?.nagad_number && copyToClipboard(owner.nagad_number, 'Nagad number')} className="text-xs text-gray-400 hover:text-orange-600">Copy</button>
                 </div>
               </div>
             )}

@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import type { User } from '@supabase/supabase-js'
 import {
-  MapPin, User, Users, Wifi, Zap, Flame, ShowerHead,
+  MapPin, User as UserIcon, Users, Wifi, Zap, Flame, ShowerHead,
   BookOpen, Shirt, FileText, Calendar, Tag, Home,
   Power, ArrowUpDown, Snowflake, Sparkles, ShieldCheck,
   Droplets, Trees, UtensilsCrossed,
@@ -17,6 +18,11 @@ import BookingModal from '@/features/bookings/components/BookingModal'
 import ReportListingButton from '@/features/rooms/components/ReportListingButton'
 import SimilarRooms from '@/features/rooms/components/SimilarRooms'
 
+type UserProfile = {
+  verification_status: string | null
+  role: string | null
+}
+
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   open:    { label: 'Open',                className: 'bg-green-500 text-white' },
   partial: { label: 'Partially Available', className: 'bg-yellow-400 text-white' },
@@ -26,8 +32,8 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
 
 export default function ListingClient({ id }: { id: string }) {
   const [room, setRoom]               = useState<Room | null>(null)
-  const [currentUser, setCurrentUser] = useState<any>(null)
-  const [userProfile, setUserProfile] = useState<any>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading]         = useState(true)
   const [showBooking, setShowBooking] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
@@ -205,9 +211,9 @@ export default function ListingClient({ id }: { id: string }) {
                   : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
               }`}>
                 {room.gender_type === 'male'
-                  ? <><User className="h-3.5 w-3.5" /> Male only</>
+                  ? <><UserIcon className="h-3.5 w-3.5" /> Male only</>
                   : room.gender_type === 'female'
-                  ? <><User className="h-3.5 w-3.5" /> Female only</>
+                  ? <><UserIcon className="h-3.5 w-3.5" /> Female only</>
                   : <><Users className="h-3.5 w-3.5" /> Any gender</>}
               </span>
             </div>
@@ -298,9 +304,14 @@ export default function ListingClient({ id }: { id: string }) {
                   { key: 'security',      Icon: ShieldCheck, label: 'Security' },
                   { key: 'water_filter',  Icon: Droplets,    label: 'Water Filter' },
                   { key: 'balcony',       Icon: Trees,       label: 'Balcony' },
-                ]
-                const available = ALL_FACILITIES.filter((f) => (room as any)[f.key] === true)
-                const unavailable = ALL_FACILITIES.filter((f) => (room as any)[f.key] === false)
+                ] as const
+
+                // Facility flags live on Room as boolean | null fields, addressed
+                // dynamically by key here — narrowed via Record<string, ...> instead
+                // of `any` since the exact field names vary across the room schema.
+                const roomFlags = room as unknown as Record<string, boolean | null | undefined>
+                const available = ALL_FACILITIES.filter((f) => roomFlags[f.key] === true)
+                const unavailable = ALL_FACILITIES.filter((f) => roomFlags[f.key] === false)
                 return (
                   <div className="grid grid-cols-3 gap-2">
                     {available.map(({ key, Icon, label }) => (

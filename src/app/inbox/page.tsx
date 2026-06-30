@@ -14,6 +14,12 @@ type Thread = {
   unread: number
 }
 
+// Minimal shape we need from the realtime INSERT payload on `messages`
+type NewMessagePayload = {
+  sender_id: string
+  receiver_id: string
+}
+
 export default function InboxPage() {
   const router = useRouter()
   const [threads, setThreads] = useState<Thread[]>([])
@@ -75,7 +81,7 @@ export default function InboxPage() {
     const channel = supabase
       .channel('inbox-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-        const msg = payload.new as any
+        const msg = payload.new as NewMessagePayload
         if (msg.sender_id === myId || msg.receiver_id === myId) {
           buildThreads(myId)
         }

@@ -129,8 +129,9 @@ export default function RegisterPage() {
     let idCardUrl: string | null = null
     try {
       idCardUrl = await uploadIdCard(data.user.id)
-    } catch (err: any) {
-      setError('ID card upload failed: ' + err.message)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      setError('ID card upload failed: ' + message)
       setLoading(false)
       return
     }
@@ -373,7 +374,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="rounded-xl bg-yellow-50 px-4 py-3 text-xs text-yellow-700">
-            After registering, your account will be reviewed by admin. You'll get access once verified.
+            After registering, your account will be reviewed by admin. You&apos;ll get access once verified.
           </div>
 
           <button

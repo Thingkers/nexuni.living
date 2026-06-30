@@ -1,5 +1,5 @@
 export function profileVerifiedTemplate({ userName }: { userName?: string | null }) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aiub-students-home.vercel.app'
   return `
     <div style="font-family: Arial, sans-serif; padding: 24px; background: #f8fafc;">
       <div style="max-width: 560px; margin: auto; background: white; border-radius: 16px; padding: 32px; border: 1px solid #e5e7eb;">
@@ -22,7 +22,7 @@ export function profileVerifiedTemplate({ userName }: { userName?: string | null
 }
 
 export function profileRejectedTemplate({ userName }: { userName?: string | null }) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aiub-students-home.vercel.app'
   return `
     <div style="font-family: Arial, sans-serif; padding: 24px; background: #f8fafc;">
       <div style="max-width: 560px; margin: auto; background: white; border-radius: 16px; padding: 32px; border: 1px solid #e5e7eb;">
@@ -62,7 +62,7 @@ export function newBookingRequestTemplate({
   tenantMessage?: string | null
   bookingsUrl: string
 }) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aiub-students-home.vercel.app'
   return `
     <div style="font-family: Arial, sans-serif; padding: 24px; background: #f8fafc;">
       <div style="max-width: 560px; margin: auto; background: white; border-radius: 16px; padding: 32px; border: 1px solid #e5e7eb;">
@@ -134,7 +134,7 @@ export function bookingConfirmedTemplate({
         </p>
 
         <a
-          href="${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'}/profile"
+          href="${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aiub-students-home.vercel.app'}/profile"
           style="
             display: inline-block;
             margin-top: 20px;
@@ -182,7 +182,7 @@ export function bookingRejectedTemplate({
           Don't worry — there are more rooms available. Browse other listings and find your perfect match.
         </p>
         <a
-          href="${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'}/listings"
+          href="${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aiub-students-home.vercel.app'}/listings"
           style="display: inline-block; margin-top: 20px; background: #0d9488; color: white; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 600;"
         >
           Browse Other Rooms

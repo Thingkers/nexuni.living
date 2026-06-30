@@ -47,6 +47,47 @@ export function profileRejectedTemplate({ userName }: { userName?: string | null
   `
 }
 
+export function newBookingRequestTemplate({
+  ownerName,
+  tenantName,
+  roomTitle,
+  moveInDate,
+  tenantMessage,
+  bookingsUrl,
+}: {
+  ownerName?: string | null
+  tenantName?: string | null
+  roomTitle: string
+  moveInDate?: string | null
+  tenantMessage?: string | null
+  bookingsUrl: string
+}) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'
+  return `
+    <div style="font-family: Arial, sans-serif; padding: 24px; background: #f8fafc;">
+      <div style="max-width: 560px; margin: auto; background: white; border-radius: 16px; padding: 32px; border: 1px solid #e5e7eb;">
+        <h1 style="margin: 0 0 12px; color: #111827;">New Booking Request 📩</h1>
+        <p style="color: #4b5563; line-height: 1.7;">Hello ${ownerName || 'Owner'},</p>
+        <p style="color: #4b5563; line-height: 1.7;">
+          <strong>${tenantName || 'A student'}</strong> has sent a booking request for your listing.
+        </p>
+        <div style="margin: 20px 0; padding: 16px; background: #f9fafb; border-radius: 12px;">
+          <p style="margin: 0 0 8px; font-weight: 600; color: #111827;">🏠 ${roomTitle}</p>
+          ${moveInDate ? `<p style="margin: 0 0 4px; color: #6b7280; font-size: 14px;">📅 Move-in: ${moveInDate}</p>` : ''}
+          ${tenantMessage ? `<p style="margin: 8px 0 0; color: #6b7280; font-size: 14px; font-style: italic;">"${tenantMessage}"</p>` : ''}
+        </div>
+        <a
+          href="${bookingsUrl}"
+          style="display: inline-block; margin-top: 4px; background: #0d9488; color: white; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: 600;"
+        >
+          View Request →
+        </a>
+        <p style="margin-top: 32px; font-size: 12px; color: #9ca3af;">Student Hostel Platform · <a href="${siteUrl}" style="color: #9ca3af;">studenthostel.app</a></p>
+      </div>
+    </div>
+  `
+}
+
 export function bookingConfirmedTemplate({
   userName,
   roomTitle,

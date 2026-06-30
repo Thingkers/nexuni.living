@@ -11,6 +11,7 @@ import {
 import type { Room } from '@/features/rooms/types/room.types'
 import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.types'
 import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
+import { supabase } from '@/lib/supabase'
 
 const STATUS_CONFIG = {
   open:    { label: 'Open',                bg: 'bg-green-500',  text: 'text-white' },
@@ -39,8 +40,24 @@ export default function RoomCard({ room }: { room: Room }) {
   const [activeImage, setActiveImage] = useState(0)
   const [isHovered, setIsHovered]     = useState(false)
   const [saved, setSaved]             = useState(false)
+  const [userId, setUserId]           = useState<string | null>(null)
   const images = room.images ?? []
   const hasImages = images.length > 0
+
+  // Load user + saved status on mount
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return
+      setUserId(data.user.id)
+      supabase
+        .from('saved_rooms')
+        .select('id')
+        .eq('user_id', data.user.id)
+        .eq('room_id', room.id)
+        .maybeSingle()
+        .then(({ data: row }) => setSaved(!!row))
+    })
+  }, [room.id])
 
   useEffect(() => {
     if (images.length <= 1) return
@@ -222,7 +239,16 @@ export default function RoomCard({ room }: { room: Room }) {
             <div className="flex flex-col gap-1.5">
               <button
                 type="button"
-                onClick={(e) => { e.preventDefault(); setSaved((p) => !p) }}
+                onClick={async (e) => {
+                  e.preventDefault()
+                  if (!userId) return
+                  if (saved) {
+                    await supabase.from('saved_rooms').delete().eq('user_id', userId).eq('room_id', room.id)
+                  } else {
+                    await supabase.from('saved_rooms').insert({ user_id: userId, room_id: room.id })
+                  }
+                  setSaved((p) => !p)
+                }}
                 title={saved ? 'Saved' : 'Save'}
                 className={`flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
                   saved

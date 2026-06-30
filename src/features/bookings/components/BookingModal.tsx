@@ -2,7 +2,7 @@
 
 import { toast } from 'sonner'
 import { useState } from 'react'
-import { bookingConfirmedTemplate } from '@/lib/email/templates'
+import { newBookingRequestTemplate } from '@/lib/email/templates'
 import { supabase } from '@/lib/supabase'
 import type { Room } from '@/features/rooms/types/room.types'
 import { isSharedRoom } from '@/features/rooms/types/room.types'
@@ -75,32 +75,40 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
     onSuccess?.()
     onClose()
 
-    // Send email with auth token
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.access_token) {
-      await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          to: room.profiles?.email,
-          subject: 'New Booking Request 📩',
-          html: bookingConfirmedTemplate({
-            userName: room.profiles?.full_name,
-            roomTitle: room.title,
-            roomLocation: room.location_name,
+    // Notify owner via email
+    const ownerEmail = (room.profiles as any)?.email
+    if (ownerEmail) {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.access_token) {
+        const { data: tenantProfile } = await supabase
+          .from('profiles').select('full_name').eq('id', userId).single()
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            to: ownerEmail,
+            subject: 'New Booking Request 📩',
+            html: newBookingRequestTemplate({
+              ownerName: (room.profiles as any)?.full_name,
+              tenantName: tenantProfile?.full_name,
+              roomTitle: room.title,
+              moveInDate: moveInDate,
+              tenantMessage: message || null,
+              bookingsUrl: `${window.location.origin}/dashboard/bookings`,
+            }),
           }),
-        }),
-      })
+        })
+      }
     }
 
     toast.success('Booking request sent!')
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900 dark:border dark:border-gray-700">
         <div className="mb-1 flex items-start justify-between">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Request Booking</h2>

@@ -20,55 +20,69 @@ export default function InboxPage() {
   const [loading, setLoading] = useState(true)
   const [pageError, setPageError] = useState('')
 
+  const [myId, setMyId] = useState('')
+
+  async function buildThreads(userId: string) {
+    const { data: messages, error } = await supabase
+      .from('messages')
+      .select(`
+        *,
+        sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url),
+        receiver:profiles!messages_receiver_id_fkey(id, full_name, avatar_url)
+      `)
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .order('created_at', { ascending: false })
+
+    if (error) { setPageError(error.message); return }
+
+    const threadMap = new Map<string, Thread>()
+    for (const message of messages ?? []) {
+      const otherId = message.sender_id === userId ? message.receiver_id : message.sender_id
+      const other = message.sender_id === userId ? message.receiver : message.sender
+      const key = [userId, otherId].sort().join('-')
+      if (!threadMap.has(key)) {
+        threadMap.set(key, {
+          otherId,
+          otherName: other?.full_name ?? 'Unknown',
+          otherAvatar: other?.avatar_url ?? null,
+          lastMessage: message.content,
+          lastTime: message.created_at,
+          unread: !message.is_read && message.receiver_id === userId ? 1 : 0,
+        })
+      } else {
+        const thread = threadMap.get(key)
+        if (thread && !message.is_read && message.receiver_id === userId) thread.unread += 1
+      }
+    }
+    setThreads([...threadMap.values()])
+  }
+
   useEffect(() => {
     async function loadInbox() {
       const { data: authData, error: authError } = await supabase.auth.getUser()
       if (authError || !authData.user) { router.push('/auth/login'); return }
-
       const userId = authData.user.id
-
-      const { data: messages, error } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url),
-          receiver:profiles!messages_receiver_id_fkey(id, full_name, avatar_url)
-        `)
-        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-        .order('created_at', { ascending: false })
-
-      if (error) { setPageError(error.message); setLoading(false); return }
-
-      const threadMap = new Map<string, Thread>()
-
-      for (const message of messages ?? []) {
-        const otherId = message.sender_id === userId ? message.receiver_id : message.sender_id
-        const other = message.sender_id === userId ? message.receiver : message.sender
-        const key = [userId, otherId].sort().join('-')
-
-        if (!threadMap.has(key)) {
-          threadMap.set(key, {
-            otherId,
-            otherName: other?.full_name ?? 'Unknown',
-            otherAvatar: other?.avatar_url ?? null,
-            lastMessage: message.content,
-            lastTime: message.created_at,
-            unread: !message.is_read && message.receiver_id === userId ? 1 : 0,
-          })
-        } else {
-          const thread = threadMap.get(key)
-          if (thread && !message.is_read && message.receiver_id === userId) {
-            thread.unread += 1
-          }
-        }
-      }
-
-      setThreads([...threadMap.values()])
+      setMyId(userId)
+      await buildThreads(userId)
       setLoading(false)
     }
-
     loadInbox()
   }, [router])
+
+  // Realtime — rebuild thread list when a new message arrives
+  useEffect(() => {
+    if (!myId) return
+    const channel = supabase
+      .channel('inbox-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        const msg = payload.new as any
+        if (msg.sender_id === myId || msg.receiver_id === myId) {
+          buildThreads(myId)
+        }
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [myId])
 
   if (loading) {
     return (

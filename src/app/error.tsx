@@ -1,10 +1,17 @@
 'use client'
 
 import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
 
-export default function GlobalError({ error, reset }: { error: Error; reset: () => void }) {
+export default function RouteError({
+  error,
+  unstable_retry,
+}: {
+  error: Error & { digest?: string }
+  unstable_retry: () => void
+}) {
   useEffect(() => {
-    console.error(error)
+    Sentry.captureException(error)
   }, [error])
 
   return (
@@ -15,7 +22,7 @@ export default function GlobalError({ error, reset }: { error: Error; reset: () 
         An unexpected error occurred. Please try again.
       </p>
       <button
-        onClick={reset}
+        onClick={() => unstable_retry()}
         className="rounded-xl bg-teal-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-teal-700"
       >
         Try Again

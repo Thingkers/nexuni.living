@@ -3,8 +3,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { rateLimit } from '@/lib/rateLimit'
 import { profileVerifiedTemplate, profileRejectedTemplate } from '@/lib/email/templates'
+import { z } from 'zod'
 
-type Action = 'approve' | 'reject' | 'toggle-verify' | 'toggle-admin'
+const schema = z.object({
+  userId: z.string().uuid(),
+  action: z.enum(['approve', 'reject', 'toggle-verify', 'toggle-admin']),
+})
+
+type Action = z.infer<typeof schema>['action']
 
 export async function PATCH(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -37,16 +43,18 @@ export async function PATCH(req: NextRequest) {
   }
 
   // 60 actions per minute per admin
-  const { allowed } = rateLimit(`admin-update:${caller.id}`, 60, 60 * 1000)
+  const { allowed } = await rateLimit(`admin-update:${caller.id}`, 60, 60 * 1000)
   if (!allowed) {
     return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 })
   }
 
-  const { userId, action } = await req.json() as { userId: string; action: Action }
-
-  if (!userId || !action) {
-    return NextResponse.json({ error: 'userId and action are required' }, { status: 400 })
+  const body = await req.json().catch(() => null)
+  const parsed = schema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
   }
+
+  const { userId, action } = parsed.data
 
   if (userId === caller.id && action === 'toggle-admin') {
     return NextResponse.json({ error: 'Cannot change your own admin role' }, { status: 400 })

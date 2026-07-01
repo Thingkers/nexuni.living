@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next'
 import withPWA from '@ducanh2912/next-pwa'
+import { withSentryConfig } from '@sentry/nextjs'
 
 const nextConfig: NextConfig = {
   turbopack: {},
@@ -17,7 +18,7 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withPWA({
+const pwaConfig = withPWA({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
   // The default runtime caching tries to intercept every route, including
@@ -39,3 +40,15 @@ export default withPWA({
     ],
   },
 })(nextConfig)
+
+export default withSentryConfig(pwaConfig, {
+  org: 'rayhan-ky',
+  project: 'student-hostel-system',
+  silent: !process.env.CI,
+  disableLogger: true,
+  telemetry: false,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: {
+    disable: process.env.NODE_ENV !== 'production',
+  },
+})

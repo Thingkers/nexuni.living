@@ -108,7 +108,12 @@ function ListingsContent() {
       .neq('status', 'closed')
 
     if (query.trim()) {
-      qb = qb.or(`title.ilike.%${query}%,location_name.ilike.%${query}%`)
+      const words = query.trim().split(/\s+/)
+      if (words.length > 1) {
+        qb = qb.textSearch('search_vector', query, { type: 'websearch', config: 'simple' })
+      } else {
+        qb = qb.or(`title.ilike.%${query}%,location_name.ilike.%${query}%`)
+      }
     }
     if (location.trim()) {
       qb = qb.ilike('location_name', `%${location.trim()}%`)
@@ -203,7 +208,14 @@ function ListingsContent() {
       .neq('status', 'closed')
       .limit(300)
 
-    if (query.trim())     qb = qb.or(`title.ilike.%${query}%,location_name.ilike.%${query}%`)
+    if (query.trim()) {
+      const words = query.trim().split(/\s+/)
+      if (words.length > 1) {
+        qb = qb.textSearch('search_vector', query, { type: 'websearch', config: 'simple' })
+      } else {
+        qb = qb.or(`title.ilike.%${query}%,location_name.ilike.%${query}%`)
+      }
+    }
     if (location.trim())  qb = qb.ilike('location_name', `%${location.trim()}%`)
     if (gender)           qb = qb.eq('gender_type', gender)
     if (type)             qb = qb.eq('type', type)

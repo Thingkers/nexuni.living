@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { supabase } from '@/lib/supabase'
 
-type Room    = { id: string; title: string; views: number }
-type Booking = { status: string }
+type Room    = { id: string; title: string }
+type Booking = { status: string; room_id: string }
 
 export default function AnalyticsPage() {
   const [loading, setLoading]   = useState(true)
@@ -27,12 +27,12 @@ export default function AnalyticsPage() {
       if (!auth.user) return
 
       const { data: roomsData } = await supabase
-        .from('rooms').select('id, title, views').eq('owner_id', auth.user.id)
+        .from('rooms').select('id, title').eq('owner_id', auth.user.id)
 
       const roomIds = (roomsData ?? []).map((r) => r.id)
 
       const { data: bookingsData } = roomIds.length
-        ? await supabase.from('bookings').select('status').in('room_id', roomIds)
+        ? await supabase.from('bookings').select('status, room_id').in('room_id', roomIds)
         : { data: [] }
 
       setRooms((roomsData ?? []) as Room[])
@@ -57,10 +57,17 @@ export default function AnalyticsPage() {
     )
   }
 
-  const totalViews        = rooms.reduce((s, r) => s + (r.views || 0), 0)
   const confirmedBookings = bookings.filter((b) => b.status === 'confirmed').length
   const pendingBookings   = bookings.filter((b) => b.status === 'pending').length
-  const topRoom           = [...rooms].sort((a, b) => (b.views || 0) - (a.views || 0))[0]
+  const topRoom           = rooms.map((r) => ({
+    ...r,
+    count: bookings.filter((b) => b.room_id === r.id).length,
+  })).sort((a, b) => b.count - a.count)[0]
+
+  const chartData = rooms.map((r) => ({
+    title: r.title,
+    bookings: bookings.filter((b) => b.room_id === r.id).length,
+  }))
 
   const axisColor   = isDark ? '#9ca3af' : '#6b7280'
   const gridColor   = isDark ? '#374151' : '#f3f4f6'
@@ -76,7 +83,7 @@ export default function AnalyticsPage() {
 
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-        <StatCard title="Total Views"        value={String(totalViews)}        icon="👁" color="teal" />
+        <StatCard title="Total Rooms"        value={String(rooms.length)}        icon="🏠" color="teal" />
         <StatCard title="Confirmed Bookings" value={String(confirmedBookings)} icon="✅" color="green" />
         <StatCard title="Pending Requests"   value={String(pendingBookings)}   icon="⏳" color="yellow" />
         <StatCard title="Top Room"           value={topRoom?.title || 'N/A'}   icon="🏆" color="purple" small />
@@ -85,8 +92,8 @@ export default function AnalyticsPage() {
       {/* Bar chart */}
       <div className="mt-8 rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Room Views</h2>
-          <p className="text-sm text-gray-400 dark:text-gray-500">Views per listing</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Bookings per Room</h2>
+          <p className="text-sm text-gray-400 dark:text-gray-500">Total booking requests per listing</p>
         </div>
 
         {rooms.length === 0 ? (
@@ -96,7 +103,7 @@ export default function AnalyticsPage() {
         ) : (
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={rooms} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+              <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <XAxis
                   dataKey="title"
                   tick={{ fill: axisColor, fontSize: 12 }}
@@ -120,11 +127,7 @@ export default function AnalyticsPage() {
                   }}
                   cursor={{ fill: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }}
                 />
-                <Bar dataKey="views" radius={[8, 8, 0, 0]}>
-                  {rooms.map((_, i) => (
-                    <Cell key={i} fill={isDark ? '#14b8a6' : '#0d9488'} />
-                  ))}
-                </Bar>
+                <Bar dataKey="bookings" radius={[8, 8, 0, 0]} fill={isDark ? '#14b8a6' : '#0d9488'} />
               </BarChart>
             </ResponsiveContainer>
           </div>

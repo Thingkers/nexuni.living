@@ -59,7 +59,6 @@ export type Room = {
 
   images: string[] | null
   description?: string | null
-  views?: number
   created_at?: string
 
   profiles?: RoomOwner | null

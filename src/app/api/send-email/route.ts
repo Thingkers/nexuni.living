@@ -1,6 +1,13 @@
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 import { rateLimit } from '@/lib/rateLimit'
+import { z } from 'zod'
+
+const schema = z.object({
+  to: z.string().email(),
+  subject: z.string().min(1).max(200),
+  html: z.string().min(1),
+})
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,17 +31,18 @@ export async function POST(req: Request) {
     }
 
     // 10 emails per user per hour
-    const { allowed } = rateLimit(`email:${user.id}`, 10, 60 * 60 * 1000)
+    const { allowed } = await rateLimit(`email:${user.id}`, 10, 60 * 60 * 1000)
     if (!allowed) {
       return Response.json({ error: 'Too many requests. Please wait before sending more emails.' }, { status: 429 })
     }
 
-    const body = await req.json()
-    const { to, subject, html } = body
-
-    if (!to || !subject || !html) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 })
+    const body = await req.json().catch(() => null)
+    const parsed = schema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json({ error: parsed.error.issues[0].message }, { status: 400 })
     }
+
+    const { to, subject, html } = parsed.data
 
     const data = await resend.emails.send({
       from: process.env.EMAIL_FROM ?? 'Student Hostel <onboarding@resend.dev>',

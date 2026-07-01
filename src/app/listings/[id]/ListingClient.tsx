@@ -52,10 +52,6 @@ export default function ListingClient({ id }: { id: string }) {
       setRoom(roomData as Room)
 
       const isOwner = userData.user?.id === roomData.owner_id
-      if (!isOwner) {
-        await supabase.from('rooms').update({ views: (roomData.views ?? 0) + 1 }).eq('id', roomData.id)
-      }
-
       setCurrentUser(userData.user)
 
       if (userData.user) {

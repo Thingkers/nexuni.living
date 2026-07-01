@@ -1,6 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rateLimit'
+import { z } from 'zod'
+
+const schema = z.object({
+  userId: z.string().uuid(),
+})
 
 export async function DELETE(req: NextRequest) {
   const supabaseAdmin = createClient(
@@ -32,16 +37,18 @@ export async function DELETE(req: NextRequest) {
   }
 
   // 10 deletes per hour per admin
-  const { allowed } = rateLimit(`admin-delete:${caller.id}`, 10, 60 * 60 * 1000)
+  const { allowed } = await rateLimit(`admin-delete:${caller.id}`, 10, 60 * 60 * 1000)
   if (!allowed) {
     return NextResponse.json({ error: 'Too many delete requests. Please wait.' }, { status: 429 })
   }
 
-  const { userId } = await req.json()
-
-  if (!userId) {
-    return NextResponse.json({ error: 'userId required' }, { status: 400 })
+  const body = await req.json().catch(() => null)
+  const parsed = schema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
   }
+
+  const { userId } = parsed.data
 
   if (userId === caller.id) {
     return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })

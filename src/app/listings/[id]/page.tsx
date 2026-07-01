@@ -60,5 +60,38 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ListingPage({ params }: Props) {
   const { id } = await params
-  return <ListingClient id={id} />
+  const room = await getRoom(id)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'
+
+  const jsonLd = room
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Accommodation',
+        name: room.title,
+        description: room.description ?? undefined,
+        url: `${siteUrl}/listings/${id}`,
+        ...(room.images?.[0] ? { image: room.images[0] } : {}),
+        address: room.location_name
+          ? { '@type': 'PostalAddress', addressLocality: room.location_name, addressCountry: 'BD' }
+          : undefined,
+        offers: {
+          '@type': 'Offer',
+          price: room.rent,
+          priceCurrency: 'BDT',
+          availability: 'https://schema.org/InStock',
+        },
+      }
+    : null
+
+  return (
+    <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <ListingClient id={id} />
+    </>
+  )
 }

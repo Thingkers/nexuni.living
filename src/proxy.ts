@@ -28,7 +28,11 @@ export async function proxy(req: NextRequest) {
     },
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  // getUser() re-validates the token against the Supabase Auth server on
+  // every call, unlike getSession() which just reads the (unverified)
+  // cookie. Middleware gates admin access, so it must not trust a session
+  // that Supabase itself hasn't confirmed is still valid.
+  const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = req.nextUrl
 
@@ -37,18 +41,18 @@ export async function proxy(req: NextRequest) {
   const isAuthPage  = AUTH_ROUTES.some((r) => pathname.startsWith(r))
 
   // No session → redirect to login (preserve intended destination)
-  if ((isProtected || isAdmin) && !session) {
+  if ((isProtected || isAdmin) && !user) {
     const loginUrl = new URL('/auth/login', req.url)
     loginUrl.searchParams.set('next', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
   // Admin routes → verify role in DB
-  if (isAdmin && session) {
+  if (isAdmin && user) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
     if (profile?.role !== 'admin') {
@@ -57,7 +61,7 @@ export async function proxy(req: NextRequest) {
   }
 
   // Already logged in → skip login/register pages
-  if (isAuthPage && session) {
+  if (isAuthPage && user) {
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 

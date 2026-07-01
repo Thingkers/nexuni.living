@@ -2,7 +2,6 @@
 
 import { toast } from 'sonner'
 import { useState } from 'react'
-import { newBookingRequestTemplate } from '@/lib/email/templates'
 import { supabase } from '@/lib/supabase'
 import type { Room } from '@/features/rooms/types/room.types'
 import { isSharedRoom } from '@/features/rooms/types/room.types'
@@ -62,15 +61,19 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
       return
     }
 
-    const { error: bookingError } = await supabase.from('bookings').insert({
-      room_id: room.id,
-      user_id: userId,
-      move_in_date: moveInDate,
-      message,
-      status: 'pending',
-      seats: shared ? seats : 1,
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    })
+    const { data: newBooking, error: bookingError } = await supabase
+      .from('bookings')
+      .insert({
+        room_id: room.id,
+        user_id: userId,
+        move_in_date: moveInDate,
+        message,
+        status: 'pending',
+        seats: shared ? seats : 1,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      })
+      .select('id')
+      .single()
 
     setLoading(false)
 
@@ -82,32 +85,20 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
     onSuccess?.()
     onClose()
 
-    // Notify owner via email
+    // Notify owner via email — server resolves the owner's address and
+    // renders the template itself from the booking record; the client only
+    // supplies the booking id.
     const owner = room.profiles as RoomOwner | null | undefined
-    const ownerEmail = owner?.email
-    if (ownerEmail) {
+    if (owner?.email && newBooking?.id) {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.access_token) {
-        const { data: tenantProfile } = await supabase
-          .from('profiles').select('full_name').eq('id', userId).single()
         fetch('/api/send-email', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({
-            to: ownerEmail,
-            subject: 'New Booking Request 📩',
-            html: newBookingRequestTemplate({
-              ownerName: owner?.full_name,
-              tenantName: tenantProfile?.full_name,
-              roomTitle: room.title,
-              moveInDate: moveInDate,
-              tenantMessage: message || null,
-              bookingsUrl: `${window.location.origin}/dashboard/bookings`,
-            }),
-          }),
+          body: JSON.stringify({ type: 'new-booking-request', bookingId: newBooking.id }),
         })
       }
     }

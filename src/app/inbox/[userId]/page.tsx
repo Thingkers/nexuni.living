@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { newMessageTemplate } from '@/lib/email/templates'
 import { supabase } from '@/lib/supabase'
 import { useTypingIndicator } from '@/hooks/useTypingIndicator'
 
@@ -171,16 +170,7 @@ export default function ChatPage() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({
-            to: otherUser.email,
-            subject: 'New message on Student Hostel',
-            html: newMessageTemplate({
-              receiverName: otherUser.full_name,
-              senderName: profile?.full_name,
-              message: text,
-              inboxUrl: `${window.location.origin}/inbox/${myId}`,
-            }),
-          }),
+          body: JSON.stringify({ type: 'new-message', receiverId: otherUserId, message: text }),
         })
       }
     }

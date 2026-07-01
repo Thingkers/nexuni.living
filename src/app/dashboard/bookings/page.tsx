@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
-import { bookingConfirmedTemplate, bookingRejectedTemplate } from '@/lib/email/templates'
 import { isSharedRoom } from '@/features/rooms/types/room.types'
 import type { RoomType } from '@/features/rooms/types/room.types'
 
@@ -150,10 +149,9 @@ export default function BookingRequestsPage() {
       'Booking cancelled.',
     )
 
-    // Notify tenant via email
-    const tenantEmail = booking?.profiles?.email
-    const tenantName  = booking?.profiles?.full_name
-    if (tenantEmail && (action === 'confirmed' || action === 'rejected')) {
+    // Notify tenant via email — server resolves the tenant's address and
+    // renders the template itself, and verifies the caller owns the room.
+    if (booking?.profiles?.email && (action === 'confirmed' || action === 'rejected')) {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.access_token) {
         fetch('/api/send-email', {
@@ -162,15 +160,7 @@ export default function BookingRequestsPage() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({
-            to: tenantEmail,
-            subject: action === 'confirmed'
-              ? 'Your booking has been confirmed 🎉'
-              : 'Update on your booking request',
-            html: action === 'confirmed'
-              ? bookingConfirmedTemplate({ userName: tenantName, roomTitle: booking?.rooms?.title ?? 'your room', roomLocation: booking?.rooms?.location_name })
-              : bookingRejectedTemplate({ userName: tenantName, roomTitle: booking?.rooms?.title ?? 'your room', roomLocation: booking?.rooms?.location_name }),
-          }),
+          body: JSON.stringify({ type: 'booking-status', bookingId, action }),
         })
       }
     }

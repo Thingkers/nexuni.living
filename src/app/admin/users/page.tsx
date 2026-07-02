@@ -48,10 +48,7 @@ export default function AdminUsersPage() {
     if (me?.role !== 'admin') { router.push('/'); return }
 
     const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, email, university, role, is_verified, verification_status, student_id, student_id_card_url, created_at')
-      .order('created_at', { ascending: false })
-      .range(0, PAGE_SIZE - 1)
+      .rpc('admin_list_profiles', { p_limit: PAGE_SIZE, p_offset: 0 })
 
     const result = (data ?? []) as UserProfile[]
     setUsers(result)
@@ -67,10 +64,7 @@ export default function AdminUsersPage() {
     const nextPage = page + 1
     const from = nextPage * PAGE_SIZE
     const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, email, university, role, is_verified, verification_status, student_id, student_id_card_url, created_at')
-      .order('created_at', { ascending: false })
-      .range(from, from + PAGE_SIZE - 1)
+      .rpc('admin_list_profiles', { p_limit: PAGE_SIZE, p_offset: from })
 
     const result = (data ?? []) as UserProfile[]
     setUsers((prev) => [...prev, ...result])

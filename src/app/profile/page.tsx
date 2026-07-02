@@ -55,7 +55,7 @@ export default function ProfilePage() {
         { data: profileData, error: profileError },
         { data: roomData },
       ] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
+        supabase.rpc('get_my_profile').maybeSingle(),
         supabase.from('rooms').select('*').eq('owner_id', uid).order('created_at', { ascending: false }),
       ])
 
@@ -71,8 +71,9 @@ export default function ProfilePage() {
         return
       }
 
-      setProfile(profileData as Profile)
-      setIsVerified(profileData.verification_status === 'approved')
+      const typedProfile = profileData as Profile
+      setProfile(typedProfile)
+      setIsVerified(typedProfile.verification_status === 'approved')
       setMyRooms((roomData ?? []) as Room[])
       setLoading(false)
     }

@@ -341,139 +341,143 @@ function ListingsContent() {
         <p className="text-sm text-gray-500 dark:text-gray-400">Browse available rooms for students</p>
       </div>
 
-      {/* SEARCH ROW — stacks on mobile */}
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row">
-        <input
-          className={`flex-1 ${inputCls}`}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder="Search by title or keyword..."
-        />
-        <div className="relative sm:w-44">
+      {/* SEARCH + FILTERS CARD */}
+      <div className="mb-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/60">
+        {/* Main row — search, location, filters toggle, search button */}
+        <div className="flex flex-col gap-2 sm:flex-row">
           <input
-            className={`w-full ${inputCls}`}
-            value={locationInput}
-            onChange={(e) => setLocationInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') { setShowSuggestions(false); handleSearch() }
-              if (e.key === 'Escape') setShowSuggestions(false)
-            }}
-            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-            placeholder="Location..."
+            className={`flex-1 ${inputCls} bg-white dark:bg-gray-800`}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="Search by title or keyword..."
           />
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute left-0 top-full z-50 mt-1 w-56 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-              {suggestions.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    setLocationInput(s)
-                    setLocation(s)
-                    setShowSuggestions(false)
-                    syncURL({ search: query, location: s, gender, type, rent: maxRent, sort, month: availableMonth })
-                  }}
-                >
-                  <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 21c-4-4-8-8-8-13a8 8 0 1 1 16 0c0 5-4 9-8 13z" /><circle cx="12" cy="8" r="2" /></svg>
-                  <span className="truncate">{s}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <button
-          onClick={handleSearch}
-          className="rounded-xl bg-teal-600 px-5 py-2 text-sm font-medium text-white hover:bg-teal-700"
-        >
-          Search
-        </button>
-      </div>
+          <div className="relative sm:w-44">
+            <input
+              className={`w-full ${inputCls} bg-white dark:bg-gray-800`}
+              value={locationInput}
+              onChange={(e) => setLocationInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { setShowSuggestions(false); handleSearch() }
+                if (e.key === 'Escape') setShowSuggestions(false)
+              }}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              placeholder="Location..."
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute left-0 top-full z-50 mt-1 w-56 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      setLocationInput(s)
+                      setLocation(s)
+                      setShowSuggestions(false)
+                      syncURL({ search: query, location: s, gender, type, rent: maxRent, sort, month: availableMonth })
+                    }}
+                  >
+                    <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 21c-4-4-8-8-8-13a8 8 0 1 1 16 0c0 5-4 9-8 13z" /><circle cx="12" cy="8" r="2" /></svg>
+                    <span className="truncate">{s}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-      {/* FILTER TOGGLE — mobile */}
-      <div className="mb-3 flex items-center justify-between">
-        <button
-          onClick={() => setShowFilters((p) => !p)}
-          className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 sm:hidden"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 8h10M10 12h4" />
-          </svg>
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="rounded-full bg-teal-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{activeFilterCount}</span>
-          )}
-        </button>
-
-        {hasFilter && (
-          <button onClick={clearAll} className="text-sm text-red-500 underline sm:hidden">
-            Clear all
-          </button>
-        )}
-      </div>
-
-      {/* FILTER ROW — always visible on desktop, toggle on mobile */}
-      <div className={`mb-4 ${showFilters ? 'block' : 'hidden sm:block'}`}>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={sort}
-            onChange={(e) => handleFilterChange({ sort: e.target.value })}
-            className={selectCls}
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-
-          <select
-            value={gender}
-            onChange={(e) => handleFilterChange({ gender: e.target.value })}
-            className={selectCls}
-          >
-            {GENDER_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-
-          <select
-            value={type}
-            onChange={(e) => handleFilterChange({ type: e.target.value })}
-            className={selectCls}
-          >
-            {TYPE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-
-          <input
-            type="number"
-            value={maxRent}
-            onChange={(e) => handleFilterChange({ maxRent: e.target.value })}
-            placeholder="Max rent (৳)"
-            className={`w-36 ${inputCls}`}
-            min={0}
-          />
-
-          <select
-            value={availableMonth}
-            onChange={(e) => handleFilterChange({ availableMonth: e.target.value })}
-            className={selectCls}
-          >
-            <option value="">Any Month</option>
-            {monthOptions.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-
-          {hasFilter && (
-            <button onClick={clearAll} className="hidden text-sm text-red-500 underline sm:block">
-              Clear all
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilters((p) => !p)}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-4 py-2 text-sm font-medium transition-colors sm:flex-none ${
+                showFilters
+                  ? 'border-teal-500 bg-teal-50 text-teal-700 dark:border-teal-500 dark:bg-teal-900/20 dark:text-teal-400'
+                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 8h10M10 12h4" />
+              </svg>
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="rounded-full bg-teal-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{activeFilterCount}</span>
+              )}
             </button>
-          )}
+
+            <button
+              onClick={handleSearch}
+              className="flex-1 rounded-xl bg-teal-600 px-5 py-2 text-sm font-medium text-white hover:bg-teal-700 sm:flex-none"
+            >
+              Search
+            </button>
+          </div>
         </div>
+
+        {/* Advanced filters — collapsible */}
+        {showFilters && (
+          <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={sort}
+                onChange={(e) => handleFilterChange({ sort: e.target.value })}
+                className={`w-full ${selectCls} bg-white dark:bg-gray-800`}
+              >
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+
+              <select
+                value={gender}
+                onChange={(e) => handleFilterChange({ gender: e.target.value })}
+                className={`w-full ${selectCls} bg-white dark:bg-gray-800`}
+              >
+                {GENDER_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+
+              <select
+                value={type}
+                onChange={(e) => handleFilterChange({ type: e.target.value })}
+                className={`w-full ${selectCls} bg-white dark:bg-gray-800`}
+              >
+                {TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+
+              <select
+                value={availableMonth}
+                onChange={(e) => handleFilterChange({ availableMonth: e.target.value })}
+                className={`w-full ${selectCls} bg-white dark:bg-gray-800`}
+              >
+                <option value="">Any Month</option>
+                {monthOptions.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <input
+              type="number"
+              value={maxRent}
+              onChange={(e) => handleFilterChange({ maxRent: e.target.value })}
+              placeholder="Max rent (৳)"
+              className={`mt-2 ${inputCls} bg-white dark:bg-gray-800`}
+              min={0}
+            />
+
+            {hasFilter && (
+              <button onClick={clearAll} className="mt-2 text-sm text-red-500 underline">
+                Clear all
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Active filter chips — each has an × to remove */}

@@ -112,7 +112,7 @@ export default function RoomCard({ room }: { room: Room }) {
       className={`group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-teal-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-700 ${isBooked ? 'opacity-70' : ''}`}
     >
       {/* ── Image ── */}
-      <div className="relative h-44 overflow-hidden bg-gray-100 dark:bg-gray-700">
+      <div className="relative h-52 overflow-hidden bg-gray-100 dark:bg-gray-700">
         {hasImages ? (
           images.map((src, index) => (
             <div key={src} className={`absolute inset-0 transition-opacity duration-700 ${index === activeImage ? 'opacity-100' : 'opacity-0'}`}>
@@ -146,138 +146,129 @@ export default function RoomCard({ room }: { room: Room }) {
 
       {/* ── Content ── */}
       <div className="p-4">
-        <div className="flex gap-3">
 
-          {/* Left — main info */}
-          <div className="min-w-0 flex-1">
-            <Link href={`/listings/${room.id}`}>
-              <h3 className="mb-1 line-clamp-1 font-semibold text-gray-900 transition-colors hover:text-teal-600 dark:text-white dark:hover:text-teal-400">
-                {room.title}
-              </h3>
-            </Link>
+        {/* Save + Share — float top-right so heading/body reclaim full width below */}
+        <div className="float-right ml-3 flex gap-1.5">
+          <button
+            type="button"
+            onClick={async (e) => {
+              e.preventDefault()
+              if (!userId) return
+              if (saved) {
+                await supabase.from('saved_rooms').delete().eq('user_id', userId).eq('room_id', room.id)
+              } else {
+                await supabase.from('saved_rooms').insert({ user_id: userId, room_id: room.id })
+              }
+              setSaved((p) => !p)
+            }}
+            title={saved ? 'Saved' : 'Save'}
+            className={`flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
+              saved
+                ? 'border-teal-400 bg-teal-50 text-teal-600 dark:bg-teal-900/30'
+                : 'border-gray-200 text-gray-400 hover:border-teal-300 hover:text-teal-500 dark:border-gray-700 dark:text-gray-500'
+            }`}
+          >
+            <Bookmark className={`h-3.5 w-3.5 ${saved ? 'fill-teal-600' : ''}`} />
+          </button>
 
-            <div className="mb-1 flex flex-wrap items-center gap-1.5">
-              <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                <MapPin className="h-3 w-3 shrink-0" />
-                {room.location_name || 'Location not added'}
-              </span>
-              <span className="text-gray-300 dark:text-gray-600">·</span>
-              {(() => { return (
-                <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                  {TypeIcon && <TypeIcon className="h-3 w-3 shrink-0" />}
-                  {ROOM_TYPE_LABELS[room.type] ?? room.type}
-                </span>
-              )})()}
-            </div>
+          <button
+            type="button"
+            onClick={handleShare}
+            title="Share"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-colors hover:border-teal-300 hover:text-teal-500 dark:border-gray-700 dark:text-gray-500"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
 
-            {/* Gender badge */}
-            <div className="mb-2.5">
-              {room.gender_type === 'male' && (
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-                  Male only
-                </span>
-              )}
-              {room.gender_type === 'female' && (
-                <span className="inline-flex items-center rounded-full bg-pink-50 px-2 py-0.5 text-xs font-medium text-pink-600 dark:bg-pink-900/20 dark:text-pink-400">
-                  Female only
-                </span>
-              )}
-              {room.gender_type === 'any' && (
-                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-                  Any gender
-                </span>
-              )}
-            </div>
+        <Link href={`/listings/${room.id}`}>
+          <h3 className="mb-2 line-clamp-2 font-semibold text-gray-900 transition-colors hover:text-teal-600 dark:text-white dark:hover:text-teal-400">
+            {room.title}
+          </h3>
+        </Link>
 
-            <p className="text-xl font-bold text-teal-600 dark:text-teal-400">
-              ৳{room.rent.toLocaleString('en-US')}
-              <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
-                {isSharedRoom(room.type) ? ' /seat/month' : ' /month'}
-              </span>
-            </p>
+        <div className="mb-2 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+          <MapPin className="h-3 w-3 shrink-0" />
+          <span className="truncate">{room.location_name || 'Location not added'}</span>
+        </div>
 
-            {isSharedRoom(room.type) ? (
-              <div className="mt-1 flex items-center gap-2">
-                <p className="text-xs text-gray-500 dark:text-gray-400">{room.available_seats} of {room.total_seats} seats</p>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
-                  {availability.emoji} {availability.label}
-                </span>
-              </div>
-            ) : (
-              <div className="mt-1">
-                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
-                  {statusConfig.label}
-                </span>
-              </div>
-            )}
+        {/* Room type (left) + gender (right), side by side */}
+        <div className="mb-3 clear-right flex flex-wrap items-center gap-1.5">
+          <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+            {TypeIcon && <TypeIcon className="h-3 w-3 shrink-0" />}
+            {ROOM_TYPE_LABELS[room.type] ?? room.type}
+          </span>
+          {room.gender_type === 'male' && (
+            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+              Male only
+            </span>
+          )}
+          {room.gender_type === 'female' && (
+            <span className="inline-flex items-center rounded-full bg-pink-50 px-2 py-0.5 text-xs font-medium text-pink-600 dark:bg-pink-900/20 dark:text-pink-400">
+              Female only
+            </span>
+          )}
+          {room.gender_type === 'any' && (
+            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+              Any gender
+            </span>
+          )}
+        </div>
 
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {AMENITIES.filter((a) => room[a.key]).map(({ key, Icon, label }) => (
-                <span key={key} className="flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-xs text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
-                  <Icon className="h-3 w-3 shrink-0" /> {label}
-                </span>
-              ))}
-            </div>
+        <p className="mb-2 text-xl font-bold text-teal-600 dark:text-teal-400">
+          ৳{room.rent.toLocaleString('en-US')}
+          <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
+            {isSharedRoom(room.type) ? ' /seat/month' : ' /month'}
+          </span>
+        </p>
 
-            {shortDesc && (
-              <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
-                {shortDesc}
-              </p>
-            )}
-
-            {availableDate && (
-              <p className="mt-2 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
-                <Calendar className="h-3 w-3 shrink-0" />
-                {isAvailableNow ? 'Available now' : `From ${availableDate}`}
-              </p>
-            )}
+        {isSharedRoom(room.type) ? (
+          <div className="mb-3 flex items-center gap-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400">{room.available_seats} of {room.total_seats} seats</p>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
+              {availability.emoji} {availability.label}
+            </span>
           </div>
-
-          {/* Right — quick actions */}
-          <div className="flex shrink-0 flex-col items-end justify-between gap-3">
-            {/* Save + Share buttons */}
-            <div className="flex flex-col gap-1.5">
-              <button
-                type="button"
-                onClick={async (e) => {
-                  e.preventDefault()
-                  if (!userId) return
-                  if (saved) {
-                    await supabase.from('saved_rooms').delete().eq('user_id', userId).eq('room_id', room.id)
-                  } else {
-                    await supabase.from('saved_rooms').insert({ user_id: userId, room_id: room.id })
-                  }
-                  setSaved((p) => !p)
-                }}
-                title={saved ? 'Saved' : 'Save'}
-                className={`flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
-                  saved
-                    ? 'border-teal-400 bg-teal-50 text-teal-600 dark:bg-teal-900/30'
-                    : 'border-gray-200 text-gray-400 hover:border-teal-300 hover:text-teal-500 dark:border-gray-700 dark:text-gray-500'
-                }`}
-              >
-                <Bookmark className={`h-3.5 w-3.5 ${saved ? 'fill-teal-600' : ''}`} />
-              </button>
-
-              <button
-                type="button"
-                onClick={handleShare}
-                title="Share"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-colors hover:border-teal-300 hover:text-teal-500 dark:border-gray-700 dark:text-gray-500"
-              >
-                <Share2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            {/* Details button — bottom */}
-            <Link
-              href={`/listings/${room.id}`}
-              className="rounded-xl bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-teal-700"
-            >
-              Details →
-            </Link>
+        ) : (
+          <div className="mb-3">
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
+              {statusConfig.label}
+            </span>
           </div>
+        )}
 
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {AMENITIES.filter((a) => room[a.key]).map(({ key, Icon, label }) => (
+            <span key={key} className="flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-xs text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
+              <Icon className="h-3 w-3 shrink-0" /> {label}
+            </span>
+          ))}
+        </div>
+
+        {shortDesc && (
+          <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+            {shortDesc}
+          </p>
+        )}
+
+        {/* Available date + Details button — same row */}
+        <div className="mt-1 flex items-center justify-between gap-2">
+          {availableDate ? (
+            <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+              isAvailableNow
+                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                : 'bg-teal-50 text-teal-700 dark:bg-teal-900/20 dark:text-teal-400'
+            }`}>
+              <Calendar className="h-3 w-3 shrink-0" />
+              {isAvailableNow ? 'Available now' : `From ${availableDate}`}
+            </div>
+          ) : <span />}
+          <Link
+            href={`/listings/${room.id}`}
+            className="rounded-xl bg-teal-600 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-teal-700"
+          >
+            Details →
+          </Link>
         </div>
       </div>
 

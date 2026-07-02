@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { compressImage } from '@/lib/compressImage'
@@ -21,11 +21,12 @@ const EDITABLE_FIELDS = [
   { key: 'nagad_number', label: 'Nagad Number (for payment)', type: 'text' },
 ] as const satisfies readonly { key: keyof Profile; label: string; type: string }[]
 
-export default function ProfilePage() {
+function ProfilePageContent() {
 
   const router = useRouter()
+  const searchParams = useSearchParams()
 
-  const [tab, setTab]             = useState<Tab>('info')
+  const [tab, setTab]             = useState<Tab>(() => (searchParams.get('tab') === 'rooms' ? 'rooms' : 'info'))
   const [profile, setProfile]     = useState<Profile | null>(null)
   const [myRooms, setMyRooms]     = useState<Room[]>([])
   const [saving, setSaving]       = useState(false)
@@ -379,5 +380,19 @@ export default function ProfilePage() {
 
     </main>
 
+  )
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="mx-auto max-w-2xl px-4 py-10 animate-pulse">
+        <div className="mb-4 h-20 w-20 rounded-full bg-gray-100" />
+        <div className="mb-2 h-5 w-1/3 rounded bg-gray-100" />
+        <div className="h-4 w-1/4 rounded bg-gray-100" />
+      </div>
+    }>
+      <ProfilePageContent />
+    </Suspense>
   )
 }

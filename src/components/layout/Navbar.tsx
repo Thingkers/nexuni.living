@@ -7,7 +7,7 @@ import type { User } from '@supabase/supabase-js'
 import {
   Home, LayoutGrid, UtensilsCrossed, BedDouble, Key,
   LayoutDashboard, MessageSquare, Inbox, CalendarCheck,
-  Plus, LogOut, BarChart2, ShieldCheck, Flag, Building2,
+  Plus, LogOut, BarChart2, ShieldCheck, Flag, Building2, List,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -394,6 +394,9 @@ export default function Navbar() {
                     <>
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                       <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Listings</p>
+                      <Link href="/profile?tab=rooms" className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
+                        <List className="h-3.5 w-3.5 opacity-50" />My Rooms
+                      </Link>
                       <Link href="/dashboard/bookings" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
                         <span className="flex items-center gap-2.5"><Inbox className="h-3.5 w-3.5 opacity-50" />Requests Received</span>
                         {pendingBookingCount > 0 && (
@@ -519,6 +522,9 @@ export default function Navbar() {
                   {isVerified && isOwner && (
                     <>
                       <p className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Listings</p>
+                      <Link href="/profile?tab=rooms" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
+                        <List className="h-4 w-4 shrink-0 opacity-60" />My Rooms
+                      </Link>
                       <Link href="/dashboard/bookings" className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
                         <span className="flex items-center gap-3"><Inbox className="h-4 w-4 shrink-0 opacity-60" />Requests Received</span>
                         {pendingBookingCount > 0 && (

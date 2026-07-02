@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { User, Plus, ClipboardList, MessageSquare, CalendarCheck, BarChart2, ShieldCheck, Building2, Flag } from 'lucide-react'
+import { Plus, ClipboardList, MessageSquare, CalendarCheck, BarChart2, ShieldCheck, Building2, Flag, List } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type Stats = {
@@ -12,12 +12,28 @@ type Stats = {
   activeBookings: number
 }
 
+type MyRoom = {
+  id: string
+  title: string
+  rent: number
+  location_name: string | null
+  status: string
+}
+
+const ROOM_STATUS_LABEL: Record<string, string> = {
+  open: '🟢 Open',
+  partial: '🟡 Partial',
+  booked: '🔴 Booked',
+  closed: '⛔ Closed',
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [isVerified, setIsVerified] = useState(false)
   const [isOwner, setIsOwner] = useState(false)
-  const [profile, setProfile] = useState<{ full_name: string | null; role: string | null } | null>(null)
+  const [profile, setProfile] = useState<{ full_name: string | null; role: string | null; avatar_url: string | null } | null>(null)
+  const [myRooms, setMyRooms] = useState<MyRoom[]>([])
   const [stats, setStats] = useState<Stats>({
     pendingBookings: 0,
     unreadMessages: 0,
@@ -32,11 +48,15 @@ export default function DashboardPage() {
 
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('verification_status, full_name, role')
+        .select('verification_status, full_name, role, avatar_url')
         .eq('id', userId)
         .single()
 
-      setProfile({ full_name: profileData?.full_name ?? null, role: profileData?.role ?? null })
+      setProfile({
+        full_name: profileData?.full_name ?? null,
+        role: profileData?.role ?? null,
+        avatar_url: profileData?.avatar_url ?? null,
+      })
       const verified = profileData?.verification_status === 'approved'
       setIsVerified(verified)
 
@@ -48,9 +68,14 @@ export default function DashboardPage() {
         supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('user_id', userId).in('status', ['pending', 'confirmed', 'active']),
       ])
 
-      const { data: ownerRooms } = await supabase.from('rooms').select('id').eq('owner_id', userId)
+      const { data: ownerRooms } = await supabase
+        .from('rooms')
+        .select('id, title, rent, location_name, status')
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: false })
       const roomIds = ownerRooms?.map((r) => r.id) ?? []
       setIsOwner(roomIds.length > 0)
+      setMyRooms((ownerRooms ?? []) as MyRoom[])
 
       let pendingBookings = 0
       if (roomIds.length > 0) {
@@ -85,14 +110,26 @@ export default function DashboardPage() {
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'there'
   const isAdmin = profile?.role === 'admin'
+  const initials =
+    profile?.full_name
+      ?.split(' ')
+      .map((name) => name[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() ?? 'U'
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
 
       {/* Header — profile card */}
       <div className="mb-6 flex items-center gap-4 rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <Link href="/profile" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400 hover:bg-teal-100 transition">
-          <User className="h-5 w-5" />
+        <Link href="/profile" className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-50 text-teal-600 transition hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-400">
+          {profile?.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-sm font-semibold">{initials}</span>
+          )}
         </Link>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-gray-900 dark:text-white">

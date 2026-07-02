@@ -500,7 +500,7 @@ export default function ListingClient({ id }: { id: string }) {
               {/* Share + Report */}
               <div className="flex flex-col gap-2">
                 <ShareButton title={room.title} rent={room.rent} location={room.location_name} roomId={room.id} />
-                {!isOwner && <ReportListingButton roomId={room.id} />}
+                {currentUser && !isOwner && <ReportListingButton roomId={room.id} />}
               </div>
 
             </div>

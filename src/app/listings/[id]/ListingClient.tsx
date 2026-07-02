@@ -44,7 +44,7 @@ export default function ListingClient({ id }: { id: string }) {
   useEffect(() => {
     async function loadRoomDetails() {
       const [{ data: roomData }, { data: userData }] = await Promise.all([
-        supabase.from('rooms').select('*, profiles(full_name, phone, avatar_url, university, email)').eq('id', id).single(),
+        supabase.from('rooms').select('*, profiles(full_name, phone, avatar_url, university)').eq('id', id).single(),
         supabase.auth.getUser(),
       ])
 

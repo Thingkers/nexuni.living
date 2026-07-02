@@ -36,21 +36,19 @@ export default function LoginPage() {
 
     let loginEmail = email
 
-    // Student ID দিয়ে login হলে email lookup করতে হবে
+    // Student ID দিয়ে login হলে email lookup করতে হবে — email কলাম anon-এর
+    // জন্য readable না, তাই নির্দিষ্ট এই লুকআপের জন্য বানানো RPC ব্যবহার হয়।
     if (loginType === 'id') {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('student_id', studentId.trim())
-        .single()
+      const { data: foundEmail } = await supabase
+        .rpc('get_email_by_student_id', { p_student_id: studentId.trim() })
 
-      if (!profile?.email) {
+      if (!foundEmail) {
         setError('Student ID not found. Please check and try again.')
         setLoading(false)
         return
       }
 
-      loginEmail = profile.email
+      loginEmail = foundEmail
     }
 
     const { error: loginError } = await supabase.auth.signInWithPassword({

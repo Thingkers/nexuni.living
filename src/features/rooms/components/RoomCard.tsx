@@ -11,7 +11,7 @@ import {
 import type { Room } from '@/features/rooms/types/room.types'
 import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.types'
 import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
-import { supabase } from '@/lib/supabase'
+import { useSavedRooms } from '@/features/rooms/components/SavedRoomsProvider'
 
 const STATUS_CONFIG = {
   open:    { label: 'Open',                bg: 'bg-green-500',  text: 'text-white' },
@@ -39,25 +39,30 @@ export default function RoomCard({ room }: { room: Room }) {
   const isBooked = room.status === 'booked' || room.status === 'closed'
   const [activeImage, setActiveImage] = useState(0)
   const [isHovered, setIsHovered]     = useState(false)
-  const [saved, setSaved]             = useState(false)
-  const [userId, setUserId]           = useState<string | null>(null)
   const images = room.images ?? []
   const hasImages = images.length > 0
 
-  // Load user + saved status on mount
+  // Saved state is shared via context — one query for the whole page instead
+  // of one auth + one saved_rooms request per card.
+  const { userId, isSaved, toggleSaved } = useSavedRooms()
+  const saved = isSaved(room.id)
+
+  // Which carousel slides have been shown so far. Only these (plus the
+  // upcoming slide) get an <Image> mounted, so a card with 6 photos doesn't
+  // download all 6 upfront — only the visible one and the next.
+  const [shownImages, setShownImages] = useState<Set<number>>(() => new Set([0]))
+
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return
-      setUserId(data.user.id)
-      supabase
-        .from('saved_rooms')
-        .select('id')
-        .eq('user_id', data.user.id)
-        .eq('room_id', room.id)
-        .maybeSingle()
-        .then(({ data: row }) => setSaved(!!row))
+    // Bookkeeping derived from activeImage, not a data fetch — recording that
+    // this slide has been displayed so its <Image> stays mounted.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShownImages((prev) => {
+      if (prev.has(activeImage)) return prev
+      const next = new Set(prev)
+      next.add(activeImage)
+      return next
     })
-  }, [room.id])
+  }, [activeImage])
 
   useEffect(() => {
     if (images.length <= 1) return
@@ -114,11 +119,23 @@ export default function RoomCard({ room }: { room: Room }) {
       {/* ── Image ── */}
       <div className="relative h-52 overflow-hidden bg-gray-100 dark:bg-gray-700">
         {hasImages ? (
-          images.map((src, index) => (
-            <div key={src} className={`absolute inset-0 transition-opacity duration-700 ${index === activeImage ? 'opacity-100' : 'opacity-0'}`}>
-              <Image src={src} alt={room.title} fill className="object-cover" />
-            </div>
-          ))
+          images.map((src, index) => {
+            const upcoming = (activeImage + 1) % images.length
+            const shouldLoad = index === activeImage || index === upcoming || shownImages.has(index)
+            return (
+              <div key={src} className={`absolute inset-0 transition-opacity duration-700 ${index === activeImage ? 'opacity-100' : 'opacity-0'}`}>
+                {shouldLoad && (
+                  <Image
+                    src={src}
+                    alt={room.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
+                  />
+                )}
+              </div>
+            )
+          })
         ) : (
           <div className="flex h-full items-center justify-center">
             <HomeIcon className="h-16 w-16 text-gray-300 dark:text-gray-600" />
@@ -151,15 +168,10 @@ export default function RoomCard({ room }: { room: Room }) {
         <div className="float-right ml-3 flex gap-1.5">
           <button
             type="button"
-            onClick={async (e) => {
+            onClick={(e) => {
               e.preventDefault()
               if (!userId) return
-              if (saved) {
-                await supabase.from('saved_rooms').delete().eq('user_id', userId).eq('room_id', room.id)
-              } else {
-                await supabase.from('saved_rooms').insert({ user_id: userId, room_id: room.id })
-              }
-              setSaved((p) => !p)
+              toggleSaved(room.id)
             }}
             title={saved ? 'Saved' : 'Save'}
             className={`flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${

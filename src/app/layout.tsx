@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next'
 import Navbar from '@/components/layout/Navbar'
 import BottomNav from '@/components/layout/BottomNav'
 import NotificationProvider from '@/components/providers/NotificationProvider'
+import SavedRoomsProvider from '@/features/rooms/components/SavedRoomsProvider'
 
 import './globals.css'
 
@@ -52,7 +53,9 @@ export default function RootLayout({
         <Navbar />
 
         <main className="flex-1 pb-16 md:pb-0">
-          {children}
+          <SavedRoomsProvider>
+            {children}
+          </SavedRoomsProvider>
         </main>
 
         <BottomNav />

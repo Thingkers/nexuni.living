@@ -34,11 +34,16 @@ function getDateLabel(dateStr: string) {
   return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export default function ChatPage() {
   const params = useParams<{ userId: string }>()
   const router = useRouter()
   const bottomRef = useRef<HTMLDivElement | null>(null)
-  const otherUserId = params.userId
+  // The route param is interpolated into PostgREST .or() filters below —
+  // only ever pass through a well-formed uuid (RLS already protects the
+  // data; this just stops crafted URLs from producing broken queries).
+  const otherUserId = UUID_RE.test(params.userId ?? '') ? params.userId : ''
 
   const MSG_PAGE_SIZE = 50
 
@@ -171,7 +176,7 @@ export default function ChatPage() {
             'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ type: 'new-message', receiverId: otherUserId, message: text }),
-        })
+        }).catch(() => {}) // best-effort notification — the message itself already sent
       }
     }
 

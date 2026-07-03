@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 import RoomCard from '@/features/rooms/components/RoomCard'
 import type { Room } from '@/features/rooms/types/room.types'
-import { buildRoomsQuery, LISTINGS_PAGE_SIZE, type RoomFilters } from '@/features/rooms/queries'
+import { buildRoomsQuery, sanitizeFilterText, LISTINGS_PAGE_SIZE, type RoomFilters } from '@/features/rooms/queries'
 
 const RoomsMap = dynamic(
   () => import('@/features/map/components/RoomsMap'),
@@ -191,15 +191,17 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
       .neq('status', 'closed')
       .limit(300)
 
-    if (query.trim()) {
-      const words = query.trim().split(/\s+/)
+    const safeQuery = sanitizeFilterText(query)
+    const safeLocation = sanitizeFilterText(location)
+    if (safeQuery) {
+      const words = safeQuery.split(/\s+/)
       if (words.length > 1) {
-        qb = qb.textSearch('search_vector', query, { type: 'websearch', config: 'simple' })
+        qb = qb.textSearch('search_vector', safeQuery, { type: 'websearch', config: 'simple' })
       } else {
-        qb = qb.or(`title.ilike.%${query}%,location_name.ilike.%${query}%`)
+        qb = qb.or(`title.ilike.%${safeQuery}%,location_name.ilike.%${safeQuery}%`)
       }
     }
-    if (location.trim())  qb = qb.ilike('location_name', `%${location.trim()}%`)
+    if (safeLocation) qb = qb.ilike('location_name', `%${safeLocation}%`)
     if (gender)           qb = qb.eq('gender_type', gender)
     if (type)             qb = qb.eq('type', type)
     if (maxRent)          qb = qb.lte('rent', Number(maxRent))
@@ -225,7 +227,7 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
       const { data } = await supabase
         .from('rooms')
         .select('location_name')
-        .ilike('location_name', `%${locationInput.trim()}%`)
+        .ilike('location_name', `%${sanitizeFilterText(locationInput)}%`)
         .not('location_name', 'is', null)
         .neq('status', 'booked')
         .neq('status', 'closed')

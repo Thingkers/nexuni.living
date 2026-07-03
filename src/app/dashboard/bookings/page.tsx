@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
-import { isSharedRoom } from '@/features/rooms/types/room.types'
 import type { RoomType } from '@/features/rooms/types/room.types'
 
 type FilterStatus = 'all' | 'pending' | 'confirmed' | 'active'
@@ -106,36 +105,22 @@ export default function BookingRequestsPage() {
 
     const booking = bookings.find((b) => b.id === bookingId)
 
-    const { error } = await supabase
-      .from('bookings')
-      .update({ status: action })
-      .eq('id', bookingId)
+    // set_booking_status updates the booking AND the room's seat count in a
+    // single locked transaction — the old client-side read-modify-write let
+    // two simultaneous confirmations oversell a shared room.
+    const { error } = await supabase.rpc('set_booking_status', {
+      p_booking_id: bookingId,
+      p_status: action,
+    })
 
     if (error) {
-      toast.error(error.message)
+      toast.error(
+        error.message.includes('NOT_ENOUGH_SEATS')
+          ? 'Not enough seats left — another booking may have just been confirmed.'
+          : error.message,
+      )
       setActing(null)
       return
-    }
-
-    // Update room seats/status when booking is confirmed
-    if (booking?.rooms?.id && action === 'confirmed') {
-      const roomType = booking.rooms.type as RoomType
-      const roomId   = booking.rooms.id
-
-      if (isSharedRoom(roomType)) {
-        const seatsBooked = booking.seats ?? 1
-        const newSeats    = Math.max(0, (booking.rooms.available_seats ?? 0) - seatsBooked)
-        await supabase
-          .from('rooms')
-          .update({ available_seats: newSeats, status: newSeats === 0 ? 'booked' : 'partial' })
-          .eq('id', roomId)
-      } else {
-        // Single / master_bedroom — one booking fills the room
-        await supabase
-          .from('rooms')
-          .update({ status: 'booked' })
-          .eq('id', roomId)
-      }
     }
 
     setBookings((previous) =>
@@ -161,38 +146,25 @@ export default function BookingRequestsPage() {
             'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ type: 'booking-status', bookingId, action }),
-        })
+        }).catch(() => {}) // best-effort notification — the status change already succeeded
       }
     }
 
     setActing(null)
   }
 
-  async function endTenancy(bookingId: string, roomId: string) {
+  async function endTenancy(bookingId: string) {
     setActing(bookingId)
-    const booking = bookings.find((b) => b.id === bookingId)
-    const roomType = booking?.rooms?.type as RoomType
 
-    const { error: bookingError } = await supabase
-      .from('bookings').update({ status: 'completed' }).eq('id', bookingId)
+    // Atomically completes the booking and restores the held seats /
+    // reopens the room in one transaction.
+    const { error } = await supabase.rpc('set_booking_status', {
+      p_booking_id: bookingId,
+      p_status: 'completed',
+    })
 
-    if (bookingError) { toast.error(bookingError.message); setActing(null); return }
-
-    let roomError: { message: string } | null = null
-    if (isSharedRoom(roomType)) {
-      const current  = booking?.rooms?.available_seats ?? 0
-      const total    = booking?.rooms?.total_seats ?? 999
-      const restored = Math.min(current + (booking?.seats ?? 1), total)
-      const { error } = await supabase
-        .from('rooms').update({ available_seats: restored, status: 'open' }).eq('id', roomId)
-      roomError = error
-    } else {
-      const { error } = await supabase.from('rooms').update({ status: 'open' }).eq('id', roomId)
-      roomError = error
-    }
-
-    if (roomError) {
-      toast.error(roomError.message)
+    if (error) {
+      toast.error(error.message)
     } else {
       setBookings((prev) => prev.map((b) => b.id === bookingId ? { ...b, status: 'completed' } : b))
       toast.success('🏁 Tenancy ended — room is now open again!')
@@ -465,7 +437,7 @@ export default function BookingRequestsPage() {
                     </div>
                     <button
                       disabled={!!isActing}
-                      onClick={() => endTenancy(booking.id, booking.rooms?.id ?? '')}
+                      onClick={() => endTenancy(booking.id)}
                       className="w-full rounded-xl border border-purple-200 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 disabled:opacity-50"
                     >
                       {isActing ? 'Processing...' : '🏁 Tenant চলে গেছে — Tenancy শেষ করুন'}

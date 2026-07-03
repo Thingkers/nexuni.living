@@ -21,6 +21,17 @@ function memoryRateLimit(key: string, limit: number, windowMs: number) {
 const hasUpstash =
   !!process.env.UPSTASH_REDIS_REST_URL && !!process.env.UPSTASH_REDIS_REST_TOKEN
 
+// The in-memory fallback is per-serverless-instance, so in production it
+// effectively means "no rate limiting". Fail loudly (once at module load)
+// instead of silently degrading when the Upstash env vars are missing.
+if (!hasUpstash && process.env.NODE_ENV === 'production') {
+  console.error(
+    '[rateLimit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are not set — ' +
+    'falling back to per-instance in-memory rate limiting, which does NOT protect ' +
+    'a serverless deployment. Set the Upstash env vars in production.',
+  )
+}
+
 const redis = hasUpstash
   ? new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL!,

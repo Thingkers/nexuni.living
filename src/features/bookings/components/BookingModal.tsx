@@ -78,7 +78,14 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
     setLoading(false)
 
     if (bookingError) {
-      toast.error(bookingError.message)
+      // 23505 = unique violation from bookings_one_pending_per_user_room —
+      // the DB-level backstop for two quick clicks / two tabs racing past
+      // the pre-check above.
+      toast.error(
+        bookingError.code === '23505'
+          ? 'You already have a pending booking request for this room'
+          : bookingError.message,
+      )
       return
     }
 
@@ -99,7 +106,7 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
             'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ type: 'new-booking-request', bookingId: newBooking.id }),
-        })
+        }).catch(() => {}) // best-effort notification — the booking itself already succeeded
       }
     }
 

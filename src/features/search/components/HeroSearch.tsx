@@ -20,13 +20,13 @@ export default function HeroSearch() {
   }
 
   return (
-    <div className="relative mx-auto flex max-w-xl overflow-visible rounded-2xl bg-white/10 p-1.5 backdrop-blur-sm ring-1 ring-white/20 focus-within:ring-white/40">
+    <div className="relative mx-auto flex max-w-xl overflow-visible rounded-2xl bg-white p-1.5 shadow-xl shadow-teal-950/25 ring-1 ring-black/5 transition-shadow focus-within:shadow-2xl focus-within:shadow-teal-950/30">
       <div className="relative flex-1">
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           placeholder="Search by area, university or room type..."
-          className="w-full rounded-xl bg-transparent py-3 pl-10 pr-4 text-sm text-white placeholder-white/50 outline-none"
+          className="w-full rounded-xl bg-transparent py-3 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 outline-none"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -41,7 +41,7 @@ export default function HeroSearch() {
       </div>
       <button
         onClick={handleSearch}
-        className="rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-teal-700 shadow transition hover:bg-teal-50"
+        className="rounded-xl bg-teal-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
       >
         Search
       </button>

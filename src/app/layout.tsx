@@ -28,6 +28,14 @@ export const metadata: Metadata = {
     icon: '/icon-192.png',
     apple: '/icon-192.png',
   },
+  // iOS reads these (not manifest.json) for Add to Home Screen behaviour —
+  // without them the shortcut opens as a plain Safari tab instead of
+  // a standalone app window.
+  appleWebApp: {
+    capable: true,
+    title: 'Students Home',
+    statusBarStyle: 'default',
+  },
 }
 
 export default function RootLayout({

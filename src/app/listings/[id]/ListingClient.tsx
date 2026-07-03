@@ -30,11 +30,13 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   closed:  { label: 'Closed',              className: 'bg-gray-400 text-white' },
 }
 
-export default function ListingClient({ id }: { id: string }) {
-  const [room, setRoom]               = useState<Room | null>(null)
+export default function ListingClient({ id, initialRoom }: { id: string; initialRoom: Room | null }) {
+  // The room itself is server-rendered (passed down from page.tsx), so the
+  // page paints with content immediately; only the viewer-specific bits
+  // (session, verification, existing booking) load client-side below.
+  const room = initialRoom
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading]         = useState(true)
   const [showBooking, setShowBooking] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
   const [descExpanded, setDescExpanded] = useState(false)
@@ -42,31 +44,22 @@ export default function ListingClient({ id }: { id: string }) {
   const [existingBooking, setExistingBooking] = useState<{ status: string } | null>(null)
 
   useEffect(() => {
-    async function loadRoomDetails() {
-      const [{ data: roomData }, { data: userData }] = await Promise.all([
-        supabase.from('rooms').select('*, profiles(full_name, phone, avatar_url, university)').eq('id', id).single(),
-        supabase.auth.getUser(),
-      ])
+    async function loadViewerDetails() {
+      const { data } = await supabase.auth.getSession()
+      const sessionUser = data.session?.user ?? null
+      setCurrentUser(sessionUser)
 
-      if (!roomData) return
-      setRoom(roomData as Room)
-
-      const isOwner = userData.user?.id === roomData.owner_id
-      setCurrentUser(userData.user)
-
-      if (userData.user) {
+      if (sessionUser) {
         const [{ data: profile }, { data: booking }] = await Promise.all([
-          supabase.from('profiles').select('verification_status, role').eq('id', userData.user.id).single(),
-          supabase.from('bookings').select('status').eq('room_id', id).eq('user_id', userData.user.id).in('status', ['pending', 'confirmed']).maybeSingle(),
+          supabase.from('profiles').select('verification_status, role').eq('id', sessionUser.id).single(),
+          supabase.from('bookings').select('status').eq('room_id', id).eq('user_id', sessionUser.id).in('status', ['pending', 'confirmed']).maybeSingle(),
         ])
         setUserProfile(profile)
         if (booking) setExistingBooking(booking)
       }
-
-      setLoading(false)
     }
 
-    if (id) loadRoomDetails()
+    if (id) loadViewerDetails()
   }, [id])
 
   // Auto slideshow
@@ -77,16 +70,6 @@ export default function ListingClient({ id }: { id: string }) {
     }, 4000)
     return () => clearInterval(interval)
   }, [room?.images])
-
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-10 animate-pulse">
-        <div className="mb-6 h-80 rounded-2xl bg-gray-100 dark:bg-gray-800" />
-        <div className="mb-3 h-6 w-2/3 rounded bg-gray-100 dark:bg-gray-800" />
-        <div className="h-4 w-1/3 rounded bg-gray-100 dark:bg-gray-800" />
-      </div>
-    )
-  }
 
   if (!room) return <div className="py-20 text-center text-gray-400">Listing not found</div>
 

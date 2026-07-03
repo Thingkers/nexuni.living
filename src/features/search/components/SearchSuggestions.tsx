@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { sanitizeFilterText } from '@/features/rooms/queries'
 
 type Props = {
   query: string
@@ -13,18 +14,17 @@ export default function SearchSuggestions({ query, onSelect }: Props) {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (query.trim().length < 2) {
+      const safeQuery = sanitizeFilterText(query)
+      if (safeQuery.length < 2) {
         setSuggestions([])
         return
       }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('rooms')
         .select('title, location_name')
-        .or(`title.ilike.%${query}%,location_name.ilike.%${query}%`)  // ✅ whitespace সরানো
+        .or(`title.ilike.%${safeQuery}%,location_name.ilike.%${safeQuery}%`)
         .limit(8)
-
-      console.log('suggestions data:', data, 'error:', error)  // debug
 
       const items = Array.from(
         new Set(

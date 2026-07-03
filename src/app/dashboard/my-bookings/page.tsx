@@ -85,10 +85,14 @@ export default function MyBookingsPage() {
 
   async function cancelBooking(bookingId: string) {
     setCancelling(bookingId)
-    const { error } = await supabase
-      .from('bookings')
-      .update({ status: 'cancelled' })
-      .eq('id', bookingId)
+    // RPC so cancelling a *confirmed* booking also returns the held seats to
+    // the room in the same transaction (a plain status update left the seats
+    // locked forever). The DB trigger still restricts tenants to cancelling
+    // their own pending/confirmed bookings.
+    const { error } = await supabase.rpc('set_booking_status', {
+      p_booking_id: bookingId,
+      p_status: 'cancelled',
+    })
 
     if (error) {
       toast.error(error.message)

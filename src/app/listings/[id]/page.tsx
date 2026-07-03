@@ -1,23 +1,28 @@
+import { cache } from 'react'
 import type { Metadata } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import type { Room } from '@/features/rooms/types/room.types'
 import ListingClient from './ListingClient'
 
 type Props = {
   params: Promise<{ id: string }>
 }
 
-async function getRoom(id: string) {
+// Full row (not just metadata fields) so the page body renders with the room
+// already in the HTML instead of the client re-fetching it after hydration.
+// React.cache dedupes the call between generateMetadata and the page render.
+const getRoom = cache(async (id: string): Promise<Room | null> => {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   )
   const { data } = await supabase
     .from('rooms')
-    .select('title, location_name, rent, type, gender_type, description, images')
+    .select('*, profiles(full_name, phone, avatar_url, university)')
     .eq('id', id)
     .single()
-  return data
-}
+  return data as Room | null
+})
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
@@ -91,7 +96,7 @@ export default async function ListingPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <ListingClient id={id} />
+      <ListingClient id={id} initialRoom={room} />
     </>
   )
 }

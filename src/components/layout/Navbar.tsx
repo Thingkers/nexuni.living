@@ -62,6 +62,9 @@ function Avatar({
 export default function Navbar() {
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
+  // Room ids owned by the logged-in user — kept in a ref so the realtime
+  // callbacks can check relevance without re-querying on every event.
+  const ownedRoomIdsRef = useRef<string[]>([])
 
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -119,6 +122,7 @@ export default function Navbar() {
       setUnreadCount(msgCount ?? 0)
 
       const roomIds = myRooms?.map((r) => r.id) ?? []
+      ownedRoomIdsRef.current = roomIds
       setIsOwner(roomIds.length > 0)
 
       if (roomIds.length > 0) {
@@ -132,13 +136,75 @@ export default function Navbar() {
       }
     }
 
+    // Realtime channels are only opened for logged-in users (anonymous
+    // visitors used to open them too), and every callback first checks that
+    // the event actually concerns this user before hitting the database —
+    // otherwise each message/booking anywhere in the system made every
+    // connected client run count queries.
+    let channels: ReturnType<typeof supabase.channel>[] = []
+
+    function subscribeRealtime(uid: string) {
+      const messageChannel = supabase
+        .channel(`navbar-unread-messages-${uid}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, async (payload) => {
+          // Server-side filters on UPDATE need REPLICA IDENTITY FULL, so the
+          // relevance check happens client-side instead.
+          const row = (payload.new ?? payload.old) as { receiver_id?: string } | null
+          if (row?.receiver_id !== uid) return
+          const { count } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', uid)
+            .eq('is_read', false)
+          setUnreadCount(count ?? 0)
+        })
+        .subscribe()
+
+      const bookingChannel = supabase
+        .channel(`navbar-bookings-${uid}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, async (payload) => {
+          const newBooking = payload.new as { room_id?: string; user_id?: string; status?: string } | null
+
+          // OWNER: refresh pending count only when the booking is on one of my rooms
+          if (newBooking?.room_id && ownedRoomIdsRef.current.includes(newBooking.room_id)) {
+            const { count } = await supabase
+              .from('bookings')
+              .select('*', { count: 'exact', head: true })
+              .eq('status', 'pending')
+              .in('room_id', ownedRoomIdsRef.current)
+            setPendingBookingCount(count ?? 0)
+          }
+
+          // TENANT: badge on My Bookings when owner confirms/rejects
+          if (payload.eventType === 'UPDATE' && newBooking?.user_id === uid &&
+              (newBooking.status === 'confirmed' || newBooking.status === 'rejected')) {
+            setMyBookingCount((prev) => {
+              const next = prev + 1
+              localStorage.setItem('my_booking_updates', String(next))
+              return next
+            })
+          }
+        })
+        .subscribe()
+
+      channels = [messageChannel, bookingChannel]
+    }
+
+    function unsubscribeRealtime() {
+      channels.forEach((channel) => supabase.removeChannel(channel))
+      channels = []
+    }
+
     async function loadUser() {
       // getSession reads the locally stored session — no auth-server round
       // trip just to render the navbar (middleware still validates for real).
       const { data } = await supabase.auth.getSession()
       const sessionUser = data.session?.user ?? null
       setUser(sessionUser)
-      if (sessionUser) await loadUserExtras(sessionUser.id)
+      if (sessionUser) {
+        await loadUserExtras(sessionUser.id)
+        subscribeRealtime(sessionUser.id)
+      }
     }
 
     loadUser()
@@ -146,9 +212,13 @@ export default function Navbar() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       // INITIAL_SESSION is already handled by loadUser() above — skip to avoid double fetching
       if (event === 'INITIAL_SESSION') return
+      // TOKEN_REFRESHED fires periodically for the same user — nothing changed
+      if (event === 'TOKEN_REFRESHED') return
 
       setUser(session?.user ?? null)
+      unsubscribeRealtime()
       if (!session) {
+        ownedRoomIdsRef.current = []
         setProfile(null)
         setUnreadCount(0)
         setPendingBookingCount(0)
@@ -156,61 +226,13 @@ export default function Navbar() {
       } else {
         // Re-fetch so isVerified updates immediately after login
         await loadUserExtras(session.user.id)
+        subscribeRealtime(session.user.id)
       }
     })
 
-    const messageChannel = supabase
-      .channel('navbar-unread-messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, async () => {
-        const { data } = await supabase.auth.getSession()
-        const uid = data.session?.user.id
-        if (!uid) return
-        const { count } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('receiver_id', uid)
-          .eq('is_read', false)
-        setUnreadCount(count ?? 0)
-      })
-      .subscribe()
-
-    const bookingChannel = supabase
-      .channel('navbar-bookings')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, async (payload) => {
-        const { data } = await supabase.auth.getSession()
-        const uid = data.session?.user.id
-        if (!uid) return
-
-        // OWNER: update pending booking count
-        const { data: myRooms } = await supabase.from('rooms').select('id').eq('owner_id', uid)
-        const roomIds = myRooms?.map((r) => r.id) ?? []
-        if (roomIds.length > 0) {
-          const { count } = await supabase
-            .from('bookings')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'pending')
-            .in('room_id', roomIds)
-          setPendingBookingCount(count ?? 0)
-        }
-
-        // TENANT: badge on My Bookings when owner confirms/rejects
-        if (payload.eventType === 'UPDATE') {
-          const newBooking = payload.new as { user_id: string; status: string }
-          if (newBooking.user_id === uid && (newBooking.status === 'confirmed' || newBooking.status === 'rejected')) {
-            setMyBookingCount((prev) => {
-              const next = prev + 1
-              localStorage.setItem('my_booking_updates', String(next))
-              return next
-            })
-          }
-        }
-      })
-      .subscribe()
-
     return () => {
       subscription.unsubscribe()
-      supabase.removeChannel(messageChannel)
-      supabase.removeChannel(bookingChannel)
+      unsubscribeRealtime()
     }
   }, [])
 

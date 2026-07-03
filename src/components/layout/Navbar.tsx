@@ -94,45 +94,51 @@ export default function Navbar() {
   }, [menuOpen])
 
   useEffect(() => {
-    async function loadUser() {
-      const { data } = await supabase.auth.getUser()
-      setUser(data.user)
-
-      if (data.user) {
-        const { data: profileData } = await supabase
+    // Profile, unread count, and owned rooms don't depend on each other, so
+    // they run in parallel; only the pending-bookings count has to wait for
+    // the room ids. (Previously all five calls ran one after another.)
+    async function loadUserExtras(uid: string) {
+      const [{ data: profileData }, { count: msgCount }, { data: myRooms }] = await Promise.all([
+        supabase
           .from('profiles')
           .select('full_name, avatar_url, role, verification_status')
-          .eq('id', data.user.id)
-          .maybeSingle()
-
-        setProfile(profileData)
-
-        const { count: msgCount } = await supabase
+          .eq('id', uid)
+          .maybeSingle(),
+        supabase
           .from('messages')
           .select('*', { count: 'exact', head: true })
-          .eq('receiver_id', data.user.id)
-          .eq('is_read', false)
-
-        setUnreadCount(msgCount ?? 0)
-
-        const { data: myRooms } = await supabase
+          .eq('receiver_id', uid)
+          .eq('is_read', false),
+        supabase
           .from('rooms')
           .select('id')
-          .eq('owner_id', data.user.id)
+          .eq('owner_id', uid),
+      ])
 
-        const roomIds = myRooms?.map((r) => r.id) ?? []
-        setIsOwner(roomIds.length > 0)
+      setProfile(profileData)
+      setUnreadCount(msgCount ?? 0)
 
-        if (roomIds.length > 0) {
-          const { count: bookingCount } = await supabase
-            .from('bookings')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'pending')
-            .in('room_id', roomIds)
+      const roomIds = myRooms?.map((r) => r.id) ?? []
+      setIsOwner(roomIds.length > 0)
 
-          setPendingBookingCount(bookingCount ?? 0)
-        }
+      if (roomIds.length > 0) {
+        const { count: bookingCount } = await supabase
+          .from('bookings')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending')
+          .in('room_id', roomIds)
+
+        setPendingBookingCount(bookingCount ?? 0)
       }
+    }
+
+    async function loadUser() {
+      // getSession reads the locally stored session — no auth-server round
+      // trip just to render the navbar (middleware still validates for real).
+      const { data } = await supabase.auth.getSession()
+      const sessionUser = data.session?.user ?? null
+      setUser(sessionUser)
+      if (sessionUser) await loadUserExtras(sessionUser.id)
     }
 
     loadUser()
@@ -148,47 +154,21 @@ export default function Navbar() {
         setPendingBookingCount(0)
         setIsOwner(false)
       } else {
-        // Re-fetch profile so isVerified updates immediately after login
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url, role, verification_status')
-          .eq('id', session.user.id)
-          .maybeSingle()
-        setProfile(profileData)
-
-        const { count: msgCount } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('receiver_id', session.user.id)
-          .eq('is_read', false)
-        setUnreadCount(msgCount ?? 0)
-
-        const { data: myRooms } = await supabase
-          .from('rooms')
-          .select('id')
-          .eq('owner_id', session.user.id)
-        const roomIds = myRooms?.map((r) => r.id) ?? []
-        setIsOwner(roomIds.length > 0)
-        if (roomIds.length > 0) {
-          const { count: bookingCount } = await supabase
-            .from('bookings')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'pending')
-            .in('room_id', roomIds)
-          setPendingBookingCount(bookingCount ?? 0)
-        }
+        // Re-fetch so isVerified updates immediately after login
+        await loadUserExtras(session.user.id)
       }
     })
 
     const messageChannel = supabase
       .channel('navbar-unread-messages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, async () => {
-        const { data } = await supabase.auth.getUser()
-        if (!data.user) return
+        const { data } = await supabase.auth.getSession()
+        const uid = data.session?.user.id
+        if (!uid) return
         const { count } = await supabase
           .from('messages')
           .select('*', { count: 'exact', head: true })
-          .eq('receiver_id', data.user.id)
+          .eq('receiver_id', uid)
           .eq('is_read', false)
         setUnreadCount(count ?? 0)
       })
@@ -197,9 +177,9 @@ export default function Navbar() {
     const bookingChannel = supabase
       .channel('navbar-bookings')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, async (payload) => {
-        const { data } = await supabase.auth.getUser()
-        if (!data.user) return
-        const uid = data.user.id
+        const { data } = await supabase.auth.getSession()
+        const uid = data.session?.user.id
+        if (!uid) return
 
         // OWNER: update pending booking count
         const { data: myRooms } = await supabase.from('rooms').select('id').eq('owner_id', uid)

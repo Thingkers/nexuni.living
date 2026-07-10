@@ -392,7 +392,7 @@ export default function PostRoomPage() {
           <div>
             <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Location *</label>
             <input
-              placeholder="e.g. Shahbag, Dhaka"
+              placeholder="e.g. Basundhara, Kuril.."
               className={inputCls(errors.location_name)}
               value={form.location_name}
               onChange={(e) => updateField('location_name', e.target.value)}
@@ -413,7 +413,7 @@ export default function PostRoomPage() {
           </div>
 
           {/* Advance Deposit */}
-          <div>
+          {/* <div>
             <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Advance / Security Deposit <span className="text-gray-400">(optional)</span></label>
             <input
               placeholder="e.g. 1 month advance, ৳5000 deposit"
@@ -421,7 +421,7 @@ export default function PostRoomPage() {
               value={form.advance_deposit}
               onChange={(e) => updateField('advance_deposit', e.target.value)}
             />
-          </div>
+          </div> */}
 
           {/* Rent Inclusive toggle */}
           <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 dark:border-gray-700">
@@ -439,7 +439,7 @@ export default function PostRoomPage() {
           </div>
 
           {/* University Priority */}
-          <div>
+          {/* <div>
             <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Preferred Students / University <span className="text-gray-400">(optional)</span></label>
             <input
               placeholder="e.g. NSU, AIUB, IUB students preferred"
@@ -447,7 +447,7 @@ export default function PostRoomPage() {
               value={form.university_priority}
               onChange={(e) => updateField('university_priority', e.target.value)}
             />
-          </div>
+          </div> */}
 
           <button
             onClick={() => { if (validateStep1()) setStep(2) }}

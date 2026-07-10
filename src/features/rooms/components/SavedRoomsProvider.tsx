@@ -90,9 +90,9 @@ export default function SavedRoomsProvider({ children }: { children: React.React
   }, [userId, savedIds])
 
   return (
-    <SavedRoomsContext value={{ userId, isSaved, toggleSaved }}>
-      {children}
-    </SavedRoomsContext>
+    <SavedRoomsContext.Provider value={{ userId, isSaved, toggleSaved }}>
+        {children}
+    </SavedRoomsContext.Provider>   
   )
 }
 

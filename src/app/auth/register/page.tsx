@@ -212,7 +212,7 @@ export default function RegisterPage() {
           <div>
             <label className="mb-1 block text-xs text-gray-500">University</label>
             <input
-              placeholder="e.g. AIUB, BUET, NSU..."
+              placeholder="e.g. AIUB, NSU, IUB..."
               className={inputClass + ' w-full'}
               value={form.university}
               onChange={(e) => updateField('university', e.target.value)}

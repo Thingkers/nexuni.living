@@ -4,6 +4,7 @@ export type Profile = {
   email: string
   phone?: string
   university?: string
+  university_id?: string | null
   avatar_url?: string
   bkash_number?: string
   nagad_number?: string

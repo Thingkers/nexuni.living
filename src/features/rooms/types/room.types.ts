@@ -25,6 +25,8 @@ export type Room = {
   location_name: string | null
   latitude: number | null
   longitude: number | null
+  locality_id?: string | null
+  nearest_university_ids?: string[]
 
   // Basic amenities
   wifi: boolean
@@ -68,6 +70,21 @@ export type Room = {
 export function isSharedRoom(type: RoomType): boolean {
   return type === 'mess' || type === 'bachelor' || type === 'sublet'
 }
+
+// Message keys under the "RoomType" namespace in messages/{locale}.json —
+// exhaustively typed (satisfies Record<RoomType, string>) so a new RoomType
+// added later without updating this map fails to typecheck, rather than
+// silently rendering a raw key on screen. Used by RoomCard.tsx, which has
+// useTranslations() available; pages not yet converted to next-intl
+// (this session only translates the homepage) keep using the plain-English
+// ROOM_TYPE_LABELS below.
+export const ROOM_TYPE_MESSAGE_KEYS = {
+  mess: 'mess',
+  bachelor: 'bachelor',
+  sublet: 'sublet',
+  single: 'single',
+  master_bedroom: 'master_bedroom',
+} as const satisfies Record<RoomType, string>
 
 export const ROOM_TYPE_LABELS: Record<RoomType, string> = {
   mess: 'Mess',

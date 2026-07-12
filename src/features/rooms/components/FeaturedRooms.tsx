@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Home } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
@@ -13,6 +14,7 @@ type Tab = 'all' | 'male' | 'female'
 // first paint; only the gender tabs fetch client-side, and results are kept
 // per-tab so switching back is instant.
 export default function FeaturedRooms({ initialRooms }: { initialRooms: Room[] }) {
+  const t = useTranslations('FeaturedRooms')
   const [activeTab, setActiveTab] = useState<Tab>('all')
   const [roomsByTab, setRoomsByTab] = useState<Partial<Record<Tab, Room[]>>>({ all: initialRooms })
 
@@ -42,9 +44,9 @@ export default function FeaturedRooms({ initialRooms }: { initialRooms: Room[] }
       {/* Tabs */}
       <div className="mb-5 flex gap-2">
         {[
-          { key: 'all', label: 'All' },
-          { key: 'male', label: 'Male' },
-          { key: 'female', label: 'Female' },
+          { key: 'all', label: t('all') },
+          { key: 'male', label: t('male') },
+          { key: 'female', label: t('female') },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -75,7 +77,7 @@ export default function FeaturedRooms({ initialRooms }: { initialRooms: Room[] }
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-300 dark:bg-gray-800">
             <Home className="h-7 w-7" />
           </div>
-          <p className="text-sm text-gray-400 dark:text-gray-500">No rooms posted yet</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">{t('empty')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

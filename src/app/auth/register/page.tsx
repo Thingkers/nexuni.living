@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase/'
+import { UniversityCombobox } from '@/features/universities/components/UniversityCombobox'
 
 const INITIAL_FORM = {
   full_name: '',
@@ -16,6 +17,7 @@ const INITIAL_FORM = {
   gender: 'male',
   student_id: '',
   university: '',
+  university_id: null as string | null,
 }
 
 function getPasswordStrength(password: string): { score: number; label: string; color: string } {
@@ -143,6 +145,7 @@ export default function RegisterPage() {
       phone: form.phone,
       gender: form.gender,
       university: form.university || null,
+      university_id: form.university_id,
       student_id: form.student_id,
       student_id_card_url: idCardUrl,
       role: 'student',
@@ -211,11 +214,13 @@ export default function RegisterPage() {
 
           <div>
             <label className="mb-1 block text-xs text-gray-500">University</label>
-            <input
-              placeholder="e.g. AIUB, NSU, IUB..."
+            <UniversityCombobox
+              value={form.university_id}
+              initialText={form.university}
               className={inputClass + ' w-full'}
-              value={form.university}
-              onChange={(e) => updateField('university', e.target.value)}
+              onChange={({ id, name, rawText }) =>
+                setForm((prev) => ({ ...prev, university_id: id, university: name ?? rawText }))
+              }
             />
           </div>
 

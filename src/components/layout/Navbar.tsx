@@ -1,15 +1,18 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
 import type { User } from '@supabase/supabase-js'
 import {
   Home, LayoutGrid, UtensilsCrossed, BedDouble, Key,
   LayoutDashboard, MessageSquare, Inbox, CalendarCheck,
-  Plus, LogOut, BarChart2, ShieldCheck, Flag, Building2, List,
+  Plus, LogOut, BarChart2, ShieldCheck, Flag, Building2, List, Users,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { setLocaleAction } from '@/features/i18n/actions'
+import type { AppLocale } from '@/i18n/request'
 
 type Profile = {
   full_name: string | null
@@ -61,6 +64,9 @@ function Avatar({
 
 export default function Navbar() {
   const router = useRouter()
+  const t = useTranslations('Navbar')
+  const locale = useLocale() as AppLocale
+  const [isLocalePending, startLocaleTransition] = useTransition()
   const menuRef = useRef<HTMLDivElement>(null)
   // Room ids owned by the logged-in user — kept in a ref so the realtime
   // callbacks can check relevance without re-querying on every event.
@@ -247,6 +253,15 @@ export default function Navbar() {
     }
   }
 
+  function toggleLocale() {
+    const next: AppLocale = locale === 'en' ? 'bn' : 'en'
+    startLocaleTransition(async () => {
+      localStorage.setItem('locale', next)
+      await setLocaleAction(next)
+      router.refresh()
+    })
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut()
     setUser(null)
@@ -289,16 +304,17 @@ export default function Navbar() {
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-600 text-white shadow-sm">
             <Home className="h-4 w-4" />
           </div>
-          <span className="text-base font-bold text-gray-900 dark:text-white">Students Home </span>
+          <span className="text-base font-bold text-gray-900 dark:text-white">{t('brand')} </span>
         </Link>
 
         {/* Desktop nav links */}
         <div className="hidden items-center gap-0.5 text-sm md:flex">
           {[
-            { href: '/listings', label: 'All Rooms' },
-            { href: '/listings?type=mess', label: 'Mess' },
-            { href: '/listings?type=bachelor', label: 'Bachelor' },
-            { href: '/listings?type=sublet', label: 'Sublet' },
+            { href: '/listings', label: t('allRooms') },
+            { href: '/listings?type=mess', label: t('mess') },
+            { href: '/listings?type=bachelor', label: t('bachelor') },
+            { href: '/listings?type=sublet', label: t('sublet') },
+            { href: '/roommates', label: t('roommates') },
           ].map((link) => (
             <Link
               key={link.href}
@@ -317,9 +333,19 @@ export default function Navbar() {
           <button
             onClick={toggleTheme}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
-            aria-label="Toggle dark mode"
+            aria-label={t('toggleDarkMode')}
           >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </button>
+
+          {/* Language toggle — shows the language it will switch TO */}
+          <button
+            onClick={toggleLocale}
+            disabled={isLocalePending}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+            aria-label={t('toggleLanguage')}
+          >
+            {locale === 'en' ? 'বাং' : 'EN'}
           </button>
 
           {user && isVerified && (
@@ -327,7 +353,7 @@ export default function Navbar() {
               href="/post-room"
               className="hidden rounded-xl bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 md:block"
             >
-              + Post Room
+              {t('postRoom')}
             </Link>
           )}
 
@@ -335,7 +361,7 @@ export default function Navbar() {
           <button
             onClick={() => setMobileOpen((prev) => !prev)}
             className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-300 md:hidden"
-            aria-label="Toggle menu"
+            aria-label={t('toggleMenu')}
           >
             {mobileOpen ? (
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -373,18 +399,18 @@ export default function Navbar() {
                     <div className="min-w-0">
                       <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200">{profile?.full_name || user.email}</p>
                       {!isVerified && (
-                        <span className="text-[10px] text-yellow-600">⏳ Pending</span>
+                        <span className="text-[10px] text-yellow-600">⏳ {t('pending')}</span>
                       )}
                     </div>
                   </div>
 
                   <Link href="/dashboard" className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
-                    <LayoutDashboard className="h-3.5 w-3.5 opacity-50" />Dashboard
+                    <LayoutDashboard className="h-3.5 w-3.5 opacity-50" />{t('dashboard')}
                   </Link>
 
                   {isVerified && (
                     <Link href="/inbox" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
-                      <span className="flex items-center gap-2.5"><MessageSquare className="h-3.5 w-3.5 opacity-50" />Inbox</span>
+                      <span className="flex items-center gap-2.5"><MessageSquare className="h-3.5 w-3.5 opacity-50" />{t('inbox')}</span>
                       {unreadCount > 0 && (
                         <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
                       )}
@@ -395,12 +421,12 @@ export default function Navbar() {
                   {isVerified && isOwner && (
                     <>
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
-                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Listings</p>
+                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('myListings')}</p>
                       <Link href="/profile?tab=rooms" className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
-                        <List className="h-3.5 w-3.5 opacity-50" />My Rooms
+                        <List className="h-3.5 w-3.5 opacity-50" />{t('myRooms')}
                       </Link>
                       <Link href="/dashboard/bookings" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
-                        <span className="flex items-center gap-2.5"><Inbox className="h-3.5 w-3.5 opacity-50" />Requests Received</span>
+                        <span className="flex items-center gap-2.5"><Inbox className="h-3.5 w-3.5 opacity-50" />{t('requestsReceived')}</span>
                         {pendingBookingCount > 0 && (
                           <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
                         )}
@@ -412,9 +438,9 @@ export default function Navbar() {
                   {isVerified && (
                     <>
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
-                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Renting</p>
+                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('myRenting')}</p>
                       <Link href="/dashboard/my-bookings" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={goToMyBookings}>
-                        <span className="flex items-center gap-2.5"><CalendarCheck className="h-3.5 w-3.5 opacity-50" />My Bookings</span>
+                        <span className="flex items-center gap-2.5"><CalendarCheck className="h-3.5 w-3.5 opacity-50" />{t('myBookings')}</span>
                         {myBookingCount > 0 && (
                           <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
                         )}
@@ -425,33 +451,33 @@ export default function Navbar() {
                   {profile?.role === 'admin' && (
                     <>
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
-                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Admin</p>
+                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('admin')}</p>
                       <Link href="/dashboard/analytics" className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
-                        <BarChart2 className="h-3.5 w-3.5 opacity-50" />Analytics
+                        <BarChart2 className="h-3.5 w-3.5 opacity-50" />{t('analytics')}
                       </Link>
                       <Link href="/admin/users" className="flex items-center gap-2.5 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
-                        <ShieldCheck className="h-3.5 w-3.5" />Admin Users
+                        <ShieldCheck className="h-3.5 w-3.5" />{t('adminUsers')}
                       </Link>
                       <Link href="/admin/rooms" className="flex items-center gap-2.5 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
-                        <Building2 className="h-3.5 w-3.5" />Admin Rooms
+                        <Building2 className="h-3.5 w-3.5" />{t('adminRooms')}
                       </Link>
                       <Link href="/admin/reports" className="flex items-center gap-2.5 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
-                        <Flag className="h-3.5 w-3.5" />Report Listings
+                        <Flag className="h-3.5 w-3.5" />{t('reportListings')}
                       </Link>
                     </>
                   )}
 
                   <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                   <button onClick={handleLogout} className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <LogOut className="h-3.5 w-3.5" />Logout
+                    <LogOut className="h-3.5 w-3.5" />{t('logout')}
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <div className="hidden items-center gap-3 md:flex">
-              <Link href="/auth/login" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Login</Link>
-              <Link href="/auth/register" className="rounded-xl bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700">Register</Link>
+              <Link href="/auth/login" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">{t('login')}</Link>
+              <Link href="/auth/register" className="rounded-xl bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700">{t('register')}</Link>
             </div>
           )}
         </div>
@@ -463,13 +489,14 @@ export default function Navbar() {
           <div className="max-h-[75vh] overflow-y-auto px-4 py-3">
             <div className="flex flex-col gap-1.5">
 
-              <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Browse</p>
+              <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('browse')}</p>
               {([
-                { href: '/listings', Icon: LayoutGrid, label: 'All Rooms' },
-                { href: '/listings?type=mess', Icon: UtensilsCrossed, label: 'Mess' },
-                { href: '/listings?type=bachelor', Icon: BedDouble, label: 'Bachelor' },
-                { href: '/listings?type=sublet', Icon: Key, label: 'Sublet' },
-              ] as const).map(({ href, Icon, label }) => (
+                { href: '/listings', Icon: LayoutGrid, label: t('allRooms') },
+                { href: '/listings?type=mess', Icon: UtensilsCrossed, label: t('mess') },
+                { href: '/listings?type=bachelor', Icon: BedDouble, label: t('bachelor') },
+                { href: '/listings?type=sublet', Icon: Key, label: t('sublet') },
+                { href: '/roommates', Icon: Users, label: t('roommates') },
+              ]).map(({ href, Icon, label }) => (
                 <Link
                   key={href}
                   href={href}
@@ -490,30 +517,30 @@ export default function Navbar() {
                     <div className="flex min-w-0 flex-col">
                       <span className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">{profile?.full_name || user.email}</span>
                       {!isVerified ? (
-                        <span className="text-[10px] text-yellow-600">⏳ Verification Pending</span>
+                        <span className="text-[10px] text-yellow-600">⏳ {t('verificationPending')}</span>
                       ) : (
-                        <span className="text-[10px] text-green-600">✓ Verified</span>
+                        <span className="text-[10px] text-green-600">✓ {t('verified')}</span>
                       )}
                     </div>
                   </div>
 
-                  <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Account</p>
+                  <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('account')}</p>
 
                   {isVerified && (
                     <Link href="/post-room" className="flex items-center gap-3 rounded-xl bg-teal-50 px-3 py-2.5 text-sm font-medium text-teal-600 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40" onClick={closeMenus}>
                       <Plus className="h-4 w-4 shrink-0" />
-                      Post Room
+                      {t('postRoomShort')}
                     </Link>
                   )}
 
                   <Link href="/dashboard" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
                     <LayoutDashboard className="h-4 w-4 shrink-0 opacity-60" />
-                    Dashboard
+                    {t('dashboard')}
                   </Link>
 
                   {isVerified && (
                     <Link href="/inbox" className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
-                      <span className="flex items-center gap-3"><MessageSquare className="h-4 w-4 shrink-0 opacity-60" />Inbox</span>
+                      <span className="flex items-center gap-3"><MessageSquare className="h-4 w-4 shrink-0 opacity-60" />{t('inbox')}</span>
                       {unreadCount > 0 && (
                         <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
                       )}
@@ -523,12 +550,12 @@ export default function Navbar() {
                   {/* Owner section — only shown if user has posted rooms */}
                   {isVerified && isOwner && (
                     <>
-                      <p className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Listings</p>
+                      <p className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('myListings')}</p>
                       <Link href="/profile?tab=rooms" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
-                        <List className="h-4 w-4 shrink-0 opacity-60" />My Rooms
+                        <List className="h-4 w-4 shrink-0 opacity-60" />{t('myRooms')}
                       </Link>
                       <Link href="/dashboard/bookings" className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
-                        <span className="flex items-center gap-3"><Inbox className="h-4 w-4 shrink-0 opacity-60" />Requests Received</span>
+                        <span className="flex items-center gap-3"><Inbox className="h-4 w-4 shrink-0 opacity-60" />{t('requestsReceived')}</span>
                         {pendingBookingCount > 0 && (
                           <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
                         )}
@@ -539,9 +566,9 @@ export default function Navbar() {
                   {/* Tenant section — always shown */}
                   {isVerified && (
                     <>
-                      <p className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">My Renting</p>
+                      <p className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('myRenting')}</p>
                       <Link href="/dashboard/my-bookings" className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={goToMyBookings}>
-                        <span className="flex items-center gap-3"><CalendarCheck className="h-4 w-4 shrink-0 opacity-60" />My Bookings</span>
+                        <span className="flex items-center gap-3"><CalendarCheck className="h-4 w-4 shrink-0 opacity-60" />{t('myBookings')}</span>
                         {myBookingCount > 0 && (
                           <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
                         )}
@@ -552,18 +579,18 @@ export default function Navbar() {
                   {profile?.role === 'admin' && (
                     <>
                       <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
-                      <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Admin</p>
+                      <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('admin')}</p>
                       <Link href="/dashboard/analytics" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
-                        <BarChart2 className="h-4 w-4 shrink-0 opacity-60" />Analytics
+                        <BarChart2 className="h-4 w-4 shrink-0 opacity-60" />{t('analytics')}
                       </Link>
                       <Link href="/admin/users" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
-                        <ShieldCheck className="h-4 w-4 shrink-0" />Admin Users
+                        <ShieldCheck className="h-4 w-4 shrink-0" />{t('adminUsers')}
                       </Link>
                       <Link href="/admin/rooms" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
-                        <Building2 className="h-4 w-4 shrink-0" />Admin Rooms
+                        <Building2 className="h-4 w-4 shrink-0" />{t('adminRooms')}
                       </Link>
                       <Link href="/admin/reports" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
-                        <Flag className="h-4 w-4 shrink-0" />Report Listings
+                        <Flag className="h-4 w-4 shrink-0" />{t('reportListings')}
                       </Link>
                     </>
                   )}
@@ -571,13 +598,13 @@ export default function Navbar() {
                   <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                   <button onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                     <LogOut className="h-4 w-4 shrink-0" />
-                    Logout
+                    {t('logout')}
                   </button>
                 </>
               ) : (
                 <>
-                  <Link href="/auth/login" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300" onClick={closeMenus}>Login</Link>
-                  <Link href="/auth/register" className="rounded-xl bg-teal-600 px-3 py-2.5 text-center text-sm font-medium text-white hover:bg-teal-700" onClick={closeMenus}>Register</Link>
+                  <Link href="/auth/login" className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300" onClick={closeMenus}>{t('login')}</Link>
+                  <Link href="/auth/register" className="rounded-xl bg-teal-600 px-3 py-2.5 text-center text-sm font-medium text-white hover:bg-teal-700" onClick={closeMenus}>{t('register')}</Link>
                 </>
               )}
             </div>

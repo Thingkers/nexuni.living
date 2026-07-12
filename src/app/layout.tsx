@@ -2,6 +2,8 @@ import { Toaster } from 'sonner'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 
 import Navbar from '@/components/layout/Navbar'
 import BottomNav from '@/components/layout/BottomNav'
@@ -30,14 +32,20 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Reading the locale here (via the NEXT_LOCALE cookie, see
+  // src/i18n/request.ts) makes every route sharing this layout dynamic —
+  // an accepted trade-off, see src/app/page.tsx's dropped `revalidate`.
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   return (
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
@@ -50,22 +58,24 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-white text-gray-900 transition-colors dark:bg-gray-950 dark:text-gray-100">
-        <Navbar />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Navbar />
 
-        <main className="flex-1 pb-16 md:pb-0">
-          <SavedRoomsProvider>
-            {children}
-          </SavedRoomsProvider>
-        </main>
+          <main className="flex-1 pb-16 md:pb-0">
+            <SavedRoomsProvider>
+              {children}
+            </SavedRoomsProvider>
+          </main>
 
-        <BottomNav />
-        <NotificationProvider />
+          <BottomNav />
+          <NotificationProvider />
 
-        <Toaster
-          position="top-right"
-          richColors
-        />
-        <Analytics />
+          <Toaster
+            position="top-right"
+            richColors
+          />
+          <Analytics />
+        </NextIntlClientProvider>
       </body>
     </html>
   )

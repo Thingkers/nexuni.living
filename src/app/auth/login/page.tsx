@@ -51,22 +51,25 @@ export default function LoginPage() {
       loginEmail = foundEmail
     }
 
-    const { error: loginError } = await supabase.auth.signInWithPassword({
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
       email: loginEmail,
       password,
     })
 
-    if (loginError) {
+    if (loginError || !loginData.user) {
       setError('Invalid credentials. Please try again.')
       setLoading(false)
       return
     }
 
-    // Verification status check
+    // Verification status check. Filtered by id, not email — `email` is
+    // revoked from `authenticated` (see 20260702180000_lock_down_authenticated_
+    // sensitive_columns.sql), so filtering on it fails silently and this
+    // check never actually fired for pending/rejected users.
     const { data: profile } = await supabase
       .from('profiles')
       .select('verification_status')
-      .eq('email', loginEmail)
+      .eq('id', loginData.user.id)
       .single()
 
     setLoading(false)

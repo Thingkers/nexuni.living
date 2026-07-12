@@ -10,6 +10,9 @@ export type RoomFilters = {
   maxRent: string
   sort: string
   availableMonth: string
+  // University uuids (never slugs — slugs are a URL-only encoding resolved
+  // to ids before reaching this filter, see resolveUniversityIdsBySlug).
+  universityIds: string[]
 }
 
 export const EMPTY_FILTERS: RoomFilters = {
@@ -20,6 +23,7 @@ export const EMPTY_FILTERS: RoomFilters = {
   maxRent: '',
   sort: 'newest',
   availableMonth: '',
+  universityIds: [],
 }
 
 // PostgREST `.or()` filter strings are comma/paren-delimited, so raw user
@@ -60,6 +64,7 @@ export function buildRoomsQuery(supabase: SupabaseClient, filters: RoomFilters) 
   if (type) qb = qb.eq('type', type)
   if (maxRent) qb = qb.lte('rent', Number(maxRent))
   if (availableMonth) qb = qb.lte('available_from', `${availableMonth}-01`)
+  if (filters.universityIds.length > 0) qb = qb.overlaps('nearest_university_ids', filters.universityIds)
 
   if (sort === 'price_asc') {
     qb = qb.order('rent', { ascending: true })

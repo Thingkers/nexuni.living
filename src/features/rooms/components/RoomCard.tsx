@@ -3,27 +3,31 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import {
   MapPin, Wifi, Flame, Zap, Calendar, Bookmark, Share2,
   UtensilsCrossed, BedDouble, Key, Bed, Home as HomeIcon,
   type LucideIcon,
 } from 'lucide-react'
 import type { Room } from '@/features/rooms/types/room.types'
-import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.types'
+import { isSharedRoom, ROOM_TYPE_MESSAGE_KEYS } from '@/features/rooms/types/room.types'
 import { getAvailabilityStatus } from '@/lib/getAvailabilityStatus'
 import { useSavedRooms } from '@/features/rooms/components/SavedRoomsProvider'
+import { NearestUniversityBadge } from '@/features/universities/components/NearestUniversityBadge'
 
+// bg/text classes only — labels come from the "RoomStatus" message
+// namespace, keyed by room.status itself (a stable literal union).
 const STATUS_CONFIG = {
-  open:    { label: 'Open',                bg: 'bg-green-500',  text: 'text-white' },
-  partial: { label: 'Partially Available', bg: 'bg-yellow-400', text: 'text-white' },
-  booked:  { label: 'Booked',              bg: 'bg-red-500',    text: 'text-white' },
-  closed:  { label: 'Closed',              bg: 'bg-gray-400',   text: 'text-white' },
+  open:    { bg: 'bg-green-500',  text: 'text-white' },
+  partial: { bg: 'bg-yellow-400', text: 'text-white' },
+  booked:  { bg: 'bg-red-500',    text: 'text-white' },
+  closed:  { bg: 'bg-gray-400',   text: 'text-white' },
 } as const
 
 const AMENITIES = [
-  { key: 'wifi',        Icon: Wifi,  label: 'WiFi' },
-  { key: 'gas',         Icon: Flame, label: 'Gas' },
-  { key: 'electricity', Icon: Zap,   label: 'Electricity' },
+  { key: 'wifi',        Icon: Wifi,  labelKey: 'wifi' },
+  { key: 'gas',         Icon: Flame, labelKey: 'gas' },
+  { key: 'electricity', Icon: Zap,   labelKey: 'electricity' },
 ] as const
 
 const TYPE_ICON: Record<string, LucideIcon> = {
@@ -36,6 +40,10 @@ const TYPE_ICON: Record<string, LucideIcon> = {
 
 
 export default function RoomCard({ room }: { room: Room }) {
+  const t = useTranslations('RoomCard')
+  const tRoomType = useTranslations('RoomType')
+  const tRoomStatus = useTranslations('RoomStatus')
+  const tAvailability = useTranslations('Availability')
   const isBooked = room.status === 'booked' || room.status === 'closed'
   const [activeImage, setActiveImage] = useState(0)
   const [isHovered, setIsHovered]     = useState(false)
@@ -173,7 +181,7 @@ export default function RoomCard({ room }: { room: Room }) {
               if (!userId) return
               toggleSaved(room.id)
             }}
-            title={saved ? 'Saved' : 'Save'}
+            title={saved ? t('saved') : t('save')}
             className={`flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
               saved
                 ? 'border-teal-400 bg-teal-50 text-teal-600 dark:bg-teal-900/30'
@@ -186,7 +194,7 @@ export default function RoomCard({ room }: { room: Room }) {
           <button
             type="button"
             onClick={handleShare}
-            title="Share"
+            title={t('share')}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-colors hover:border-teal-300 hover:text-teal-500 dark:border-gray-700 dark:text-gray-500"
           >
             <Share2 className="h-3.5 w-3.5" />
@@ -201,28 +209,38 @@ export default function RoomCard({ room }: { room: Room }) {
 
         <div className="mb-2 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
           <MapPin className="h-3 w-3 shrink-0" />
-          <span className="truncate">{room.location_name || 'Location not added'}</span>
+          <span className="truncate">{room.location_name || t('locationNotAdded')}</span>
         </div>
+
+        {room.latitude != null && room.longitude != null && (room.nearest_university_ids?.length ?? 0) > 0 && (
+          <div className="mb-2">
+            <NearestUniversityBadge
+              latitude={room.latitude}
+              longitude={room.longitude}
+              nearestUniversityIds={room.nearest_university_ids}
+            />
+          </div>
+        )}
 
         {/* Room type (left) + gender (right), side by side */}
         <div className="mb-3 clear-right flex flex-wrap items-center gap-1.5">
           <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
             {TypeIcon && <TypeIcon className="h-3 w-3 shrink-0" />}
-            {ROOM_TYPE_LABELS[room.type] ?? room.type}
+            {tRoomType(ROOM_TYPE_MESSAGE_KEYS[room.type])}
           </span>
           {room.gender_type === 'male' && (
             <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-              Male only
+              {t('maleOnly')}
             </span>
           )}
           {room.gender_type === 'female' && (
             <span className="inline-flex items-center rounded-full bg-pink-50 px-2 py-0.5 text-xs font-medium text-pink-600 dark:bg-pink-900/20 dark:text-pink-400">
-              Female only
+              {t('femaleOnly')}
             </span>
           )}
           {room.gender_type === 'any' && (
             <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-              Any gender
+              {t('anyGender')}
             </span>
           )}
         </div>
@@ -230,29 +248,31 @@ export default function RoomCard({ room }: { room: Room }) {
         <p className="mb-2 text-xl font-bold text-teal-600 dark:text-teal-400">
           ৳{room.rent.toLocaleString('en-US')}
           <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
-            {isSharedRoom(room.type) ? ' /seat/month' : ' /month'}
+            {isSharedRoom(room.type) ? ` ${t('perSeatMonth')}` : ` ${t('perMonth')}`}
           </span>
         </p>
 
         {isSharedRoom(room.type) ? (
           <div className="mb-3 flex items-center gap-2">
-            <p className="text-xs text-gray-500 dark:text-gray-400">{room.available_seats} of {room.total_seats} seats</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t('seatsOf', { available: room.available_seats, total: room.total_seats })}
+            </p>
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
-              {availability.emoji} {availability.label}
+              {availability.emoji} {tAvailability(availability.labelKey)}
             </span>
           </div>
         ) : (
           <div className="mb-3">
             <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
-              {statusConfig.label}
+              {tRoomStatus(effectiveStatus)}
             </span>
           </div>
         )}
 
         <div className="mb-3 flex flex-wrap gap-1.5">
-          {AMENITIES.filter((a) => room[a.key]).map(({ key, Icon, label }) => (
+          {AMENITIES.filter((a) => room[a.key]).map(({ key, Icon, labelKey }) => (
             <span key={key} className="flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-xs text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
-              <Icon className="h-3 w-3 shrink-0" /> {label}
+              <Icon className="h-3 w-3 shrink-0" /> {t(labelKey)}
             </span>
           ))}
         </div>
@@ -272,14 +292,14 @@ export default function RoomCard({ room }: { room: Room }) {
                 : 'bg-teal-50 text-teal-700 dark:bg-teal-900/20 dark:text-teal-400'
             }`}>
               <Calendar className="h-3 w-3 shrink-0" />
-              {isAvailableNow ? 'Available now' : `From ${availableDate}`}
+              {isAvailableNow ? t('availableNow') : t('fromDate', { date: availableDate ?? '' })}
             </div>
           ) : <span />}
           <Link
             href={`/listings/${room.id}`}
             className="rounded-xl bg-teal-600 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-teal-700"
           >
-            Details →
+            {t('details')}
           </Link>
         </div>
       </div>
@@ -294,7 +314,7 @@ export default function RoomCard({ room }: { room: Room }) {
         <div className="flex items-center gap-1">
           <span className="text-xs text-gray-600 dark:text-gray-400">{room.profiles?.full_name}</span>
           {room.profiles?.is_verified && (
-            <span title="Verified" className="flex h-4 w-4 items-center justify-center rounded-full bg-teal-600 text-[10px] text-white">✓</span>
+            <span title={t('verified')} className="flex h-4 w-4 items-center justify-center rounded-full bg-teal-600 text-[10px] text-white">✓</span>
           )}
         </div>
       </div>

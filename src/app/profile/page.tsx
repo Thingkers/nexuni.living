@@ -7,16 +7,17 @@ import { toast } from 'sonner'
 import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase'
 import type { Profile, Room } from '@/types'
+import { UniversityCombobox } from '@/features/universities/components/UniversityCombobox'
 
 type Tab = 'info' | 'rooms'
 
 // Editable text fields on the profile form — typed as a const tuple so
 // `field.key` narrows to a literal keyof Profile instead of a bare string,
-// which lets us index `profile[field.key]` safely without `any`.
+// which lets us index `profile[field.key]` safely without `any`. Full
+// name/phone/university are rendered separately above (university needs
+// UniversityCombobox, not a plain text input; keeping the other two next to
+// it preserves the original field order).
 const EDITABLE_FIELDS = [
-  { key: 'full_name',    label: 'Full Name',       type: 'text' },
-  { key: 'phone',        label: 'Phone Number',    type: 'text' },
-  { key: 'university',   label: 'University',      type: 'text' },
   { key: 'bkash_number', label: 'bKash Number (for payment)', type: 'text' },
   { key: 'nagad_number', label: 'Nagad Number (for payment)', type: 'text' },
 ] as const satisfies readonly { key: keyof Profile; label: string; type: string }[]
@@ -88,7 +89,14 @@ function ProfilePageContent() {
 
     const { error } = await supabase
       .from('profiles')
-      .update({ full_name: profile.full_name, phone: profile.phone, university: profile.university, bkash_number: profile.bkash_number, nagad_number: profile.nagad_number })
+      .update({
+        full_name: profile.full_name,
+        phone: profile.phone,
+        university: profile.university,
+        university_id: profile.university_id,
+        bkash_number: profile.bkash_number,
+        nagad_number: profile.nagad_number,
+      })
       .eq('id', userId)
 
     setSaving(false)
@@ -272,6 +280,44 @@ function ProfilePageContent() {
       {/* PROFILE INFO */}
       {tab === 'info' && (
         <div className="flex flex-col gap-4">
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">Full Name</label>
+            <input
+              type="text"
+              value={profile.full_name ?? ''}
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-teal-500"
+              onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">Phone Number</label>
+            <input
+              type="text"
+              value={profile.phone ?? ''}
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-teal-500"
+              onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">University</label>
+            <UniversityCombobox
+              value={profile.university_id ?? null}
+              initialText={profile.university ?? ''}
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-teal-500"
+              onChange={({ id, name, rawText }) =>
+                setProfile({ ...profile, university_id: id, university: name ?? rawText })
+              }
+            />
+          </div>
+
+          {!profile.university_id && (
+            <div className="rounded-xl bg-teal-50 px-4 py-3 text-xs text-teal-700 dark:bg-teal-900/20 dark:text-teal-400">
+              💡 Pick your university from the list so roommates, listings, and search can find you by campus.
+            </div>
+          )}
+
           {EDITABLE_FIELDS.map((field) => (
             <div key={field.key}>
               <label className="mb-1 block text-xs text-gray-500">{field.label}</label>

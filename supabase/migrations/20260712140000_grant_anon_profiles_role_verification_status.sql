@@ -1,0 +1,21 @@
+-- Problem: RLS policies added in this sprint (universities/localities'
+-- admin policy, roommate_profiles', roommate_profile_reports') all use a
+-- subquery shaped `exists (select 1 from public.profiles where id =
+-- auth.uid() and role = 'admin' [or verification_status = 'approved'])`.
+-- Postgres checks column-level SELECT privilege on `profiles.role` and
+-- `profiles.verification_status` BEFORE row-level RLS gets a chance to
+-- filter anything -- and 20260702170000_restrict_anon_profile_columns.sql
+-- only granted anon a narrow column allowlist that doesn't include either
+-- column. Result: any anon query touching a table whose RLS references
+-- those columns (universities, localities, roommate_profiles, ...) fails
+-- outright with "permission denied for table profiles", even though the
+-- actual row-level condition (e.g. universities.is_active) would have
+-- allowed it. Confirmed live: curl against /rest/v1/universities as anon
+-- returned 401 with exactly that error.
+--
+-- Fix: grant anon SELECT on just these two columns. Low sensitivity --
+-- `is_verified` (a coarser view of verification_status) is already
+-- anon-readable from the same migration, and `role` only distinguishes
+-- 'student'/'admin', not a secret. This does not touch any existing RLS
+-- policy text, only a column grant.
+grant select (role, verification_status) on public.profiles to anon;

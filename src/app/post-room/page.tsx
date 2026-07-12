@@ -3,6 +3,7 @@
 import { toast } from 'sonner'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import {
   Wifi, Zap, Flame, ShowerHead, BookOpen, Shirt, Camera,
@@ -14,6 +15,11 @@ import { supabase } from '@/lib/supabase'
 import { isSharedRoom } from '@/features/rooms/types/room.types'
 import type { RoomType } from '@/features/rooms/types/room.types'
 
+const LocationPicker = dynamic(
+  () => import('@/features/map/components/LocationPicker'),
+  { ssr: false },
+)
+
 type LandmarkItem = { name: string; time: string }
 
 const INITIAL_FORM = {
@@ -23,6 +29,8 @@ const INITIAL_FORM = {
   rent: '',
   total_seats: '2',
   location_name: '',
+  latitude: null as number | null,
+  longitude: null as number | null,
   available_from: '',
   description: '',
   advance_deposit: '',
@@ -57,7 +65,7 @@ const INITIAL_FORM = {
 
 // Every value updateField is ever called with falls into one of these shapes —
 // typing it this way (instead of `any`) keeps the dynamic [key] assignment safe.
-type FormValue = string | boolean | string[] | LandmarkItem[]
+type FormValue = string | boolean | string[] | LandmarkItem[] | number | null
 
 const AMENITIES = [
   { key: 'wifi',          Icon: Wifi,        label: 'WiFi' },
@@ -99,6 +107,7 @@ export default function PostRoomPage() {
   const [step, setStep] = useState(1)
   const [images, setImages] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
+  const [showMap, setShowMap] = useState(false)
 
   const shared = isSharedRoom(form.type as RoomType)
 
@@ -181,6 +190,8 @@ export default function PostRoomPage() {
         total_seats: Number(form.total_seats),
         available_seats: Number(form.total_seats),
         location_name: form.location_name,
+        latitude: form.latitude,
+        longitude: form.longitude,
         available_from: form.available_from,
         description: form.description,
         owner_id: userId,
@@ -398,6 +409,37 @@ export default function PostRoomPage() {
               onChange={(e) => updateField('location_name', e.target.value)}
             />
             {errors.location_name && <p className="mt-1 text-xs text-red-500">{errors.location_name}</p>}
+          </div>
+
+          {/* Map location — sets latitude/longitude, which is what powers the
+              "X km from [University]" badge on room cards. Optional: rooms
+              without it just show no distance badge. */}
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-xs text-gray-500 dark:text-gray-400">
+                Map Location <span className="font-normal text-gray-400">(optional)</span>{' '}
+                {form.latitude && form.longitude && <span className="text-green-600">✓ Set</span>}
+              </label>
+              <button type="button" onClick={() => setShowMap((p) => !p)} className="text-xs text-teal-600 hover:text-teal-700">
+                {showMap ? 'Hide Map' : 'Pick on Map'}
+              </button>
+            </div>
+            {showMap && (
+              <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
+                <LocationPicker
+                  latitude={form.latitude}
+                  longitude={form.longitude}
+                  onChange={(lat, lng) => { updateField('latitude', lat); updateField('longitude', lng) }}
+                />
+              </div>
+            )}
+            {form.latitude && form.longitude && (
+              <p className="mt-1.5 text-xs text-gray-400">
+                📍 {form.latitude.toFixed(5)}, {form.longitude.toFixed(5)}
+                <button type="button" onClick={() => { updateField('latitude', null); updateField('longitude', null) }}
+                  className="ml-2 text-red-400 hover:text-red-600">Remove</button>
+              </p>
+            )}
           </div>
 
           {/* Available from */}

@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next'
 import withPWA from '@ducanh2912/next-pwa'
 import { withSentryConfig } from '@sentry/nextjs'
+import createNextIntlPlugin from 'next-intl/plugin'
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 // Only enforced in production — dev's HMR/websocket traffic doesn't fit a
 // locked-down CSP and the header would just get in the way locally.
@@ -78,7 +81,7 @@ const pwaConfig = withPWA({
       },
     ],
   },
-})(nextConfig)
+})(withNextIntl(nextConfig))
 
 export default withSentryConfig(pwaConfig, {
   org: 'rayhan-ky',

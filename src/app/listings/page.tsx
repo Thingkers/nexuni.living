@@ -1,6 +1,7 @@
 import { createAnonServerClient } from '@/lib/supabase/server'
 import type { Room } from '@/features/rooms/types/room.types'
 import { buildRoomsQuery, LISTINGS_PAGE_SIZE, type RoomFilters } from '@/features/rooms/queries'
+import { resolveUniversityIdsBySlug } from '@/features/universities/queries'
 
 import ListingsClient from './ListingsClient'
 
@@ -17,6 +18,12 @@ export default async function ListingsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const params = await searchParams
+  const universitySlugs = first(params.universities).split(',').map((s) => s.trim()).filter(Boolean)
+
+  let initialRooms: Room[] = []
+  let initialCount = 0
+
+  const supabase = createAnonServerClient()
 
   const filters: RoomFilters = {
     query: first(params.search) || first(params.q),
@@ -26,12 +33,9 @@ export default async function ListingsPage({
     maxRent: first(params.rent),
     sort: first(params.sort) || 'newest',
     availableMonth: first(params.month),
+    universityIds: supabase ? await resolveUniversityIdsBySlug(supabase, universitySlugs) : [],
   }
 
-  let initialRooms: Room[] = []
-  let initialCount = 0
-
-  const supabase = createAnonServerClient()
   if (supabase) {
     try {
       // Bounded so a slow/unreachable database degrades to an empty first

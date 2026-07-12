@@ -8,6 +8,8 @@ import { supabase } from '@/lib/supabase'
 import RoomCard from '@/features/rooms/components/RoomCard'
 import type { Room } from '@/features/rooms/types/room.types'
 import { buildRoomsQuery, sanitizeFilterText, LISTINGS_PAGE_SIZE, type RoomFilters } from '@/features/rooms/queries'
+import { useUniversities } from '@/features/universities/hooks/useUniversities'
+import { UniversityMultiSelectFilter } from '@/features/universities/components/UniversityMultiSelectFilter'
 
 const RoomsMap = dynamic(
   () => import('@/features/map/components/RoomsMap'),
@@ -66,6 +68,7 @@ type Props = {
 
 export default function ListingsClient({ initialFilters, initialRooms, initialCount }: Props) {
   const router = useRouter()
+  const { universities } = useUniversities()
 
   const [query, setQuery] = useState(initialFilters.query)
   const [inputValue, setInputValue] = useState(initialFilters.query)
@@ -76,6 +79,7 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
   const [location, setLocation] = useState(initialFilters.location)
   const [locationInput, setLocationInput] = useState(initialFilters.location)
   const [availableMonth, setAvailableMonth] = useState(initialFilters.availableMonth)
+  const [universityIds, setUniversityIds] = useState(initialFilters.universityIds)
   const [showFilters, setShowFilters] = useState(false)
 
   // First page comes prefetched from the Server Component, so there is no
@@ -111,8 +115,17 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
     )
   }
 
+  // URL carries university slugs (?universities=aiub,nsu), never uuids —
+  // resolved against the already-loaded universities list.
+  function universitySlugsParam(ids: string[]) {
+    return ids
+      .map((id) => universities.find((u) => u.id === id)?.slug)
+      .filter((slug): slug is string => Boolean(slug))
+      .join(',')
+  }
+
   function buildQuery() {
-    return buildRoomsQuery(supabase, { query, location, gender, type, maxRent, sort, availableMonth })
+    return buildRoomsQuery(supabase, { query, location, gender, type, maxRent, sort, availableMonth, universityIds })
   }
 
   // Filter changes — always resets to page 1
@@ -128,7 +141,7 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
     }
     setLoading(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, location, gender, type, maxRent, sort, availableMonth])
+  }, [query, location, gender, type, maxRent, sort, availableMonth, universityIds])
 
   async function loadMore() {
     setLoadingMore(true)
@@ -206,12 +219,13 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
     if (type)             qb = qb.eq('type', type)
     if (maxRent)          qb = qb.lte('rent', Number(maxRent))
     if (availableMonth)   qb = qb.lte('available_from', `${availableMonth}-01`)
+    if (universityIds.length > 0) qb = qb.overlaps('nearest_university_ids', universityIds)
 
     qb.then(({ data }) => {
       setMapRooms((data ?? []) as typeof mapRooms)
       setLoadingMap(false)
     })
-  }, [viewMode, query, location, gender, type, maxRent, availableMonth])
+  }, [viewMode, query, location, gender, type, maxRent, availableMonth, universityIds])
 
   // Location autocomplete — fetch matching location_name values from DB
   useEffect(() => {
@@ -247,7 +261,7 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
     const timer = setTimeout(() => {
       if (inputValue !== query) {
         setQuery(inputValue)
-        syncURL({ search: inputValue, location, gender, type, rent: maxRent, sort, month: availableMonth })
+        syncURL({ search: inputValue, location, gender, type, rent: maxRent, sort, month: availableMonth, universities: universitySlugsParam(universityIds) })
       }
     }, 400)
     return () => clearTimeout(timer)
@@ -265,6 +279,7 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
       rent: maxRent,
       sort,
       month: availableMonth,
+      universities: universitySlugsParam(universityIds),
     })
   }
 
@@ -296,6 +311,21 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
       rent: next.maxRent,
       sort: next.sort,
       month: next.availableMonth,
+      universities: universitySlugsParam(universityIds),
+    })
+  }
+
+  function handleUniversityIdsChange(ids: string[]) {
+    setUniversityIds(ids)
+    syncURL({
+      search: query,
+      location,
+      gender,
+      type,
+      rent: maxRent,
+      sort,
+      month: availableMonth,
+      universities: universitySlugsParam(ids),
     })
   }
 
@@ -309,13 +339,14 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
     setLocation('')
     setLocationInput('')
     setAvailableMonth('')
+    setUniversityIds([])
     router.replace('/listings', { scroll: false })
   }
 
   const hasFilter =
-    query || gender || type || maxRent || sort !== 'newest' || location || availableMonth
+    query || gender || type || maxRent || sort !== 'newest' || location || availableMonth || universityIds.length > 0
 
-  const activeFilterCount = [query, gender, type, maxRent, location, availableMonth].filter(Boolean).length
+  const activeFilterCount = [query, gender, type, maxRent, location, availableMonth].filter(Boolean).length + (universityIds.length > 0 ? 1 : 0)
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
@@ -361,7 +392,7 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
                       setLocationInput(s)
                       setLocation(s)
                       setShowSuggestions(false)
-                      syncURL({ search: query, location: s, gender, type, rent: maxRent, sort, month: availableMonth })
+                      syncURL({ search: query, location: s, gender, type, rent: maxRent, sort, month: availableMonth, universities: universitySlugsParam(universityIds) })
                     }}
                   >
                     <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 21c-4-4-8-8-8-13a8 8 0 1 1 16 0c0 5-4 9-8 13z" /><circle cx="12" cy="8" r="2" /></svg>
@@ -398,6 +429,11 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
               Search
             </button>
           </div>
+        </div>
+
+        {/* University filter + Near My Campus shortcut — persistent, not tucked into the collapsible advanced panel */}
+        <div className="mt-2">
+          <UniversityMultiSelectFilter selectedIds={universityIds} onChange={handleUniversityIdsChange} />
         </div>
 
         {/* Advanced filters — collapsible */}
@@ -495,6 +531,11 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
           {availableMonth && (
             <button onClick={() => handleFilterChange({ availableMonth: '' })} className="flex items-center gap-1 rounded-full bg-teal-100 px-3 py-1 text-xs text-teal-700 hover:bg-teal-200 dark:bg-teal-900/30 dark:text-teal-400">
               By: {monthOptions.find(o => o.value === availableMonth)?.label} <span className="ml-0.5 font-bold">×</span>
+            </button>
+          )}
+          {universityIds.length > 0 && (
+            <button onClick={() => handleUniversityIdsChange([])} className="flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">
+              University: {universityIds.length} selected <span className="ml-0.5 font-bold">×</span>
             </button>
           )}
         </div>

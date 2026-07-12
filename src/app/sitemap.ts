@@ -23,11 +23,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
+  // Small reference tables (dozens of rows) — no .limit() needed, unlike rooms.
+  const { data: universities } = await supabase
+    .from('universities')
+    .select('slug, created_at')
+    .eq('is_active', true)
+
+  const universityUrls: MetadataRoute.Sitemap = (universities ?? []).map((u) => ({
+    url: `${base}/universities/${u.slug}`,
+    lastModified: new Date(u.created_at),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }))
+
+  const { data: localities } = await supabase
+    .from('localities')
+    .select('slug, created_at')
+    .eq('is_active', true)
+
+  const areaUrls: MetadataRoute.Sitemap = (localities ?? []).map((l) => ({
+    url: `${base}/areas/${l.slug}`,
+    lastModified: new Date(l.created_at),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }))
+
   return [
     { url: base,                     lastModified: new Date(), changeFrequency: 'daily',   priority: 1 },
     { url: `${base}/listings`,       lastModified: new Date(), changeFrequency: 'hourly',  priority: 0.9 },
     { url: `${base}/auth/login`,     lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
     { url: `${base}/auth/register`,  lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
+    ...universityUrls,
+    ...areaUrls,
     ...roomUrls,
   ]
 }

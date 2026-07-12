@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Search } from 'lucide-react'
 
 import SearchSuggestions from '@/features/search/components/SearchSuggestions'
 
 export default function HeroSearch() {
   const router = useRouter()
+  const t = useTranslations('HeroSearch')
   const [search, setSearch] = useState('')
 
   function handleSearch() {
@@ -25,7 +27,7 @@ export default function HeroSearch() {
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Search by area, university or room type..."
+          placeholder={t('placeholder')}
           className="w-full rounded-xl bg-transparent py-3 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 outline-none"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -33,9 +35,15 @@ export default function HeroSearch() {
         />
         <SearchSuggestions
           query={search}
-          onSelect={(value) => {
-            setSearch(value)
-            router.push(`/listings?q=${encodeURIComponent(value)}`)
+          onSelect={(result) => {
+            if (result.kind === 'university') {
+              router.push(`/universities/${result.slug}`)
+            } else if (result.kind === 'locality') {
+              router.push(`/areas/${result.slug}`)
+            } else {
+              setSearch(result.value)
+              router.push(`/listings?q=${encodeURIComponent(result.value)}`)
+            }
           }}
         />
       </div>
@@ -43,7 +51,7 @@ export default function HeroSearch() {
         onClick={handleSearch}
         className="rounded-xl bg-teal-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
       >
-        Search
+        {t('search')}
       </button>
     </div>
   )

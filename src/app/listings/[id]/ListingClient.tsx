@@ -17,6 +17,7 @@ import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.type
 import BookingModal from '@/features/bookings/components/BookingModal'
 import ReportListingButton from '@/features/rooms/components/ReportListingButton'
 import SimilarRooms from '@/features/rooms/components/SimilarRooms'
+import { NearestUniversityBadge } from '@/features/universities/components/NearestUniversityBadge'
 
 type UserProfile = {
   verification_status: string | null
@@ -180,6 +181,16 @@ export default function ListingClient({ id, initialRoom }: { id: string; initial
               <MapPin className="h-3.5 w-3.5 shrink-0" />
               {room.location_name || 'Location not added'}
             </div>
+
+            {room.latitude != null && room.longitude != null && (room.nearest_university_ids?.length ?? 0) > 0 && (
+              <div className="mb-4">
+                <NearestUniversityBadge
+                  latitude={room.latitude}
+                  longitude={room.longitude}
+                  nearestUniversityIds={room.nearest_university_ids}
+                />
+              </div>
+            )}
 
             {/* Room type (left) + gender (right), side by side */}
             <div className="mb-4 flex flex-wrap items-center gap-2">

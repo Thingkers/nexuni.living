@@ -7,13 +7,30 @@ import { Search } from 'lucide-react'
 
 import SearchSuggestions from '@/features/search/components/SearchSuggestions'
 
-export default function HeroSearch() {
+type Props = {
+  mapMode?: boolean
+}
+
+export default function HeroSearch({ mapMode = false }: Props) {
   const router = useRouter()
   const t = useTranslations('HeroSearch')
   const [search, setSearch] = useState('')
+  const [suggestionsOpen, setSuggestionsOpen] = useState(true)
+
+  function focusMap(value: string) {
+    setSearch(value)
+    setSuggestionsOpen(false)
+    window.dispatchEvent(
+      new CustomEvent('nexuni:map-focus', { detail: { query: value } }),
+    )
+  }
 
   function handleSearch() {
     const value = search.trim()
+    if (mapMode && value) {
+      focusMap(value)
+      return
+    }
     if (value) {
       router.push(`/listings?search=${encodeURIComponent(value)}`)
     } else {
@@ -30,22 +47,30 @@ export default function HeroSearch() {
           placeholder={t('placeholder')}
           className="w-full rounded-xl bg-transparent py-3 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 outline-none"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onFocus={() => setSuggestionsOpen(true)}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setSuggestionsOpen(true)
+          }}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
         />
-        <SearchSuggestions
-          query={search}
-          onSelect={(result) => {
-            if (result.kind === 'university') {
-              router.push(`/universities/${result.slug}`)
-            } else if (result.kind === 'locality') {
-              router.push(`/areas/${result.slug}`)
-            } else {
-              setSearch(result.value)
-              router.push(`/listings?q=${encodeURIComponent(result.value)}`)
-            }
-          }}
-        />
+        {suggestionsOpen && (
+          <SearchSuggestions
+            query={search}
+            onSelect={(result) => {
+              if (mapMode) {
+                focusMap(result.kind === 'room' ? result.value : result.name)
+              } else if (result.kind === 'university') {
+                router.push(`/universities/${result.slug}`)
+              } else if (result.kind === 'locality') {
+                router.push(`/areas/${result.slug}`)
+              } else {
+                setSearch(result.value)
+                router.push(`/listings?q=${encodeURIComponent(result.value)}`)
+              }
+            }}
+          />
+        )}
       </div>
       <button
         onClick={handleSearch}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">nexUni.living logo mark</title>
+  <rect width="512" height="512" rx="128" fill="#071c19"/>
+  <path d="M256 72c-92 0-166 72-166 162 0 114 128 196 158 214a16 16 0 0 0 16 0c30-18 158-100 158-214 0-90-74-162-166-162Z" fill="#2dd4bf"/>
+  <path d="M166 334V176h43l94 93v-93h43v158h-40l-97-96v96h-43Z" fill="#071c19"/>
+  <path d="M236 334v-62l20-18 20 18v62h-40Z" fill="#ecfeff"/>
+  <circle cx="267" cy="305" r="4" fill="#071c19"/>
+</svg>

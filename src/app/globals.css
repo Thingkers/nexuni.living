@@ -1,8 +1,152 @@
 @import 'leaflet/dist/leaflet.css';
+@import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
+@import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css';
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+.home-map-shell .leaflet-tile-pane {
+  filter: saturate(0.92) contrast(0.96) brightness(1.06);
+}
+
+.home-map-shell .leaflet-control-zoom,
+.home-map-shell .leaflet-control-attribution {
+  border: 1px solid rgb(255 255 255 / 0.16) !important;
+  background: rgb(7 28 25 / 0.82) !important;
+  color: rgb(203 213 225) !important;
+  backdrop-filter: blur(18px);
+}
+
+.home-map-shell .leaflet-control-zoom a {
+  border-color: rgb(255 255 255 / 0.12) !important;
+  background: transparent !important;
+  color: white !important;
+}
+
+.room-price-marker {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.room-price-marker span {
+  position: relative;
+  display: flex;
+  min-width: 54px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  border-radius: 999px;
+  background: #0f766e;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.3);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.room-price-marker span::after {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid white;
+  border-bottom: 2px solid white;
+  background: #0f766e;
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.room-price-marker:hover {
+  z-index: 1000 !important;
+}
+
+.room-price-marker:hover span {
+  background: #115e59;
+  transform: translateY(-2px);
+}
+
+.map-kind-roommate span,
+.map-kind-roommate span::after {
+  background: #7c3aed;
+}
+
+.map-kind-campus span,
+.map-kind-campus span::after {
+  background: #1d4ed8;
+}
+
+.map-kind-area span,
+.map-kind-area span::after {
+  background: #b45309;
+}
+
+.room-cluster-marker {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.room-cluster-marker span {
+  display: flex;
+  width: 54px;
+  height: 54px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  border-radius: 999px;
+  background: #0f766e;
+  box-shadow:
+    0 0 0 8px rgb(45 212 191 / 0.2),
+    0 12px 28px rgb(0 0 0 / 0.28);
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.room-cluster-marker small {
+  margin-top: 3px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nearby-radius-slider {
+  height: 4px;
+  appearance: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0f766e, #5eead4);
+  cursor: pointer;
+}
+
+.nearby-radius-slider:disabled {
+  cursor: not-allowed;
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+.nearby-radius-slider::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  appearance: none;
+  border: 3px solid white;
+  border-radius: 999px;
+  background: #0f766e;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.25);
+}
+
+.nearby-radius-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 3px solid white;
+  border-radius: 999px;
+  background: #0f766e;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.25);
 }

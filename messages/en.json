@@ -1,11 +1,18 @@
 {
   "Navbar": {
-    "brand": "Students Home",
+    "brand": "nexUni.living",
     "allRooms": "All Rooms",
     "mess": "Mess",
     "bachelor": "Bachelor",
     "sublet": "Sublet",
     "roommates": "Roommates",
+    "housing": "Housing",
+    "books": "Books",
+    "services": "Services",
+    "jobs": "Jobs",
+    "transport": "Transport",
+    "payments": "Payments",
+    "preview": "Preview",
     "toggleDarkMode": "Toggle dark mode",
     "toggleLanguage": "Switch language",
     "toggleMenu": "Toggle menu",
@@ -36,15 +43,34 @@
     "home": "Home",
     "browse": "Browse",
     "post": "Post",
+    "map": "Map",
+    "housing": "Housing",
+    "roommates": "Roommates",
     "inbox": "Inbox",
     "me": "Me",
     "login": "Login"
   },
+  "MapHub": {
+    "housing": "Housing",
+    "roommates": "Roommates",
+    "campuses": "Campuses",
+    "books": "Books",
+    "services": "Services",
+    "jobs": "Jobs",
+    "soon": "Soon",
+    "results": "Map results",
+    "visible": "{count} visible",
+    "empty": "No visible records for this layer. Roommate profiles require a verified account.",
+    "previewNotice": "This roadmap module is visible for product discovery. Data submission and transactions remain disabled until its secure backend is activated.",
+    "booksPreview": "Used books marketplace — preview",
+    "servicesPreview": "Local student services — preview",
+    "jobsPreview": "Part-time jobs and internships — preview"
+  },
   "HomePage": {
-    "badge": "Made for AIUB students",
-    "heroTitleLine1": "Find your perfect",
-    "heroTitleLine2": "mess, room or sublet",
-    "heroSubtitle": "Browse verified mess seats, bachelor rooms and sublets near campus — message owners directly and book without any broker.",
+    "badge": "Bangladesh's student living network",
+    "heroTitleLine1": "Live closer to",
+    "heroTitleLine2": "everything that matters",
+    "heroSubtitle": "Discover verified accommodation, compatible roommates, and better-connected student communities around your campus.",
     "popularLabel": "Popular:",
     "chipMess": "Mess",
     "chipBachelor": "Bachelor",
@@ -69,12 +95,15 @@
     "ctaHeading": "Have a room to offer?",
     "ctaSubtext": "Post your room for free and reach thousands of students instantly.",
     "ctaButton": "Get Started Free →",
-    "footerBrand": "Students Home",
+    "footerBrand": "nexUni.living",
     "footerBrowseRooms": "Browse Rooms",
     "footerPostRoom": "Post a Room",
     "footerTerms": "Terms",
     "footerPrivacy": "Privacy",
-    "footerCopyright": "© {year} AIUB Students Home"
+    "footerCopyright": "© {year} nexUni.living",
+    "mapLabel": "Accommodation map",
+    "mapLive": "Live availability around campus",
+    "mapExplore": "Explore map"
   },
   "HeroSearch": {
     "placeholder": "Search by area, university or room type...",
@@ -125,5 +154,8 @@
   },
   "NearestUniversityBadge": {
     "kmFrom": "{distance} km from {name}"
+  },
+  "System": {
+    "noDataMode": "Local no-data mode: the interface is available, but accounts, listings, bookings, and messages are disabled."
   }
 }

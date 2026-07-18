@@ -3,7 +3,10 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, ClipboardList, MessageSquare, CalendarCheck, BarChart2, ShieldCheck, Building2, Flag, List } from 'lucide-react'
+import {
+  Plus, ClipboardList, MessageSquare, CalendarCheck, BarChart2, ShieldCheck,
+  Building2, Flag, BookOpen, BriefcaseBusiness, Bus, MapPinned, Users, Wallet,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type Stats = {
@@ -185,6 +188,21 @@ export default function DashboardPage() {
               </Link>
             )}
 
+            {isOwner && (
+              <Link
+                href="/dashboard/analytics"
+                className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-purple-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+                  <BarChart2 className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-white">Listing Analytics</p>
+                  <p className="text-xs text-gray-400">Demand and booking insights</p>
+                </div>
+              </Link>
+            )}
+
             <Link
               href="/inbox"
               className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
@@ -232,6 +250,39 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <div className="mb-6">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Student life</p>
+          <span className="text-[10px] font-semibold text-teal-600 dark:text-teal-400">Roadmap previews</span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {[
+            { href: '/roommates', label: 'Roommates', Icon: Users, live: true },
+            { href: '/books', label: 'Used Books', Icon: BookOpen },
+            { href: '/services', label: 'Local Services', Icon: MapPinned },
+            { href: '/jobs', label: 'Jobs', Icon: BriefcaseBusiness },
+            { href: '/transport', label: 'Transport', Icon: Bus },
+            { href: '/dashboard/payments', label: 'Payments', Icon: Wallet },
+          ].map(({ href, label, Icon, live }) => (
+            <Link
+              key={href}
+              href={href}
+              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            >
+              <div className="flex items-center justify-between">
+                <Icon className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                <span className={`rounded-full px-2 py-0.5 text-[8px] font-bold uppercase ${
+                  live ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300'
+                }`}>
+                  {live ? 'Live' : 'Preview'}
+                </span>
+              </div>
+              <p className="mt-3 text-sm font-semibold text-gray-900 dark:text-white">{label}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {/* Admin section */}
       {isAdmin && (

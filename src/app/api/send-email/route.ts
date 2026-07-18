@@ -8,6 +8,7 @@ import {
   bookingRejectedTemplate,
 } from '@/lib/email/templates'
 import { z } from 'zod'
+import { BRAND, getSiteUrl } from '@/config/brand'
 
 // Every branch below resolves the recipient email + template content itself
 // from the database, keyed only by IDs the client sends. The client never
@@ -30,14 +31,15 @@ const schema = z.discriminatedUnion('type', [
   }),
 ])
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-
 export async function POST(req: Request) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !serviceRoleKey) {
+    return Response.json({ error: 'Email service is not configured' }, { status: 503 })
+  }
+
+  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
+  const siteUrl = getSiteUrl()
   const resend = new Resend(process.env.RESEND_API_KEY)
   try {
     const authHeader = req.headers.get('authorization') ?? ''
@@ -89,7 +91,7 @@ export async function POST(req: Request) {
       }
 
       to = receiver.email
-      subject = 'New message on Student Hostel'
+      subject = `New message on ${BRAND.name}`
       html = newMessageTemplate({
         receiverName: receiver.full_name,
         senderName: callerProfile?.full_name,
@@ -170,7 +172,7 @@ export async function POST(req: Request) {
     }
 
     const data = await resend.emails.send({
-      from: process.env.EMAIL_FROM ?? 'Student Hostel <onboarding@resend.dev>',
+      from: process.env.EMAIL_FROM ?? `${BRAND.emailFromName} <onboarding@resend.dev>`,
       to,
       subject,
       html,

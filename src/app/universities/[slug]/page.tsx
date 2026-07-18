@@ -6,10 +6,9 @@ import Link from 'next/link'
 import { MapPin } from 'lucide-react'
 import RoomCard from '@/features/rooms/components/RoomCard'
 import type { Room } from '@/features/rooms/types/room.types'
+import { BRAND, getSiteUrl } from '@/config/brand'
 
-// Matches sitemap.ts/robots.ts, not the inconsistent literal used in
-// listings/[id]/page.tsx.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://studenthostel.vercel.app'
+const SITE_URL = getSiteUrl()
 
 type UniversityRow = {
   id: string
@@ -77,9 +76,9 @@ const getNearbyRooms = cache(async (universityId: string): Promise<Room[]> => {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const university = await getUniversity(slug)
-  if (!university) return { title: 'University Not Found | Student Hostel' }
+  if (!university) return { title: `University Not Found | ${BRAND.name}` }
 
-  const title = `Rooms near ${university.name} | Student Hostel`
+  const title = `Rooms near ${university.name} | ${BRAND.name}`
   const description = `Find verified mess, bachelor, and sublet rooms near ${university.name}${university.city ? `, ${university.city}` : ''}. Browse listings, average rent, and nearby areas.`
 
   return {
@@ -90,7 +89,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: `${SITE_URL}/universities/${slug}`,
-      siteName: 'Student Hostel',
+      siteName: BRAND.name,
       type: 'website',
     },
     twitter: { card: 'summary', title, description },

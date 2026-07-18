@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 200" role="img" aria-labelledby="title description">
+  <title id="title">nexUni.living</title>
+  <desc id="description">A location pin and home monogram beside the nexUni.living wordmark.</desc>
+  <g transform="translate(12 8)">
+    <rect width="184" height="184" rx="48" fill="#071c19"/>
+    <path d="M92 27c-36 0-65 28-65 63 0 45 50 77 62 84a6 6 0 0 0 6 0c12-7 62-39 62-84 0-35-29-63-65-63Z" fill="#2dd4bf"/>
+    <path d="M57 129V67h17l36 36V67h17v62h-16L74 92v37H57Z" fill="#071c19"/>
+    <path d="M84 129v-24l8-7 8 7v24H84Z" fill="#ecfeff"/>
+    <circle cx="96" cy="118" r="2" fill="#071c19"/>
+  </g>
+  <text x="228" y="126" fill="#071c19" font-family="Inter, Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-4">
+    nex<tspan fill="#0f766e">U</tspan>ni<tspan fill="#14b8a6">.</tspan>living
+  </text>
+</svg>

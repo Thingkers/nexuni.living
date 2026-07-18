@@ -8,7 +8,9 @@ import { getLocale, getMessages } from 'next-intl/server'
 import Navbar from '@/components/layout/Navbar'
 import BottomNav from '@/components/layout/BottomNav'
 import NotificationProvider from '@/components/providers/NotificationProvider'
+import NoDataBanner from '@/components/ui/NoDataBanner'
 import SavedRoomsProvider from '@/features/rooms/components/SavedRoomsProvider'
+import { BRAND, getSiteUrl } from '@/config/brand'
 
 import './globals.css'
 
@@ -23,19 +25,21 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Student Hostel',
-  description: 'Find hostel, mess and bachelor rooms easily',
+  metadataBase: new URL(getSiteUrl()),
+  applicationName: BRAND.name,
+  title: {
+    default: BRAND.name,
+    template: `%s | ${BRAND.name}`,
+  },
+  description: BRAND.description,
   manifest: '/manifest.json',
   icons: {
-    icon: '/icon-192.png',
-    apple: '/icon-192.png',
+    icon: '/icon.svg',
   },
-  // iOS reads these (not manifest.json) for Add to Home Screen behaviour —
-  // without them the shortcut opens as a plain Safari tab instead of
-  // a standalone app window.
+  // iOS reads these metadata fields in addition to manifest.json.
   appleWebApp: {
     capable: true,
-    title: 'Students Home',
+    title: BRAND.shortName,
     statusBarStyle: 'default',
   },
 }
@@ -50,6 +54,7 @@ export default async function RootLayout({
   // an accepted trade-off, see src/app/page.tsx's dropped `revalidate`.
   const locale = await getLocale()
   const messages = await getMessages()
+  const noDataMode = process.env.NEXT_PUBLIC_APP_MODE === 'no-data'
 
   return (
     <html
@@ -57,16 +62,12 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        {/* Inline theme script — runs before paint to avoid flash */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
-          }}
-        />
-      </head>
-      <body className="min-h-full flex flex-col bg-white text-gray-900 transition-colors dark:bg-gray-950 dark:text-gray-100">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-white text-gray-900 transition-colors dark:bg-gray-950 dark:text-gray-100"
+      >
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <NoDataBanner />
           <Navbar />
 
           <main className="flex-1 pb-16 md:pb-0">
@@ -76,7 +77,7 @@ export default async function RootLayout({
           </main>
 
           <BottomNav />
-          <NotificationProvider />
+          {!noDataMode && <NotificationProvider />}
 
           <Toaster
             position="top-right"

@@ -1,3 +1,5 @@
+import { BRAND } from '@/config/brand'
+
 export default function TermsPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">
@@ -8,12 +10,12 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">1. Acceptance of Terms</h2>
-          <p>By accessing or using Student Hostel, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.</p>
+          <p>By accessing or using {BRAND.name}, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.</p>
         </section>
 
         <section>
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">2. Eligibility</h2>
-          <p>Student Hostel is intended for university students and room owners in Bangladesh. You must provide a valid student ID or be a verified room owner to access full features.</p>
+          <p>{BRAND.name} is intended for university students and room owners in Bangladesh. You must provide a valid student ID or be a verified room owner to access full features.</p>
         </section>
 
         <section>
@@ -28,12 +30,12 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">4. Listings</h2>
-          <p>Room owners are solely responsible for the accuracy of their listings. Student Hostel does not verify the physical condition of listed properties. We reserve the right to remove any listing that violates our policies.</p>
+          <p>Room owners are solely responsible for the accuracy of their listings. {BRAND.name} does not verify the physical condition of listed properties. We reserve the right to remove any listing that violates our policies.</p>
         </section>
 
         <section>
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">5. Bookings</h2>
-          <p>A booking request does not guarantee accommodation. The final agreement is between the tenant and the room owner. Student Hostel is not a party to any rental agreement and accepts no liability for disputes between users.</p>
+          <p>A booking request does not guarantee accommodation. The final agreement is between the tenant and the room owner. {BRAND.name} is not a party to any rental agreement and accepts no liability for disputes between users.</p>
         </section>
 
         <section>

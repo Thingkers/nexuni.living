@@ -1,12 +1,24 @@
 import type { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { getSiteUrl } from '@/config/brand'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://studenthostel.vercel.app'
+  const base = getSiteUrl()
+  const staticUrls: MetadataRoute.Sitemap = [
+    { url: base,                     lastModified: new Date(), changeFrequency: 'daily',   priority: 1 },
+    { url: `${base}/listings`,       lastModified: new Date(), changeFrequency: 'hourly',  priority: 0.9 },
+    { url: `${base}/roommates`,      lastModified: new Date(), changeFrequency: 'daily',   priority: 0.8 },
+    { url: `${base}/auth/login`,     lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${base}/auth/register`,  lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
+  ]
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !anonKey) return staticUrls
 
   const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    anonKey,
   )
 
   const { data: rooms } = await supabase
@@ -49,10 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   return [
-    { url: base,                     lastModified: new Date(), changeFrequency: 'daily',   priority: 1 },
-    { url: `${base}/listings`,       lastModified: new Date(), changeFrequency: 'hourly',  priority: 0.9 },
-    { url: `${base}/auth/login`,     lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
-    { url: `${base}/auth/register`,  lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
+    ...staticUrls,
     ...universityUrls,
     ...areaUrls,
     ...roomUrls,

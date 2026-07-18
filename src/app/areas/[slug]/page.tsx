@@ -6,8 +6,9 @@ import Link from 'next/link'
 import { GraduationCap } from 'lucide-react'
 import RoomCard from '@/features/rooms/components/RoomCard'
 import type { Room } from '@/features/rooms/types/room.types'
+import { BRAND, getSiteUrl } from '@/config/brand'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://studenthostel.vercel.app'
+const SITE_URL = getSiteUrl()
 
 type LocalityRow = {
   id: string
@@ -101,9 +102,9 @@ const getNearbyRooms = cache(async (localityId: string, universityIds: string[])
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const locality = await getLocality(slug)
-  if (!locality) return { title: 'Area Not Found | Student Hostel' }
+  if (!locality) return { title: `Area Not Found | ${BRAND.name}` }
 
-  const title = `Rooms in ${locality.name} | Student Hostel`
+  const title = `Rooms in ${locality.name} | ${BRAND.name}`
   const description = `Find verified mess, bachelor, and sublet rooms in ${locality.name}${locality.city ? `, ${locality.city}` : ''}. Browse listings, average rent, and nearby campuses.`
 
   return {
@@ -114,7 +115,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: `${SITE_URL}/areas/${slug}`,
-      siteName: 'Student Hostel',
+      siteName: BRAND.name,
       type: 'website',
     },
     twitter: { card: 'summary', title, description },

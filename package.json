@@ -1,11 +1,18 @@
 {
-  "name": "student-hostel-system",
+  "name": "nexuni-living",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
+    "dev:no-data": "node scripts/run-local-profile.mjs config/no-data.env dev",
+    "dev:data": "node scripts/run-local-profile.mjs config/public-data.env dev",
     "build": "next build --webpack",
+    "build:no-data": "node scripts/run-local-profile.mjs config/no-data.env build",
+    "build:data": "node scripts/run-local-profile.mjs config/public-data.env build",
+    "build:cpanel": "npm run build && node scripts/prepare-cpanel.mjs",
+    "deploy:cpanel": "bash scripts/deploy-cpanel.sh",
     "start": "next start",
+    "start:standalone": "node .next/standalone/server.js",
     "lint": "eslint"
   },
   "dependencies": {
@@ -26,6 +33,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.76.1",
     "react-leaflet": "^5.0.0",
+    "react-leaflet-cluster": "^4.1.3",
     "recharts": "^3.8.1",
     "resend": "^6.12.3",
     "sonner": "^2.0.7",

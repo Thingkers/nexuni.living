@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { supabase } from '@/lib/supabase/'
 
 export default function LoginPage() {
@@ -95,19 +95,19 @@ export default function LoginPage() {
 
         {/* Header */}
         <div className="mb-6 text-center">
-
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center">
           <Image
-            src="/aiub_logo.png"
-            alt="AIUB Logo"
-            width={80}
-            height={80}
-            className="mx-auto"
+            src="/icon.svg"
+            alt="nexUni.living"
+            width={52}
+            height={52}
+            priority
+            className="mx-auto mb-3 h-[52px] w-[52px]"
           />
-        </div>
           
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome Back</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Student Hostel</p>
+          <p className="mt-1 text-sm font-semibold tracking-[-0.02em] text-gray-500 dark:text-gray-400">
+            nexUni.living
+          </p>
         </div>
 
         {/* Login Type Toggle */}
@@ -144,7 +144,7 @@ export default function LoginPage() {
 
           {loginType === 'email' ? (
             <div>
-              <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">AIUB Email</label>
+              <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Email</label>
               <input
                 type="email"
                 placeholder="your@gmail.com"
@@ -157,7 +157,7 @@ export default function LoginPage() {
             <div>
               <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Student ID</label>
               <input
-                placeholder="xx-xxxxx-x"
+                placeholder="Your university student ID"
                 className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}

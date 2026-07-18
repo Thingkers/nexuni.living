@@ -76,35 +76,22 @@ export default function BottomNav() {
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive('/') ? 2.5 : 1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
-          {t('home')}
+          {t('map')}
         </Link>
 
         <Link href="/listings" className={navCls('/listings')}>
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive('/listings') ? 2.5 : 1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          {t('browse')}
+          {t('housing')}
         </Link>
 
-        {isLoggedIn && isVerified ? (
-          <Link href="/post-room" className={navCls('/post-room')}>
-            <div className={`flex h-9 w-9 items-center justify-center rounded-full ${isActive('/post-room') ? 'bg-teal-600' : 'bg-teal-600'}`}>
-              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
-            <span className="text-teal-600 dark:text-teal-400">{t('post')}</span>
-          </Link>
-        ) : (
-          <div className={navCls('/post-room') + ' opacity-40 cursor-not-allowed'}>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
-              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
-            {t('post')}
-          </div>
-        )}
+        <Link href="/roommates" className={navCls('/roommates')}>
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive('/roommates') ? 2.5 : 1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m7-10a4 4 0 100-8 4 4 0 000 8zm13 10v-2a4 4 0 00-3-3.87m-1-9.13a4 4 0 010 7.75" />
+          </svg>
+          {t('roommates')}
+        </Link>
 
         {isLoggedIn && isVerified ? (
           <Link href="/inbox" className={navCls('/inbox')}>

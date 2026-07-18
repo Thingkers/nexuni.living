@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
+import { BRAND, getSiteUrl } from '@/config/brand'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'
-const title = 'Browse Rooms, Mess & Bachelor Listings | Student Hostel'
+const siteUrl = getSiteUrl()
+const title = `Browse Rooms, Mess & Bachelor Listings | ${BRAND.name}`
 const description = 'Find hostel, mess, bachelor, and sublet rooms near your university. Filter by rent, location, gender, and availability.'
 
 export const metadata: Metadata = {
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
     title,
     description,
     url: `${siteUrl}/listings`,
-    siteName: 'Student Hostel',
+    siteName: BRAND.name,
     type: 'website',
   },
   twitter: {

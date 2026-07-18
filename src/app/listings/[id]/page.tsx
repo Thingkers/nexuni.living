@@ -2,6 +2,7 @@ import { cache } from 'react'
 import type { Metadata } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import type { Room } from '@/features/rooms/types/room.types'
+import { BRAND, getSiteUrl } from '@/config/brand'
 import ListingClient from './ListingClient'
 
 type Props = {
@@ -29,10 +30,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const room = await getRoom(id)
 
   if (!room) {
-    return { title: 'Listing Not Found | Student Hostel' }
+    return { title: `Listing Not Found | ${BRAND.name}` }
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'
+  const siteUrl = getSiteUrl()
   const genderLabel = room.gender_type === 'male' ? 'Male only' : room.gender_type === 'female' ? 'Female only' : 'Any gender'
   const description = [
     room.location_name ? `📍 ${room.location_name}` : null,
@@ -44,13 +45,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const ogImage = room.images?.[0] ?? null
 
   return {
-    title: `${room.title} | Student Hostel`,
+    title: `${room.title} | ${BRAND.name}`,
     description,
     openGraph: {
       title: room.title,
       description,
       url: `${siteUrl}/listings/${id}`,
-      siteName: 'Student Hostel',
+      siteName: BRAND.name,
       type: 'website',
       ...(ogImage ? { images: [{ url: ogImage, width: 1280, height: 720, alt: room.title }] } : {}),
     },
@@ -66,7 +67,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ListingPage({ params }: Props) {
   const { id } = await params
   const room = await getRoom(id)
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://student-hostel.vercel.app'
+  const siteUrl = getSiteUrl()
 
   const jsonLd = room
     ? {

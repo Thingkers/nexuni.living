@@ -4,13 +4,12 @@ import { Resend } from 'resend'
 import { rateLimit } from '@/lib/rateLimit'
 import { profileVerifiedTemplate, profileRejectedTemplate } from '@/lib/email/templates'
 import { z } from 'zod'
+import { BRAND } from '@/config/brand'
 
 const schema = z.object({
   userId: z.string().uuid(),
   action: z.enum(['approve', 'reject', 'toggle-verify', 'toggle-admin']),
 })
-
-type Action = z.infer<typeof schema>['action']
 
 export async function PATCH(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -99,7 +98,7 @@ export async function PATCH(req: NextRequest) {
     const isApproved = action === 'approve'
     try {
       await resend.emails.send({
-        from: process.env.EMAIL_FROM ?? 'Student Hostel <onboarding@resend.dev>',
+        from: process.env.EMAIL_FROM ?? `${BRAND.emailFromName} <onboarding@resend.dev>`,
         to: target.email,
         subject: isApproved ? 'Your account has been verified ✅' : 'Verification update for your account',
         html: isApproved

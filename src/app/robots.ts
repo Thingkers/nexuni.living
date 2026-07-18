@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { getSiteUrl } from '@/config/brand'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/admin/', '/dashboard/', '/profile/', '/inbox/', '/auth/'],
     },
-    sitemap: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://studenthostel.vercel.app'}/sitemap.xml`,
+    sitemap: `${getSiteUrl()}/sitemap.xml`,
   }
 }

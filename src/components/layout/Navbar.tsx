@@ -2,17 +2,18 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import type { User } from '@supabase/supabase-js'
 import {
-  Home, LayoutGrid, UtensilsCrossed, BedDouble, Key,
-  LayoutDashboard, MessageSquare, Inbox, CalendarCheck,
+  LayoutGrid, BookOpen, BriefcaseBusiness, Bus, MapPinned,
+  LayoutDashboard, MessageSquare, Inbox, CalendarCheck, Wallet,
   Plus, LogOut, BarChart2, ShieldCheck, Flag, Building2, List, Users,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { setLocaleAction } from '@/features/i18n/actions'
 import type { AppLocale } from '@/i18n/request'
+import BrandWordmark from '@/components/brand/BrandWordmark'
 
 type Profile = {
   full_name: string | null
@@ -64,6 +65,7 @@ function Avatar({
 
 export default function Navbar() {
   const router = useRouter()
+  const pathname = usePathname()
   const t = useTranslations('Navbar')
   const locale = useLocale() as AppLocale
   const [isLocalePending, startLocaleTransition] = useTransition()
@@ -86,10 +88,16 @@ export default function Navbar() {
     return parseInt(localStorage.getItem('my_booking_updates') || '0', 10)
   })
   const [isOwner, setIsOwner] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof document === 'undefined') return 'light'
-    return document.documentElement.classList.contains('dark') ? 'dark' : 'light'
-  })
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('theme')
+    const next = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ? 'dark'
+      : 'light'
+    document.documentElement.classList.toggle('dark', next === 'dark')
+    queueMicrotask(() => setTheme(next))
+  }, [])
 
   // Close desktop dropdown when clicking outside
   useEffect(() => {
@@ -295,33 +303,34 @@ export default function Navbar() {
 
   const isVerified = profile?.verification_status === 'approved'
 
+  // The homepage owns a map-first floating shell header.
+  if (pathname === '/') return null
+
   return (
-    <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95">
-      <div className="flex items-center justify-between px-4 py-3 md:px-8">
+    <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90">
+      <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-4">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5" onClick={closeMenus}>
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-600 text-white shadow-sm">
-            <Home className="h-4 w-4" />
-          </div>
-          <span className="text-base font-bold text-gray-900 dark:text-white">{t('brand')} </span>
+        <Link href="/" aria-label={t('brand')} onClick={closeMenus}>
+          <BrandWordmark compact />
         </Link>
 
         {/* Desktop nav links */}
         <div className="hidden items-center gap-0.5 text-sm md:flex">
           {[
-            { href: '/listings', label: t('allRooms') },
-            { href: '/listings?type=mess', label: t('mess') },
-            { href: '/listings?type=bachelor', label: t('bachelor') },
-            { href: '/listings?type=sublet', label: t('sublet') },
+            { href: '/listings', label: t('housing') },
             { href: '/roommates', label: t('roommates') },
+            { href: '/books', label: t('books'), preview: true },
+            { href: '/services', label: t('services'), preview: true },
+            { href: '/jobs', label: t('jobs'), preview: true },
           ].map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="relative rounded-xl px-3.5 py-2 font-medium text-gray-500 transition-colors hover:bg-teal-50 hover:text-teal-700 dark:text-gray-400 dark:hover:bg-teal-900/20 dark:hover:text-teal-400"
+              className="relative flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
             >
               {link.label}
+              {link.preview && <span className="text-[7px] uppercase text-teal-600">Soon</span>}
             </Link>
           ))}
         </div>
@@ -332,7 +341,7 @@ export default function Navbar() {
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
             aria-label={t('toggleDarkMode')}
           >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
@@ -342,7 +351,7 @@ export default function Navbar() {
           <button
             onClick={toggleLocale}
             disabled={isLocalePending}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
             aria-label={t('toggleLanguage')}
           >
             {locale === 'en' ? 'বাং' : 'EN'}
@@ -351,7 +360,7 @@ export default function Navbar() {
           {user && isVerified && (
             <Link
               href="/post-room"
-              className="hidden rounded-xl bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 md:block"
+              className="hidden rounded-full bg-[#071c19] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-teal-400 dark:text-slate-950 md:block"
             >
               {t('postRoom')}
             </Link>
@@ -431,6 +440,9 @@ export default function Navbar() {
                           <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
                         )}
                       </Link>
+                      <Link href="/dashboard/analytics" className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
+                        <BarChart2 className="h-3.5 w-3.5 opacity-50" />{t('analytics')}
+                      </Link>
                     </>
                   )}
 
@@ -444,6 +456,10 @@ export default function Navbar() {
                         {myBookingCount > 0 && (
                           <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
                         )}
+                      </Link>
+                      <Link href="/dashboard/payments" className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800" onClick={closeMenus}>
+                        <Wallet className="h-3.5 w-3.5 opacity-50" />{t('payments')}
+                        <span className="ml-auto text-[8px] uppercase text-teal-600">{t('preview')}</span>
                       </Link>
                     </>
                   )}
@@ -476,8 +492,8 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="hidden items-center gap-3 md:flex">
-              <Link href="/auth/login" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">{t('login')}</Link>
-              <Link href="/auth/register" className="rounded-xl bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700">{t('register')}</Link>
+              <Link href="/auth/login" className="text-sm font-medium text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white">{t('login')}</Link>
+              <Link href="/auth/register" className="rounded-full bg-[#071c19] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-teal-400 dark:text-slate-950">{t('register')}</Link>
             </div>
           )}
         </div>
@@ -491,12 +507,13 @@ export default function Navbar() {
 
               <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('browse')}</p>
               {([
-                { href: '/listings', Icon: LayoutGrid, label: t('allRooms') },
-                { href: '/listings?type=mess', Icon: UtensilsCrossed, label: t('mess') },
-                { href: '/listings?type=bachelor', Icon: BedDouble, label: t('bachelor') },
-                { href: '/listings?type=sublet', Icon: Key, label: t('sublet') },
+                { href: '/listings', Icon: LayoutGrid, label: t('housing') },
                 { href: '/roommates', Icon: Users, label: t('roommates') },
-              ]).map(({ href, Icon, label }) => (
+                { href: '/books', Icon: BookOpen, label: t('books'), preview: true },
+                { href: '/services', Icon: MapPinned, label: t('services'), preview: true },
+                { href: '/jobs', Icon: BriefcaseBusiness, label: t('jobs'), preview: true },
+                { href: '/transport', Icon: Bus, label: t('transport'), preview: true },
+              ]).map(({ href, Icon, label, preview }) => (
                 <Link
                   key={href}
                   href={href}
@@ -505,6 +522,11 @@ export default function Navbar() {
                 >
                   <Icon className="h-4 w-4 shrink-0 opacity-60" />
                   {label}
+                  {preview && (
+                    <span className="ml-auto rounded-full bg-teal-50 px-2 py-0.5 text-[8px] font-bold uppercase text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">
+                      {t('preview')}
+                    </span>
+                  )}
                 </Link>
               ))}
 
@@ -560,6 +582,9 @@ export default function Navbar() {
                           <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">{pendingBookingCount}</span>
                         )}
                       </Link>
+                      <Link href="/dashboard/analytics" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
+                        <BarChart2 className="h-4 w-4 shrink-0 opacity-60" />{t('analytics')}
+                      </Link>
                     </>
                   )}
 
@@ -572,6 +597,10 @@ export default function Navbar() {
                         {myBookingCount > 0 && (
                           <span className="rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">{myBookingCount}</span>
                         )}
+                      </Link>
+                      <Link href="/dashboard/payments" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700" onClick={closeMenus}>
+                        <Wallet className="h-4 w-4 shrink-0 opacity-60" />{t('payments')}
+                        <span className="ml-auto text-[8px] uppercase text-teal-600">{t('preview')}</span>
                       </Link>
                     </>
                   )}

@@ -8,6 +8,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 // Returns null when the env vars are absent (e.g. a local build without
 // .env) so callers can degrade to empty data instead of crashing the build.
 export function createAnonServerClient(): SupabaseClient | null {
+  if (process.env.NEXT_PUBLIC_APP_MODE === 'no-data') return null
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !anonKey) return null

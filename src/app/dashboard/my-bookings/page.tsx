@@ -286,7 +286,7 @@ function BookingCard({
       {booking.status === 'completed' && (
         <div className="mt-3 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2.5 dark:border-purple-800 dark:bg-purple-900/20">
           <p className="text-xs font-semibold text-purple-800 dark:text-purple-400">🏁 Tenancy Completed</p>
-          <p className="mt-0.5 text-xs text-purple-700 dark:text-purple-500">Your stay has ended. Thank you for using Student Hostel!</p>
+          <p className="mt-0.5 text-xs text-purple-700 dark:text-purple-500">Your stay has ended. Thank you for using nexUni.living!</p>
           <Link href="/listings" className="mt-1 inline-block text-xs text-teal-600 hover:underline dark:text-teal-400">Find a new room →</Link>
         </div>
       )}

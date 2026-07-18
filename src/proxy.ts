@@ -8,6 +8,17 @@ const AUTH_ROUTES     = ['/auth/login', '/auth/register']
 
 export async function proxy(req: NextRequest) {
   let res = NextResponse.next({ request: { headers: req.headers } })
+  const { pathname } = req.nextUrl
+
+  // UI-only local mode has no auth backend. Public/auth pages still render,
+  // while data-dependent protected pages return to the homepage.
+  if (process.env.NEXT_PUBLIC_APP_MODE === 'no-data') {
+    const requiresData = [...PROTECTED_ROUTES, ...ADMIN_ROUTES]
+      .some((route) => pathname.startsWith(route))
+    return requiresData
+      ? NextResponse.redirect(new URL('/', req.url))
+      : res
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,8 +44,6 @@ export async function proxy(req: NextRequest) {
   // cookie. Middleware gates admin access, so it must not trust a session
   // that Supabase itself hasn't confirmed is still valid.
   const { data: { user } } = await supabase.auth.getUser()
-
-  const { pathname } = req.nextUrl
 
   const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r))
   const isAdmin     = ADMIN_ROUTES.some((r) => pathname.startsWith(r))

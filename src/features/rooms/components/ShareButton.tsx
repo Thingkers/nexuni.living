@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { BRAND } from '@/config/brand'
 
 type Props = {
   title: string
@@ -22,7 +23,7 @@ export default function ShareButton({ title, rent, location, roomId }: Props) {
 📍 ${location || 'Location not added'}
 💰 Rent: ৳${rent.toLocaleString('en-US')}/month
 
-View this room on Student Hostel:`
+View this room on ${BRAND.name}:`
 
   async function nativeShare() {
     if (navigator.share) {

@@ -1,70 +1,80 @@
-# 🏠 Student Hostel System
+# nexUni.living
 
-A modern hostel accommodation platform that helps students find hostels, messes, and bachelor accommodations based on location, budget, and availability.
+nexUni.living is a bilingual student housing and roommate platform for
+universities and localities across Bangladesh.
 
-## 🌟 Features
+## Features
 
-- User Authentication
-- Hostel & Room Listings
-- Interactive Maps
-- Search & Filtering
-- Room Availability Tracking
-- Responsive Design
-- Secure Backend with Supabase
+- University- and locality-aware room discovery
+- Mess, bachelor, sublet, and roommate listings
+- Interactive maps and campus proximity
+- Booking requests with atomic seat inventory
+- Direct messaging and notifications
+- Student and owner verification
+- Reviews, saved listings, reports, and admin moderation
+- Bangla and English interfaces
+- Installable Progressive Web App
 
----
+## Technology
 
-## 🛠 Tech Stack
+- Next.js 16, React 19, TypeScript, and Tailwind CSS
+- Supabase Auth, PostgreSQL, Storage, Realtime, and RLS
+- Leaflet and OpenStreetMap
+- Resend, Upstash Redis, Sentry, and Vercel Analytics
 
-### Frontend
+## Local development
 
-- Next.js
-- TypeScript
-- Tailwind CSS
-
-### Backend
-
-- Supabase
-
-### Database
-
-- PostgreSQL
-
----
-
-## 📂 Project Structure
-
-```text
-src/
-├── app/
-├── features/
-├── components/
-├── hooks/
-├── lib/
-└── types/
-```
-
-## 🚀 Getting Started
+Use Node.js 20.9 or newer.
 
 ```bash
-git clone https://github.com/rayhandevcs-tech/student-hostel-system.git
-
-cd student-hostel-system
-
-npm install
-
+npm ci
 npm run dev
 ```
 
-## 🎯 Future Improvements
+Open `http://localhost:3000`.
 
-- Booking System
-- Review & Rating System
-- Real-time Chat
-- Payment Integration
+Run the public interface without a database or credentials:
 
-## 👨‍💻 Author
+```bash
+npm run dev:no-data
+```
 
-Md. Rayhan
+No-data mode uses the committed, non-secret `config/no-data.env` file. Data,
+authentication, booking, messaging, and uploads are intentionally unavailable.
 
-Computer Science Student @ AIUB
+Run against the configured shared public Supabase data:
+
+```bash
+npm run dev:data
+```
+
+Authenticated actions in data mode can affect the shared database. Environment
+separation and schema synchronization are documented in
+[`docs/database-environments.md`](docs/database-environments.md).
+
+Environment setup and production instructions are documented in
+[`docs/local-and-cpanel-deployment.md`](docs/local-and-cpanel-deployment.md).
+Teammate access, safe secret handling, deployment, smoke tests and rollback are
+covered by [`docs/team-deployment-runbook.md`](docs/team-deployment-runbook.md).
+
+## Verification
+
+```bash
+npx tsc --noEmit
+npm run lint
+npm run build
+```
+
+Build a standalone cPanel/Passenger artifact:
+
+```bash
+npm run build:cpanel
+```
+
+The resulting artifact is written to `.next/standalone`.
+
+Build, upload, restart Passenger and smoke-test the Namecheap deployment:
+
+```bash
+npm run deploy:cpanel
+```

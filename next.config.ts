@@ -37,6 +37,10 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // Produces .next/standalone/server.js for Passenger/cPanel or any Node host.
+  // Vercel ignores the deployment artifact and continues to build normally.
+  output: 'standalone',
+  poweredByHeader: false,
   turbopack: {},
   images: {
     remotePatterns: [
@@ -62,7 +66,9 @@ const nextConfig: NextConfig = {
 
 const pwaConfig = withPWA({
   dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
+  disable:
+    process.env.NODE_ENV === 'development' ||
+    process.env.DISABLE_PWA === '1',
   // The default runtime caching tries to intercept every route, including
   // auth pages and API calls. Login/signup/password-reset (and any /api/*
   // request) must always hit the network directly — letting the service
@@ -70,6 +76,10 @@ const pwaConfig = withPWA({
   // rejections that hang the login form forever. NetworkOnly here means
   // the service worker steps aside completely for these paths.
   workboxOptions: {
+    // Workbox 7's Rollup/Terser worker exits early under Next.js 16's
+    // webpack build. Development mode emits the same service-worker logic
+    // without the broken minification step.
+    mode: 'development',
     runtimeCaching: [
       {
         urlPattern: ({ url }) => url.pathname.startsWith('/auth'),
@@ -85,9 +95,13 @@ const pwaConfig = withPWA({
 
 export default withSentryConfig(pwaConfig, {
   org: 'rayhan-ky',
-  project: 'student-hostel-system',
+  project: process.env.SENTRY_PROJECT ?? 'student-hostel-system',
   silent: !process.env.CI,
-  disableLogger: true,
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
   telemetry: false,
   authToken: process.env.SENTRY_AUTH_TOKEN,
   sourcemaps: {

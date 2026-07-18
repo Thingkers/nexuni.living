@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { BRAND, getSiteUrl } from '@/config/brand'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -8,7 +9,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://studenthostel.vercel.app'
+  const base = getSiteUrl()
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,11 +23,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .single()
 
   if (!room) {
-    return { title: 'Room Not Found | Student Hostel' }
+    return { title: `Room Not Found | ${BRAND.name}` }
   }
 
   const typeLabel = room.type === 'mess' ? 'Mess' : room.type === 'bachelor' ? 'Bachelor' : room.type === 'sublet' ? 'Sublet' : 'Room'
-  const title = `${room.title} | ৳${room.rent}/month — Student Hostel`
+  const title = `${room.title} | ৳${room.rent}/month — ${BRAND.name}`
   const description = room.description
     ? room.description.slice(0, 160)
     : `${typeLabel} room in ${room.location_name ?? 'Bangladesh'} for ৳${room.rent}/month.`
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: `${base}/listings/${id}`,
-      siteName: 'Student Hostel',
+      siteName: BRAND.name,
       type: 'article',
       ...(image ? { images: [{ url: image, width: 1200, height: 630, alt: room.title }] } : {}),
     },

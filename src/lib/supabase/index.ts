@@ -1,7 +1,19 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+export const isNoDataMode = process.env.NEXT_PUBLIC_APP_MODE === 'no-data'
+
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  (isNoDataMode ? 'http://127.0.0.1:54321' : '')
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  (isNoDataMode ? 'no-data-placeholder' : '')
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Supabase configuration is missing. Use `npm run dev:no-data` for UI-only local development.',
+  )
+}
 
 // Uses cookie-based session storage (via @supabase/ssr) instead of the
 // default localStorage storage that plain `createClient` from

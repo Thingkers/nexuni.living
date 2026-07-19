@@ -214,27 +214,27 @@ export default async function HomePage() {
           </div>
         </header>
 
-        <div className="absolute left-4 top-1/2 z-[450] w-[calc(100%-2rem)] -translate-y-[46%] sm:left-6 sm:max-w-[520px] lg:left-10">
-          <div className="rounded-[26px] border border-white/15 bg-[#091b19]/86 p-5 shadow-[0_24px_80px_rgba(0,0,0,.44)] backdrop-blur-2xl sm:p-7">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.18em] text-teal-100">
+        <div className="absolute left-6 top-1/2 z-[450] hidden w-[calc(100%-3rem)] max-w-[520px] -translate-y-[46%] sm:block lg:left-10">
+          <div className="rounded-[20px] border border-white/15 bg-[#091b19]/86 p-3 shadow-[0_18px_50px_rgba(0,0,0,.38)] backdrop-blur-2xl sm:rounded-[26px] sm:p-7 sm:shadow-[0_24px_80px_rgba(0,0,0,.44)]">
+            <div className="mb-5 hidden items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.18em] text-teal-100 sm:inline-flex">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal-300" />
               {t('badge')}
             </div>
 
-            <h1 className="max-w-lg text-4xl font-semibold leading-[0.96] tracking-[-0.055em] text-white sm:text-6xl">
+            <h1 className="max-w-lg text-2xl font-semibold leading-none tracking-[-0.045em] text-white sm:text-6xl sm:leading-[0.96] sm:tracking-[-0.055em]">
               {t('heroTitleLine1')}{' '}
               <span className="text-teal-300">{t('heroTitleLine2')}</span>
             </h1>
 
-            <p className="mt-5 max-w-md text-sm leading-6 text-slate-300 sm:text-base">
+            <p className="mt-5 hidden max-w-md text-sm leading-6 text-slate-300 sm:block sm:text-base">
               {t('heroSubtitle')}
             </p>
 
-            <div className="mt-6">
+            <div className="mt-3 sm:mt-6">
               <HeroSearch mapMode />
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-[10px]">
+            <div className="mt-4 hidden flex-wrap items-center gap-2 text-[10px] sm:flex">
               <span className="mr-1 text-slate-400">{t('popularLabel')}</span>
               {POPULAR_SEARCHES.map((item) => (
                 <Link

@@ -1,0 +1,27 @@
+import type { Metadata } from 'next'
+import { getLocale } from 'next-intl/server'
+
+import DiscoveryDetailPage from '@/features/discovery/components/DiscoveryDetailPage'
+import { JOBS, getDiscoveryItem } from '@/features/discovery/data'
+
+export function generateStaticParams() {
+  return JOBS.map((item) => ({ slug: item.slug }))
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const [{ slug }, locale] = await Promise.all([params, getLocale()])
+  const item = getDiscoveryItem('job', slug)
+  return {
+    title: item?.title[locale === 'bn' ? 'bn' : 'en'] ?? 'Job preview',
+    robots: { index: false, follow: false },
+  }
+}
+
+export default async function JobDetailRoute({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  return <DiscoveryDetailPage kind="job" slug={slug} />
+}

@@ -209,7 +209,7 @@ export default function BookingRequestsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-10 animate-pulse">
+      <div className="page-shell animate-pulse py-10">
         {[...Array(3)].map((_, index) => (
           <div key={index} className="mb-3 h-32 rounded-2xl bg-gray-100" />
         ))}
@@ -219,7 +219,7 @@ export default function BookingRequestsPage() {
 
   if (pageError) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-10">
+      <main className="page-shell py-10">
         <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
           {pageError}
         </div>
@@ -228,7 +228,7 @@ export default function BookingRequestsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
+    <main className="page-shell py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">
           Booking Requests

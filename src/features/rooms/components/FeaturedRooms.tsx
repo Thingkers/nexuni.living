@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Home } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
-import RoomCard from '@/features/rooms/components/RoomCard'
+import FeaturedRoomCard from '@/features/rooms/components/FeaturedRoomCard'
 import type { Room } from '@/features/rooms/types/room.types'
 
 type Tab = 'all' | 'male' | 'female'
@@ -42,7 +42,7 @@ export default function FeaturedRooms({ initialRooms }: { initialRooms: Room[] }
   return (
     <>
       {/* Tabs */}
-      <div className="mb-5 flex gap-2">
+      <div className="mb-7 inline-flex gap-1 rounded-full border border-white/10 bg-white/5 p-1">
         {[
           { key: 'all', label: t('all') },
           { key: 'male', label: t('male') },
@@ -51,10 +51,10 @@ export default function FeaturedRooms({ initialRooms }: { initialRooms: Room[] }
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key as Tab)}
-            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
               activeTab === tab.key
-                ? 'border-teal-600 bg-teal-600 text-white'
-                : 'border-gray-200 text-gray-500 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'
+                ? 'bg-teal-300 text-slate-950'
+                : 'text-slate-400 hover:bg-white/10 hover:text-white'
             }`}
           >
             {tab.label}
@@ -63,26 +63,26 @@ export default function FeaturedRooms({ initialRooms }: { initialRooms: Room[] }
       </div>
 
       {rooms === undefined ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-              <div className="mb-3 h-44 rounded-xl bg-gray-100 dark:bg-gray-700" />
-              <div className="mb-2 h-4 w-3/4 rounded bg-gray-100 dark:bg-gray-700" />
-              <div className="h-3 w-1/2 rounded bg-gray-100 dark:bg-gray-700" />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="animate-pulse rounded-[26px] border border-white/10 bg-white/5 p-4">
+              <div className="mb-3 h-48 rounded-2xl bg-white/10" />
+              <div className="mb-2 h-4 w-3/4 rounded bg-white/10" />
+              <div className="h-3 w-1/2 rounded bg-white/10" />
             </div>
           ))}
         </div>
       ) : rooms.length === 0 ? (
         <div className="py-16 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-300 dark:bg-gray-800">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-slate-500">
             <Home className="h-7 w-7" />
           </div>
-          <p className="text-sm text-gray-400 dark:text-gray-500">{t('empty')}</p>
+          <p className="text-sm text-slate-400">{t('empty')}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {rooms.map((room) => (
-            <RoomCard key={room.id} room={room} />
+            <FeaturedRoomCard key={room.id} room={room} />
           ))}
         </div>
       )}

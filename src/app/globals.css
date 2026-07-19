@@ -9,6 +9,109 @@
   --font-mono: var(--font-geist-mono);
 }
 
+.page-shell {
+  width: 100%;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .page-shell {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-shell {
+    padding-inline: 2.5rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .page-shell {
+    padding-inline: 3.5rem;
+  }
+}
+
+.nexuni-preloader-orbit {
+  position: relative;
+  display: flex;
+  width: 9rem;
+  height: 9rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.nexuni-preloader-ring,
+.nexuni-preloader-line {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.nexuni-preloader-ring-outer {
+  inset: 0;
+  border: 2px solid rgb(15 118 110 / 0.12);
+  border-top-color: #0f766e;
+  border-right-color: #2dd4bf;
+  animation: nexuni-orbit-clockwise 1.5s linear infinite;
+}
+
+.nexuni-preloader-ring-inner {
+  inset: 0.75rem;
+  border: 1px solid rgb(45 212 191 / 0.18);
+  border-bottom-color: #14b8a6;
+  border-left-color: #5eead4;
+  animation: nexuni-orbit-counter 1.1s linear infinite;
+}
+
+.nexuni-preloader-line {
+  top: 50%;
+  left: 50%;
+  width: 1.5rem;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #0f766e);
+  transform-origin: -2.75rem 50%;
+}
+
+.nexuni-preloader-line-one {
+  animation: nexuni-line-spin 1.8s linear infinite;
+}
+
+.nexuni-preloader-line-two {
+  background: linear-gradient(90deg, transparent, #2dd4bf);
+  animation: nexuni-line-spin 1.8s linear infinite reverse;
+}
+
+.nexuni-preloader-progress {
+  animation: nexuni-progress-slide 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes nexuni-orbit-clockwise {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes nexuni-orbit-counter {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes nexuni-line-spin {
+  from { transform: rotate(0deg) translateX(4.5rem); }
+  to { transform: rotate(360deg) translateX(4.5rem); }
+}
+
+@keyframes nexuni-progress-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(200%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nexuni-preloader-ring,
+  .nexuni-preloader-line,
+  .nexuni-preloader-progress {
+    animation-duration: 3s;
+  }
+}
+
 .home-map-shell .leaflet-tile-pane {
   filter: saturate(0.92) contrast(0.96) brightness(1.06);
 }
@@ -84,6 +187,21 @@
 .map-kind-area span,
 .map-kind-area span::after {
   background: #b45309;
+}
+
+.map-kind-book span,
+.map-kind-book span::after {
+  background: #c2410c;
+}
+
+.map-kind-service span,
+.map-kind-service span::after {
+  background: #0891b2;
+}
+
+.map-kind-job span,
+.map-kind-job span::after {
+  background: #4f46e5;
 }
 
 .room-cluster-marker {

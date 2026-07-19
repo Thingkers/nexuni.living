@@ -17,19 +17,14 @@ export default function MapResultsSheet({
 }) {
   const t = useTranslations('MapHub')
 
-  if (previewLabel) {
-    return (
-      <aside className="absolute right-3 top-32 z-[480] w-[min(360px,calc(100%-1.5rem))] rounded-2xl border border-white/20 bg-[#091b19]/92 p-4 text-white shadow-2xl backdrop-blur-2xl md:right-5 md:top-24">
-        <p className="text-xs font-bold">{previewLabel}</p>
-        <p className="mt-1 text-[10px] leading-4 text-slate-300">
-          {t('previewNotice')}
-        </p>
-      </aside>
-    )
-  }
-
   return (
-    <aside className="absolute right-5 top-24 z-[480] hidden max-h-[46vh] w-80 overflow-y-auto rounded-2xl border border-white/20 bg-[#091b19]/92 p-2 text-white shadow-2xl backdrop-blur-2xl lg:block">
+    <aside className={`absolute right-3 top-32 z-[480] max-h-[46vh] w-[min(360px,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-white/20 bg-[#091b19]/92 p-2 text-white shadow-2xl backdrop-blur-2xl md:right-5 md:top-24 lg:w-80 ${previewLabel ? 'block' : 'hidden lg:block'}`}>
+      {previewLabel && (
+        <div className="mb-2 rounded-xl border border-amber-300/15 bg-amber-300/10 p-3">
+          <p className="text-xs font-bold text-amber-100">{previewLabel}</p>
+          <p className="mt-1 text-[10px] leading-4 text-slate-300">{t('previewNotice')}</p>
+        </div>
+      )}
       <div className="flex items-center justify-between px-2 pb-2 pt-1">
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">
           {t('results')}

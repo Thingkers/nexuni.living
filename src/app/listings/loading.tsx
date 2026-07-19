@@ -2,7 +2,7 @@
 // rooms, so the user never stares at a blank screen.
 export default function Loading() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
+    <div className="page-shell py-6">
       <div className="mb-2 h-8 w-48 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
       <div className="mb-5 h-4 w-64 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
       <div className="mb-6 h-24 animate-pulse rounded-2xl bg-gray-50 dark:bg-gray-800/60" />

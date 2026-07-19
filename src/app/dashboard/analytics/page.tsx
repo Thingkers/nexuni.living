@@ -44,7 +44,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 animate-pulse">
+      <div className="page-shell animate-pulse py-8">
         <div className="mb-2 h-7 w-48 rounded-lg bg-gray-100 dark:bg-gray-800" />
         <div className="mb-8 h-4 w-32 rounded bg-gray-100 dark:bg-gray-800" />
         <div className="grid gap-4 md:grid-cols-4">
@@ -75,7 +75,7 @@ export default function AnalyticsPage() {
   const tooltipText = isDark ? '#f9fafb' : '#111827'
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
+    <main className="page-shell py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Analytics Dashboard</h1>
         <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Insights about your listings</p>

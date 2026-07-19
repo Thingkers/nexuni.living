@@ -100,7 +100,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="page-shell py-10">
         <div className="mb-6 h-8 w-48 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[...Array(4)].map((_, i) => (
@@ -122,7 +122,7 @@ export default function DashboardPage() {
       .toUpperCase() ?? 'U'
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
+    <main className="page-shell py-8">
 
       {/* Header — profile card */}
       <div className="mb-6 flex items-center gap-4 rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">

@@ -157,14 +157,14 @@ export default function AdminUsersPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="page-shell py-10">
         <p className="text-sm text-gray-400">Loading users...</p>
       </div>
     )
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
+    <main className="page-shell py-8">
 
       {/* ID Card Preview Modal */}
       {previewUrl && (

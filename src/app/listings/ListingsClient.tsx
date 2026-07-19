@@ -349,7 +349,7 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
   const activeFilterCount = [query, gender, type, maxRent, location, availableMonth].filter(Boolean).length + (universityIds.length > 0 ? 1 : 0)
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6">
+    <main className="page-shell py-6">
       {/* HEADER */}
       <div className="mb-5">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">All Listings</h1>
@@ -612,7 +612,7 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
       {/* GRID */}
       {viewMode === 'grid' && (
         loading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
                 <div className="mb-3 h-44 rounded-xl bg-gray-100 dark:bg-gray-700" />
@@ -634,7 +634,7 @@ export default function ListingsClient({ initialFilters, initialRooms, initialCo
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {rooms.map((room) => (
                 <RoomCard key={room.id} room={room} />
               ))}

@@ -96,7 +96,7 @@ export default function ListingClient({ id, initialRoom }: { id: string; initial
 
   return (
     <>
-      <main className="mx-auto max-w-4xl px-4 py-6">
+      <main className="page-shell py-6">
         <Link href="/listings" className="mb-4 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
           ← All Listings
         </Link>
@@ -403,7 +403,7 @@ export default function ListingClient({ id, initialRoom }: { id: string; initial
           </div>
 
           {/* RIGHT — Action card */}
-          <div className="w-full shrink-0 md:w-64">
+          <div className="w-full shrink-0 md:w-80 xl:w-96">
             <div className="sticky top-20 flex flex-col gap-3">
 
               {/* Primary action */}

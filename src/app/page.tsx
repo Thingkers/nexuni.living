@@ -7,7 +7,7 @@ import {
   Search,
   ShieldCheck,
 } from 'lucide-react'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 import { createAnonServerClient } from '@/lib/supabase/server'
 import FeaturedRooms from '@/features/rooms/components/FeaturedRooms'
@@ -15,7 +15,9 @@ import HeroSearch from '@/features/search/components/HeroSearch'
 import MapHubShell from '@/features/map/components/MapHubShell'
 import { housingToMapEntity } from '@/features/map/adapters/housing'
 import { areaToMapEntity, campusToMapEntity } from '@/features/map/adapters/geography'
+import { discoveryToMapEntity } from '@/features/map/adapters/discovery'
 import type { MapEntity } from '@/features/map/types'
+import { DISCOVERY_ITEMS } from '@/features/discovery/data'
 import type { Room } from '@/features/rooms/types/room.types'
 import BrandWordmark from '@/components/brand/BrandWordmark'
 
@@ -90,13 +92,14 @@ function resolveMapRoom(
   }
 }
 
-async function getHomeData(): Promise<{
+async function getHomeData(locale: string): Promise<{
   rooms: Room[]
   mapEntities: MapEntity[]
   totalRooms: number
 }> {
+  const discoveryEntities = DISCOVERY_ITEMS.map((item) => discoveryToMapEntity(item, locale))
   const supabase = createAnonServerClient()
-  if (!supabase) return { rooms: [], mapEntities: [], totalRooms: 0 }
+  if (!supabase) return { rooms: [], mapEntities: discoveryEntities, totalRooms: 0 }
 
   try {
     const [
@@ -154,6 +157,7 @@ async function getHomeData(): Promise<{
         const entity = campusToMapEntity(campus)
         return entity ? [entity] : []
       }),
+      ...discoveryEntities,
     ]
 
     return {
@@ -162,13 +166,14 @@ async function getHomeData(): Promise<{
       totalRooms: count ?? 0,
     }
   } catch {
-    return { rooms: [], mapEntities: [], totalRooms: 0 }
+    return { rooms: [], mapEntities: discoveryEntities, totalRooms: 0 }
   }
 }
 
 export default async function HomePage() {
+  const locale = await getLocale()
   const [{ rooms: featuredRooms, mapEntities, totalRooms }, t] = await Promise.all([
-    getHomeData(),
+    getHomeData(locale),
     getTranslations('HomePage'),
   ])
 
@@ -271,92 +276,104 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-20 md:py-28">
-        <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-          <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-400">
-              {t('featuredSubtext')}
-            </p>
-            <h2 className="max-w-xl text-3xl font-semibold tracking-[-0.035em] text-slate-950 dark:text-white md:text-5xl">
-              {t('featuredHeading')}
-            </h2>
+      <section className="relative overflow-hidden bg-[#071c19] py-20 text-white md:py-28">
+        <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(45,212,191,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,.12)_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="page-shell relative">
+          <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <div>
+              <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-teal-300">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-teal-300" />
+                {t('featuredSubtext')}
+              </p>
+              <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.045em] md:text-6xl">
+                {t('featuredHeading')}
+              </h2>
+            </div>
+            <Link
+              href="/listings"
+              className="group inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-teal-300/60 hover:bg-white/10"
+            >
+              {t('viewAll')}
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
+            </Link>
           </div>
-          <Link
-            href="/listings"
-            className="group inline-flex w-fit items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-slate-950 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-          >
-            {t('viewAll')}
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
-          </Link>
-        </div>
-
-        <FeaturedRooms initialRooms={featuredRooms} />
-
-        <div className="mt-10">
-          <Link
-            href="/listings"
-            className="inline-flex items-center gap-2 rounded-full bg-[#071c19] px-6 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 dark:bg-teal-500 dark:text-slate-950"
-          >
-            {t('browseAll')}
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          <FeaturedRooms initialRooms={featuredRooms} />
         </div>
       </section>
 
-      <section className="border-y border-slate-200 bg-white px-4 py-20 dark:border-slate-800 dark:bg-slate-900 md:py-28">
-        <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.72fr_1.28fr]">
-          <div>
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-400">
-              nexUni.living
-            </p>
-            <h2 className="text-4xl font-semibold tracking-[-0.045em] text-slate-950 dark:text-white md:text-5xl">
-              {t('howItWorksHeading')}
-            </h2>
-            <p className="mt-5 max-w-sm text-base leading-7 text-slate-500 dark:text-slate-400">
-              {t('howItWorksSubtext')}
+      <section className="border-y border-slate-200 bg-[#eef3f1] py-20 dark:border-slate-800 dark:bg-slate-900 md:py-28">
+        <div className="page-shell">
+          <div className="mb-14 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+            <div>
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-400">
+                nexUni.living · {t('howItWorksHeading')}
+              </p>
+              <h2 className="max-w-3xl text-4xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white md:text-6xl">
+                {t('howItWorksSubtext')}
+              </h2>
+            </div>
+            <p className="max-w-sm text-sm leading-6 text-slate-500 dark:text-slate-400">
+              {t('howItWorksIntro')}
             </p>
           </div>
 
-          <div className="grid gap-px overflow-hidden rounded-[28px] border border-slate-200 bg-slate-200 dark:border-slate-700 dark:bg-slate-700 md:grid-cols-3">
+          <div className="relative grid gap-6 lg:grid-cols-3 lg:gap-8">
+            <div className="absolute left-[16.66%] right-[16.66%] top-8 hidden border-t border-dashed border-teal-700/30 lg:block" />
             {HOW_IT_WORKS.map((step, index) => (
-              <div key={step.title} className="bg-white p-7 dark:bg-slate-900 md:min-h-64">
-                <div className="mb-12 flex items-center justify-between">
-                  <span className="text-xs font-bold tracking-[0.18em] text-slate-400">
-                    0{index + 1}
-                  </span>
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300">
+              <article key={step.title} className="relative rounded-[28px] border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-700 dark:bg-slate-950">
+                <div className="mb-10 flex items-center justify-between">
+                  <span className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full border-8 border-[#eef3f1] bg-teal-600 text-white shadow-lg dark:border-slate-900">
                     <step.Icon className="h-5 w-5" aria-hidden />
                   </span>
+                  <span className="text-4xl font-black tracking-[-0.08em] text-slate-100 dark:text-slate-800">
+                    0{index + 1}
+                  </span>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-950 dark:text-white">{step.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">{step.description}</p>
-              </div>
+                <h3 className="text-xl font-semibold text-slate-950 dark:text-white">{step.title}</h3>
+                <p className="mt-3 max-w-sm text-sm leading-6 text-slate-500 dark:text-slate-400">{step.description}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="px-4 py-12 md:py-16">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[32px] bg-teal-400 px-7 py-12 text-slate-950 md:px-14 md:py-16">
-          <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full border-[40px] border-slate-950/5" />
-          <div className="relative flex flex-col justify-between gap-8 md:flex-row md:items-center">
-            <div>
-              <h2 className="text-3xl font-semibold tracking-[-0.04em] md:text-5xl">{t('ctaHeading')}</h2>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-800">{t('ctaSubtext')}</p>
-            </div>
+      <section className="page-shell bg-[#eef3f1] py-12 dark:bg-slate-950 md:py-16">
+        <div className="grid overflow-hidden rounded-[36px] bg-[#071c19] text-white shadow-[0_30px_90px_rgba(7,28,25,.25)] lg:grid-cols-[1.1fr_.9fr]">
+          <div className="p-8 md:p-14 lg:p-16">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-300">{t('ownerEyebrow')}</p>
+            <h2 className="mt-5 max-w-2xl text-4xl font-semibold tracking-[-0.05em] md:text-6xl">{t('ctaHeading')}</h2>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300">{t('ctaSubtext')}</p>
             <Link
               href="/auth/register"
-              className="inline-flex w-fit items-center gap-2 rounded-full bg-[#071c19] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-teal-300 px-6 py-3.5 text-sm font-bold text-slate-950 transition hover:bg-teal-200"
             >
               {t('ctaButton')}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>
+          <div className="relative min-h-80 overflow-hidden bg-teal-400 p-8 text-slate-950 md:p-12">
+            <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(7,28,25,.35)_1px,transparent_1px),linear-gradient(90deg,rgba(7,28,25,.35)_1px,transparent_1px)] [background-size:38px_38px]" />
+            <div className="relative ml-auto flex h-full max-w-md flex-col justify-end">
+              <div className="rounded-[28px] border border-slate-950/10 bg-white/90 p-6 shadow-2xl backdrop-blur-xl">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#071c19] text-teal-300">
+                    <Building2 className="h-5 w-5" />
+                  </span>
+                  <span className="flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1.5 text-[10px] font-bold text-teal-800">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-teal-500" />
+                    {t('ownerReady')}
+                  </span>
+                </div>
+                <p className="mt-8 text-2xl font-semibold tracking-[-0.04em]">{t('ownerCardTitle')}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{t('ownerCardText')}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <footer className="px-4 pb-10 pt-4">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 border-t border-slate-300 pt-8 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400 sm:flex-row">
+      <footer className="page-shell pb-10 pt-4">
+        <div className="flex flex-col items-center justify-between gap-5 border-t border-slate-300 pt-8 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400 sm:flex-row">
           <BrandWordmark compact />
           <div className="flex flex-wrap justify-center gap-6">
             <Link href="/listings" className="hover:text-slate-950 dark:hover:text-white">{t('footerBrowseRooms')}</Link>

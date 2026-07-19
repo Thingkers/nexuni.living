@@ -38,8 +38,8 @@ export default async function ModulePreview({
   const displayCapabilities = isBn && capabilitiesBn ? capabilitiesBn : capabilities
 
   return (
-    <main className="min-h-[calc(100dvh-4rem)] bg-[#eef3f1] px-4 py-10 text-slate-950 dark:bg-slate-950 dark:text-white">
-      <div className="mx-auto max-w-5xl">
+    <main className="min-h-[calc(100dvh-4rem)] bg-[#eef3f1] py-10 text-slate-950 dark:bg-slate-950 dark:text-white">
+      <div className="page-shell">
         <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-teal-700 dark:text-slate-400">
           <ArrowLeft className="h-4 w-4" />
           {isBn ? 'ম্যাপ হাব' : 'Map hub'}

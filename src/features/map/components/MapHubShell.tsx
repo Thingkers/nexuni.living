@@ -9,10 +9,11 @@ import MapResultsSheet from '@/features/map/components/MapResultsSheet'
 import type { MapEntity } from '@/features/map/types'
 import { roommateToMapEntity } from '@/features/map/adapters/roommates'
 import { supabase } from '@/lib/supabase'
+import BrandedPreloader from '@/components/ui/BrandedPreloader'
 
 const EntityMap = dynamic(() => import('@/features/map/components/EntityMap'), {
   ssr: false,
-  loading: () => <div className="h-full animate-pulse bg-slate-200" />,
+  loading: () => <BrandedPreloader fullScreen={false} label="Preparing the map…" />,
 })
 
 export default function MapHubShell({ entities }: { entities: MapEntity[] }) {
@@ -74,6 +75,9 @@ export default function MapHubShell({ entities }: { entities: MapEntity[] }) {
     if (activeLayer === 'campuses') {
       return allEntities.filter((entity) => entity.kind === 'campus' || entity.kind === 'area')
     }
+    if (activeLayer === 'books') return allEntities.filter((entity) => entity.kind === 'book')
+    if (activeLayer === 'services') return allEntities.filter((entity) => entity.kind === 'service')
+    if (activeLayer === 'jobs') return allEntities.filter((entity) => entity.kind === 'job')
     return []
   }, [activeLayer, allEntities])
 
@@ -81,6 +85,9 @@ export default function MapHubShell({ entities }: { entities: MapEntity[] }) {
     housing: allEntities.filter((entity) => entity.kind === 'housing').length,
     roommates: allEntities.filter((entity) => entity.kind === 'roommate').length,
     campuses: allEntities.filter((entity) => entity.kind === 'campus' || entity.kind === 'area').length,
+    books: allEntities.filter((entity) => entity.kind === 'book').length,
+    services: allEntities.filter((entity) => entity.kind === 'service').length,
+    jobs: allEntities.filter((entity) => entity.kind === 'job').length,
   }), [allEntities])
 
   function focusEntity(entity: MapEntity) {

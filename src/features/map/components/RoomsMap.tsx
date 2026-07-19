@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import L from 'leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
+import { useTranslations } from 'next-intl'
 import {
   Circle,
   CircleMarker,
@@ -89,7 +90,7 @@ function roomClusterIcon(cluster: { getChildCount: () => number }) {
   const count = cluster.getChildCount()
   return L.divIcon({
     className: 'room-cluster-marker',
-    html: `<span>${count}<small>rooms</small></span>`,
+    html: `<span>${count}<small>places</small></span>`,
     iconSize: [54, 54],
   })
 }
@@ -183,6 +184,7 @@ export default function RoomsMap({
   focusQuery,
   nearbyControl = false,
 }: Props) {
+  const t = useTranslations('MapCommon')
   const markerRefs = useRef<Map<string, L.Marker>>(new Map())
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS_KM)
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
@@ -283,7 +285,7 @@ export default function RoomsMap({
                 weight: 3,
               }}
             >
-              <Popup>Your current location</Popup>
+              <Popup>{t('currentLocation')}</Popup>
             </CircleMarker>
           </>
         )}
@@ -315,11 +317,11 @@ export default function RoomsMap({
                   </p>
 
                   <p className="mt-2 text-xs text-slate-500">
-                    {room.location_name || 'Location not added'}
+                    {room.location_name || t('locationMissing')}
                   </p>
                   {room.is_approximate && (
                     <p className="mt-1 text-[10px] font-medium text-amber-700">
-                      Approximate area location
+                      {t('approximateLocation')}
                     </p>
                   )}
 
@@ -338,7 +340,7 @@ export default function RoomsMap({
                     href={room.href ?? `/listings/${room.id}`}
                     className="mt-3 inline-block text-xs font-semibold text-teal-700 hover:text-teal-900"
                   >
-                    View Details →
+                    {t('viewDetails')} →
                   </Link>
                 </div>
               </Popup>
@@ -352,15 +354,15 @@ export default function RoomsMap({
           <div className="mb-2 flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-bold">
-                {locationStatus === 'locating' && 'Finding your location…'}
-                {locationStatus === 'ready' && `${displayedRooms.length} rooms within ${radiusKm} km`}
-                {locationStatus === 'denied' && 'Location permission required'}
-                {locationStatus === 'unsupported' && 'Location is unavailable'}
+                {locationStatus === 'locating' && t('findingLocation')}
+                {locationStatus === 'ready' && t('withinRadius', { count: displayedRooms.length, radius: radiusKm })}
+                {locationStatus === 'denied' && t('permissionRequired')}
+                {locationStatus === 'unsupported' && t('locationUnavailable')}
               </p>
               <p className="mt-0.5 text-[10px] text-slate-500">
                 {locationStatus === 'ready'
-                  ? 'Drag the radius to explore nearby rooms'
-                  : 'Showing all mapped rooms until location is available'}
+                  ? t('radiusHelp')
+                  : t('allPlacesHelp')}
               </p>
             </div>
             {locationStatus !== 'ready' && locationStatus !== 'locating' && (
@@ -369,7 +371,7 @@ export default function RoomsMap({
                 onClick={requestLocation}
                 className="rounded-full bg-teal-700 px-3 py-1.5 text-[10px] font-bold text-white"
               >
-                Enable
+                {t('enable')}
               </button>
             )}
           </div>
@@ -384,7 +386,7 @@ export default function RoomsMap({
               value={radiusKm}
               disabled={locationStatus !== 'ready'}
               onChange={(event) => setRadiusKm(Number(event.target.value))}
-              aria-label={`Nearby room radius: ${radiusKm} kilometers`}
+              aria-label={t('radiusLabel', { radius: radiusKm })}
               className="nearby-radius-slider min-w-0 flex-1"
             />
             <span className="min-w-12 rounded-full bg-teal-50 px-2 py-1 text-center text-[10px] font-bold text-teal-800">

@@ -143,7 +143,7 @@ export default async function UniversityPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="page-shell py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{university.name}</h1>
           {university.name_bn && (
@@ -197,7 +197,7 @@ export default async function UniversityPage({ params }: Props) {
               No listings found near this campus yet.
             </p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {rooms.map((room) => (
                 <RoomCard key={room.id} room={room} />
               ))}

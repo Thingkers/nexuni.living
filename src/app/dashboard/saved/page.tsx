@@ -42,7 +42,7 @@ export default function SavedRoomsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="page-shell py-10">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />
@@ -53,7 +53,7 @@ export default function SavedRoomsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
+    <main className="page-shell py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Saved Rooms</h1>
         <p className="mt-1 text-sm text-gray-400">{rooms.length} saved listing{rooms.length !== 1 ? 's' : ''}</p>

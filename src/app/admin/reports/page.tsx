@@ -133,14 +133,14 @@ export default function AdminReportsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10">
+      <div className="page-shell py-10">
         <p className="text-sm text-gray-400">Loading reports...</p>
       </div>
     )
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <main className="page-shell py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Reported Listings</h1>

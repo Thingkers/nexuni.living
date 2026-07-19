@@ -76,7 +76,7 @@ export default function RoommatesBoardPage() {
   }, [profiles, userId, universityIds, localityIds, gender, minMatch, myProfile])
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6">
+    <main className="page-shell py-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Find a Roommate</h1>
@@ -122,7 +122,7 @@ export default function RoommatesBoardPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
               <div className="mb-3 h-11 w-11 rounded-full bg-gray-100 dark:bg-gray-700" />
@@ -139,7 +139,7 @@ export default function RoommatesBoardPage() {
           <p className="text-sm text-gray-400 dark:text-gray-500">No roommate profiles found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {candidates.map(({ profile, score }) => (
             <RoommateCard key={profile.id} profile={profile} matchScore={score} />
           ))}

@@ -164,17 +164,7 @@
     "all": "সব",
     "male": "পুরুষ",
     "female": "নারী",
-    "empty": "এখনো কোনো রুম পোস্ট করা হয়নি",
-    "noImage": "ছবি নেই",
-    "perSeat": "/ সিট",
-    "perMonth": "/ মাস",
-    "availableCount": "{count}টি খালি",
-    "occupied": "বর্তমানে পূর্ণ",
-    "locationMissing": "লোকেশন যোগ করা হয়নি",
-    "anyGender": "যেকোনো লিঙ্গ",
-    "maleOnly": "শুধু পুরুষ",
-    "femaleOnly": "শুধু নারী",
-    "directListing": "সরাসরি লিস্টিং"
+    "empty": "এখনো কোনো রুম পোস্ট করা হয়নি"
   },
   "RoomCard": {
     "wifi": "ওয়াইফাই",

@@ -20,6 +20,7 @@ import type { MapEntity } from '@/features/map/types'
 import { DISCOVERY_ITEMS } from '@/features/discovery/data'
 import type { Room } from '@/features/rooms/types/room.types'
 import BrandWordmark from '@/components/brand/BrandWordmark'
+import HomeHeaderAuth from '@/components/layout/HomeHeaderAuth'
 
 // Locale is read from a cookie in the root layout (src/i18n/request.ts),
 // which makes every page sharing that layout dynamic — so this page can no
@@ -205,12 +206,7 @@ export default async function HomePage() {
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal-300" />
               {mapEntities.filter((entity) => entity.kind === 'housing').length} live
             </span>
-            <Link href="/auth/login" className="rounded-full px-3 py-2 text-xs font-semibold text-white hover:bg-white/10">
-              Login
-            </Link>
-            <Link href="/auth/register" className="rounded-full bg-teal-300 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-teal-200">
-              Register
-            </Link>
+            <HomeHeaderAuth />
           </div>
         </header>
 
@@ -276,22 +272,22 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-[#071c19] py-20 text-white md:py-28">
+      <section className="relative overflow-hidden bg-[#f3f6f4] py-20 text-slate-950 dark:bg-slate-950 dark:text-white md:py-28">
         <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(45,212,191,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,.12)_1px,transparent_1px)] [background-size:48px_48px]" />
         <div className="page-shell relative">
           <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
-              <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-teal-300">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-teal-300" />
+              <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-300">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-teal-500 dark:bg-teal-300" />
                 {t('featuredSubtext')}
               </p>
-              <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.045em] md:text-6xl">
+              <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.045em] text-slate-950 dark:text-white md:text-6xl">
                 {t('featuredHeading')}
               </h2>
             </div>
             <Link
               href="/listings"
-              className="group inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-teal-300/60 hover:bg-white/10"
+              className="group inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:border-teal-300/60 hover:bg-teal-50 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
             >
               {t('viewAll')}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />

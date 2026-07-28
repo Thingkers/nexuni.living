@@ -9,11 +9,14 @@ import {
   Wifi, Zap, Flame, ShowerHead, BookOpen, Shirt, Camera,
   Tag, MapPin, ClipboardList, Plus, Trash2, LayoutGrid,
   Power, ArrowUpDown, Snowflake, Sparkles, ShieldCheck, Droplets, Trees,
+  Sparkle,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase'
-import { isSharedRoom } from '@/features/rooms/types/room.types'
+import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.types'
 import type { RoomType } from '@/features/rooms/types/room.types'
+import { AMENITY_KEYS, GENDER_TYPE_LABELS, GENDER_TYPES, HOUSE_RULE_OPTIONS, ROOM_TYPES } from '@/features/rooms/constants'
 
 const LocationPicker = dynamic(
   () => import('@/features/map/components/LocationPicker'),
@@ -67,28 +70,24 @@ const INITIAL_FORM = {
 // typing it this way (instead of `any`) keeps the dynamic [key] assignment safe.
 type FormValue = string | boolean | string[] | LandmarkItem[] | number | null
 
-const AMENITIES = [
-  { key: 'wifi',          Icon: Wifi,        label: 'WiFi' },
-  { key: 'gas',           Icon: Flame,       label: 'Gas' },
-  { key: 'electricity',   Icon: Zap,         label: 'Electricity' },
-  { key: 'attached_bath', Icon: ShowerHead,  label: 'Attached Bath' },
-  { key: 'study_table',   Icon: BookOpen,    label: 'Study Table' },
-  { key: 'generator',     Icon: Power,       label: 'Generator' },
-  { key: 'lift',          Icon: ArrowUpDown, label: 'Lift' },
-  { key: 'fridge',        Icon: Snowflake,   label: 'Fridge' },
-  { key: 'maid_service',  Icon: Sparkles,    label: 'Maid Service' },
-  { key: 'security',      Icon: ShieldCheck, label: 'Security' },
-  { key: 'water_filter',  Icon: Droplets,    label: 'Water Filter' },
-  { key: 'balcony',       Icon: Trees,       label: 'Balcony' },
-] as const
+// Icons/labels keyed off AMENITY_KEYS (shared with the AI extraction schema)
+// via a Record so a key added there without an entry here fails to typecheck.
+const AMENITY_META: Record<(typeof AMENITY_KEYS)[number], { Icon: LucideIcon; label: string }> = {
+  wifi:          { Icon: Wifi,        label: 'WiFi' },
+  gas:           { Icon: Flame,       label: 'Gas' },
+  electricity:   { Icon: Zap,         label: 'Electricity' },
+  attached_bath: { Icon: ShowerHead,  label: 'Attached Bath' },
+  study_table:   { Icon: BookOpen,    label: 'Study Table' },
+  generator:     { Icon: Power,       label: 'Generator' },
+  lift:          { Icon: ArrowUpDown, label: 'Lift' },
+  fridge:        { Icon: Snowflake,   label: 'Fridge' },
+  maid_service:  { Icon: Sparkles,    label: 'Maid Service' },
+  security:      { Icon: ShieldCheck, label: 'Security' },
+  water_filter:  { Icon: Droplets,    label: 'Water Filter' },
+  balcony:       { Icon: Trees,       label: 'Balcony' },
+}
 
-const HOUSE_RULES = [
-  'No Smoking',
-  'No Drugs',
-  'No Pets',
-  'No Male Visitors',
-  'No Female Visitors',
-]
+const AMENITIES = AMENITY_KEYS.map((key) => ({ key, ...AMENITY_META[key] }))
 
 const inputCls = (err?: string) =>
   `w-full rounded-xl border px-4 py-3 text-sm outline-none transition-colors bg-white dark:bg-gray-800 dark:text-gray-100 ${
@@ -108,6 +107,9 @@ export default function PostRoomPage() {
   const [images, setImages] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [showMap, setShowMap] = useState(false)
+  const [pasteText, setPasteText] = useState('')
+  const [extracting, setExtracting] = useState(false)
+  const [aiFilled, setAiFilled] = useState(false)
 
   const shared = isSharedRoom(form.type as RoomType)
 
@@ -133,6 +135,54 @@ export default function PostRoomPage() {
   function updateField(key: keyof typeof INITIAL_FORM, value: FormValue) {
     setForm((prev) => ({ ...prev, [key]: value }))
     if (errors[key]) setErrors((prev) => { const e = { ...prev }; delete e[key]; return e })
+  }
+
+  async function handleExtract() {
+    if (!pasteText.trim()) return
+    setExtracting(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { router.push('/auth/login'); return }
+
+      const res = await fetch('/api/ai/extract-room-listing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ text: pasteText }),
+      })
+      const body = await res.json()
+      if (!res.ok) {
+        toast.error(body.error || 'Could not extract details from that text')
+        return
+      }
+
+      setForm((prev) => ({ ...prev, ...body.data }))
+      setAiFilled(true)
+      toast.success('Filled in from your text — please review before posting')
+
+      if (body.data.location_name) void geocodeLocation(body.data.location_name)
+    } catch {
+      toast.error('Could not extract details from that text')
+    } finally {
+      setExtracting(false)
+    }
+  }
+
+  // Best-effort — "Pick on Map" stays available either way, so a failed or
+  // ambiguous geocode just means the user sets the pin manually.
+  async function geocodeLocation(locationName: string) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${locationName}, Dhaka, Bangladesh`)}&limit=1`,
+        { headers: { 'Accept-Language': 'en' } },
+      )
+      const results = await res.json()
+      if (results?.[0]) {
+        updateField('latitude', Number(results[0].lat))
+        updateField('longitude', Number(results[0].lon))
+      }
+    } catch {
+      // Silent — geocoding is a convenience, not a requirement.
+    }
   }
 
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -260,6 +310,38 @@ export default function PostRoomPage() {
       {step === 1 && (
         <div className="flex flex-col gap-4">
 
+          {/* Paste-to-fill — only while the form is still empty, so it
+              doesn't get in the way of someone editing an already-filled form. */}
+          {!form.title && (
+            <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4 dark:border-teal-800 dark:bg-teal-900/20">
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-teal-700 dark:text-teal-400">
+                <Sparkle className="h-3.5 w-3.5" /> Fill from your post
+              </p>
+              <textarea
+                rows={4}
+                placeholder="Paste your listing text here (e.g. from a Facebook To-Let group) and we'll fill in the form for you..."
+                className={`w-full resize-none ${inputCls()}`}
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={handleExtract}
+                disabled={extracting || !pasteText.trim()}
+                className="mt-2 w-full rounded-xl bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+              >
+                {extracting ? 'Extracting...' : 'Extract details'}
+              </button>
+            </div>
+          )}
+
+          {aiFilled && (
+            <div className="flex items-start justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-900/20 dark:text-amber-300">
+              <span>✨ Filled in from your text — please check everything below before posting.</span>
+              <button type="button" onClick={() => setAiFilled(false)} className="shrink-0 font-semibold hover:underline">Dismiss</button>
+            </div>
+          )}
+
           {/* Title */}
           <div>
             <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Title *</label>
@@ -281,19 +363,17 @@ export default function PostRoomPage() {
             <div>
               <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Room Type *</label>
               <select className={inputCls()} value={form.type} onChange={(e) => updateField('type', e.target.value)}>
-                <option value="mess">Mess</option>
-                <option value="bachelor">Bachelor</option>
-                <option value="sublet">Sublet</option>
-                <option value="single">Single Room</option>
-                <option value="master_bedroom">Master Bedroom</option>
+                {ROOM_TYPES.map((type) => (
+                  <option key={type} value={type}>{ROOM_TYPE_LABELS[type]}</option>
+                ))}
               </select>
             </div>
             <div>
               <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">For *</label>
               <select className={inputCls()} value={form.gender_type} onChange={(e) => updateField('gender_type', e.target.value)}>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="any">Any</option>
+                {GENDER_TYPES.map((gender) => (
+                  <option key={gender} value={gender}>{GENDER_TYPE_LABELS[gender]}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -562,7 +642,7 @@ export default function PostRoomPage() {
           <div>
             <label className="mb-2 block text-xs font-medium text-gray-600 dark:text-gray-400">House Rules <span className="font-normal text-gray-400">(optional)</span></label>
             <div className="flex flex-wrap gap-2">
-              {HOUSE_RULES.map((rule) => {
+              {HOUSE_RULE_OPTIONS.map((rule) => {
                 const active = form.house_rules.includes(rule)
                 return (
                   <button

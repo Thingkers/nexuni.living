@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   ArrowRight,
   Building2,
@@ -7,17 +8,11 @@ import {
   Search,
   ShieldCheck,
 } from 'lucide-react'
-import { getLocale, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
 
 import { createAnonServerClient } from '@/lib/supabase/server'
 import FeaturedRooms from '@/features/rooms/components/FeaturedRooms'
 import HeroSearch from '@/features/search/components/HeroSearch'
-import MapHubShell from '@/features/map/components/MapHubShell'
-import { housingToMapEntity } from '@/features/map/adapters/housing'
-import { areaToMapEntity, campusToMapEntity } from '@/features/map/adapters/geography'
-import { discoveryToMapEntity } from '@/features/map/adapters/discovery'
-import type { MapEntity } from '@/features/map/types'
-import { DISCOVERY_ITEMS } from '@/features/discovery/data'
 import type { Room } from '@/features/rooms/types/room.types'
 import BrandWordmark from '@/components/brand/BrandWordmark'
 
@@ -26,89 +21,15 @@ import BrandWordmark from '@/components/brand/BrandWordmark'
 // longer be served from a 60s ISR cache; it re-fetches on every request.
 // Accepted trade-off, see docs/playbook.md Sprint 2 Session 2.A plan.
 
-type HomeMapRoom = Pick<
-  Room,
-  'id' | 'title' | 'rent' | 'latitude' | 'longitude' | 'location_name'
-> & {
-  locality_id?: string | null
-  is_approximate?: boolean
-}
-
-type LocalityCoordinate = {
-  id: string
-  name: string
-  slug: string
-  lat: number | null
-  lng: number | null
-}
-
-type CampusCoordinate = LocalityCoordinate
-
-const AREA_CENTERS: Array<{ terms: string[]; lat: number; lng: number }> = [
-  { terms: ['kuratoli', 'kuril'], lat: 23.8259, lng: 90.4204 },
-  { terms: ['nikunja'], lat: 23.8315, lng: 90.4153 },
-  { terms: ['khilkhet'], lat: 23.8262, lng: 90.4270 },
-  { terms: ['bashundhara'], lat: 23.8151, lng: 90.4295 },
-  { terms: ['badda'], lat: 23.7805, lng: 90.4266 },
-]
-
-function normalizedLocation(value: string | null | undefined) {
-  return (value ?? '').normalize('NFC').toLowerCase()
-}
-
-function markerOffset(id: string) {
-  const hash = [...id].reduce((total, character) => total + character.charCodeAt(0), 0)
-  return {
-    lat: ((hash % 9) - 4) * 0.00022,
-    lng: (((hash * 7) % 9) - 4) * 0.00022,
-  }
-}
-
-function resolveMapRoom(
-  room: HomeMapRoom,
-  localities: LocalityCoordinate[],
-): HomeMapRoom {
-  if (room.latitude != null && room.longitude != null) return room
-
-  const location = normalizedLocation(room.location_name)
-  const locality = localities.find((item) => {
-    if (room.locality_id && item.id === room.locality_id) return true
-    const name = normalizedLocation(item.name)
-    return Boolean(name && (location.includes(name) || name.includes(location)))
-  })
-  const area = AREA_CENTERS.find((item) =>
-    item.terms.some((term) => location.includes(term)),
-  )
-  const lat = locality?.lat ?? area?.lat
-  const lng = locality?.lng ?? area?.lng
-  if (lat == null || lng == null) return room
-
-  const offset = markerOffset(room.id)
-  return {
-    ...room,
-    latitude: lat + offset.lat,
-    longitude: lng + offset.lng,
-    is_approximate: true,
-  }
-}
-
-async function getHomeData(locale: string): Promise<{
+async function getHomeData(): Promise<{
   rooms: Room[]
-  mapEntities: MapEntity[]
   totalRooms: number
 }> {
-  const discoveryEntities = DISCOVERY_ITEMS.map((item) => discoveryToMapEntity(item, locale))
   const supabase = createAnonServerClient()
-  if (!supabase) return { rooms: [], mapEntities: discoveryEntities, totalRooms: 0 }
+  if (!supabase) return { rooms: [], totalRooms: 0 }
 
   try {
-    const [
-      { data },
-      { count },
-      { data: mapData },
-      { data: localityData },
-      { data: campusData },
-    ] = await Promise.all([
+    const [{ data }, { count }] = await Promise.all([
       supabase
         .from('rooms')
         .select('*, profiles(full_name, phone, avatar_url)')
@@ -121,59 +42,20 @@ async function getHomeData(locale: string): Promise<{
         .select('*', { count: 'exact', head: true })
         .neq('status', 'closed')
         .abortSignal(AbortSignal.timeout(5000)),
-      supabase
-        .from('rooms')
-        .select('id, title, rent, latitude, longitude, location_name, locality_id')
-        .neq('status', 'booked')
-        .neq('status', 'closed')
-        .order('created_at', { ascending: false })
-        .limit(60)
-        .abortSignal(AbortSignal.timeout(5000)),
-      supabase
-        .from('localities')
-        .select('id, name, slug, lat, lng')
-        .eq('is_active', true)
-        .abortSignal(AbortSignal.timeout(5000)),
-      supabase
-        .from('universities')
-        .select('id, name, slug, lat, lng')
-        .eq('is_active', true)
-        .abortSignal(AbortSignal.timeout(5000)),
     ])
-    const localities = (localityData ?? []) as LocalityCoordinate[]
-    const resolvedMapRooms = ((mapData ?? []) as HomeMapRoom[])
-      .map((room) => resolveMapRoom(room, localities))
-      .filter((room) => room.latitude != null && room.longitude != null)
-    const mapEntities = [
-      ...resolvedMapRooms.flatMap((room) => {
-        const entity = housingToMapEntity(room)
-        return entity ? [entity] : []
-      }),
-      ...localities.flatMap((locality) => {
-        const entity = areaToMapEntity(locality)
-        return entity ? [entity] : []
-      }),
-      ...((campusData ?? []) as CampusCoordinate[]).flatMap((campus) => {
-        const entity = campusToMapEntity(campus)
-        return entity ? [entity] : []
-      }),
-      ...discoveryEntities,
-    ]
 
     return {
       rooms: (data ?? []) as Room[],
-      mapEntities,
       totalRooms: count ?? 0,
     }
   } catch {
-    return { rooms: [], mapEntities: discoveryEntities, totalRooms: 0 }
+    return { rooms: [], totalRooms: 0 }
   }
 }
 
 export default async function HomePage() {
-  const locale = await getLocale()
-  const [{ rooms: featuredRooms, mapEntities, totalRooms }, t] = await Promise.all([
-    getHomeData(locale),
+  const [{ rooms: featuredRooms, totalRooms }, t] = await Promise.all([
+    getHomeData(),
     getTranslations('HomePage'),
   ])
 
@@ -182,6 +64,8 @@ export default async function HomePage() {
     { Icon: MessageSquare, title: t('step2Title'), description: t('step2Desc') },
     { Icon: Home, title: t('step3Title'), description: t('step3Desc') },
   ]
+
+  const [showcaseBack, showcaseFront] = featuredRooms.filter((room) => room.images?.length)
 
   const POPULAR_SEARCHES = [
     { label: t('chipMess'), href: '/listings?type=mess' },
@@ -193,7 +77,8 @@ export default async function HomePage() {
   return (
     <main className="overflow-hidden bg-[#f3f6f4] text-slate-950 dark:bg-slate-950 dark:text-white">
       <section className="relative h-[calc(100dvh-4rem)] min-h-[720px] max-h-[980px] overflow-hidden bg-[#071c19] text-white">
-        <MapHubShell entities={mapEntities} />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(45,212,191,.16),transparent_55%),radial-gradient(circle_at_80%_75%,rgba(45,212,191,.10),transparent_50%)]" />
+        <div className="absolute inset-0 opacity-[0.15] [background-image:linear-gradient(rgba(45,212,191,.4)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,.4)_1px,transparent_1px)] [background-size:56px_56px]" />
 
         <header className="absolute inset-x-3 top-3 z-[500] flex h-[60px] items-center justify-between rounded-[20px] border border-white/15 bg-[#091b19]/88 px-3 shadow-[0_18px_50px_rgba(0,0,0,.38)] backdrop-blur-2xl md:inset-x-5 md:px-4">
           <Link href="/" aria-label="nexUni.living" className="shrink-0 px-2">
@@ -203,7 +88,7 @@ export default async function HomePage() {
           <div className="flex items-center gap-2">
             <span className="hidden items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-[10px] font-semibold text-slate-200 sm:flex">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal-300" />
-              {mapEntities.filter((entity) => entity.kind === 'housing').length} live
+              {totalRooms} live
             </span>
             <Link href="/auth/login" className="rounded-full px-3 py-2 text-xs font-semibold text-white hover:bg-white/10">
               Login
@@ -248,6 +133,55 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
+
+        {showcaseBack && showcaseFront && (
+          <div className="absolute inset-y-0 right-10 z-[430] hidden items-center xl:flex 2xl:right-20">
+            <div className="relative h-[440px] w-[340px]">
+              <Link
+                href={`/listings/${showcaseBack.id}`}
+                className="group absolute right-0 top-0 block h-[300px] w-[250px] rotate-[5deg] overflow-hidden rounded-[28px] border border-white/15 shadow-[0_30px_80px_rgba(0,0,0,.45)] transition hover:-translate-y-1 hover:rotate-3"
+              >
+                <Image
+                  src={showcaseBack.images![0]}
+                  alt={showcaseBack.title}
+                  fill
+                  sizes="250px"
+                  className="object-cover transition duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-[#071c19]/70 via-transparent to-transparent" />
+              </Link>
+
+              <Link
+                href={`/listings/${showcaseFront.id}`}
+                className="group absolute bottom-0 left-0 block h-[280px] w-[230px] -rotate-6 overflow-hidden rounded-[28px] border-4 border-[#071c19] shadow-[0_30px_80px_rgba(0,0,0,.5)] transition hover:-translate-y-1 hover:-rotate-3"
+              >
+                <Image
+                  src={showcaseFront.images![0]}
+                  alt={showcaseFront.title}
+                  fill
+                  sizes="230px"
+                  className="object-cover transition duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-[#071c19]/80 via-transparent to-transparent" />
+                <span className="absolute bottom-4 left-4 rounded-full border-2 border-white bg-teal-700 px-3 py-1.5 text-xs font-black text-white shadow-xl">
+                  ৳{showcaseFront.rent.toLocaleString('en-US')}/mo
+                </span>
+              </Link>
+
+              <div className="absolute -left-6 top-6 flex items-center gap-2.5 rounded-2xl border border-white/15 bg-[#091b19]/92 px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,.4)] backdrop-blur-xl">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-300 text-slate-950">
+                  <ShieldCheck className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-xs font-semibold text-white">{t('trustVerifiedOwners')}</p>
+                  <p className="max-w-[140px] truncate text-[10px] text-slate-400">
+                    {showcaseBack.location_name?.split(',')[0]?.trim()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="absolute inset-x-3 bottom-3 z-[450] grid overflow-hidden rounded-[20px] border border-white/15 bg-[#091b19]/88 shadow-2xl backdrop-blur-2xl sm:grid-cols-3 md:inset-x-5">
           <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3 sm:border-b-0 sm:border-r">

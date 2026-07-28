@@ -4,13 +4,19 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { GraduationCap, MapPin, Wallet, MessageCircle } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 import { computeMatchScore } from '@/features/roommates/matching'
 import ReportRoommateProfileButton from '@/features/roommates/components/ReportRoommateProfileButton'
 import type { RoommateProfile } from '@/features/roommates/types'
 
+const EntityDetailMap = dynamic(
+  () => import('@/features/map/components/EntityDetailMap'),
+  { ssr: false },
+)
+
 // See src/app/roommates/page.tsx for why `university_id` must be explicit.
-const ROOMMATE_SELECT = '*, profiles(full_name, avatar_url, is_verified), universities!university_id(name, slug), localities(name, slug)'
+const ROOMMATE_SELECT = '*, profiles(full_name, avatar_url, is_verified), universities!university_id(name, slug), localities(name, slug, lat, lng)'
 
 const HABIT_LABELS: Record<string, string> = {
   early_bird: 'Early bird', night_owl: 'Night owl', flexible: 'Flexible',
@@ -128,6 +134,21 @@ export default function RoommateDetailPage() {
           </span>
         )}
       </div>
+
+      {profile.localities?.lat != null && profile.localities?.lng != null && (
+        <div className="mb-6 h-56 overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-700">
+          <EntityDetailMap entity={{
+            id: profile.id,
+            kind: 'roommate',
+            title: profile.profiles?.full_name || 'Student',
+            latitude: profile.localities.lat,
+            longitude: profile.localities.lng,
+            href: `/roommates/${profile.id}`,
+            locationLabel: profile.localities.name,
+            isApproximate: true,
+          }} />
+        </div>
+      )}
 
       {profile.bio && (
         <div className="mb-6">

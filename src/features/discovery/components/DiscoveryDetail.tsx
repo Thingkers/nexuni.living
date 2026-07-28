@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft, CheckCircle2, MapPin } from 'lucide-react'
 
-import DiscoveryDetailMap from '@/features/discovery/components/DiscoveryDetailMap'
+import EntityDetailMap from '@/features/map/components/EntityDetailMap'
 import type { LocalizedDiscoveryItem } from '@/features/discovery/types'
 
 export default function DiscoveryDetail({
@@ -67,7 +67,7 @@ export default function DiscoveryDetail({
 
           <aside className="space-y-6">
             <div className="h-[420px] overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <DiscoveryDetailMap entity={{
+              <EntityDetailMap entity={{
                 id: item.id,
                 kind: item.kind,
                 title: item.title,

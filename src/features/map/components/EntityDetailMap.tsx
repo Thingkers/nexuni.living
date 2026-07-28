@@ -9,6 +9,6 @@ const EntityMap = dynamic(() => import('@/features/map/components/EntityMap'), {
   loading: () => <BrandedPreloader fullScreen={false} label="Preparing the map…" />,
 })
 
-export default function DiscoveryDetailMap({ entity }: { entity: MapEntity }) {
+export default function EntityDetailMap({ entity }: { entity: MapEntity }) {
   return <EntityMap entities={[entity]} nearbyControl={false} />
 }

@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import type { User } from '@supabase/supabase-js'
 import {
   MapPin, User as UserIcon, Users, Wifi, Zap, Flame, ShowerHead,
@@ -18,6 +19,13 @@ import BookingModal from '@/features/bookings/components/BookingModal'
 import ReportListingButton from '@/features/rooms/components/ReportListingButton'
 import SimilarRooms from '@/features/rooms/components/SimilarRooms'
 import { NearestUniversityBadge } from '@/features/universities/components/NearestUniversityBadge'
+import { useLocalities } from '@/features/localities/hooks/useLocalities'
+import { resolveApproximateLocation } from '@/features/rooms/lib/resolveApproximateLocation'
+
+const RoomMap = dynamic(
+  () => import('@/features/map/components/RoomMap'),
+  { ssr: false },
+)
 
 type UserProfile = {
   verification_status: string | null
@@ -43,6 +51,18 @@ export default function ListingClient({ id, initialRoom }: { id: string; initial
   const [descExpanded, setDescExpanded] = useState(false)
   const [lightbox, setLightbox] = useState<number | null>(null)
   const [existingBooking, setExistingBooking] = useState<{ status: string } | null>(null)
+  const { localities } = useLocalities()
+
+  // Most owners skip the optional map picker, so exact coordinates are often
+  // missing — fall back to an approximate marker derived from location_name.
+  const mapLocation = useMemo(() => {
+    if (!room) return null
+    if (room.latitude != null && room.longitude != null) {
+      return { latitude: room.latitude, longitude: room.longitude, isApproximate: false }
+    }
+    const approximate = resolveApproximateLocation(room, localities)
+    return approximate ? { ...approximate, isApproximate: true } : null
+  }, [room, localities])
 
   useEffect(() => {
     async function loadViewerDetails() {
@@ -188,6 +208,23 @@ export default function ListingClient({ id, initialRoom }: { id: string; initial
                   latitude={room.latitude}
                   longitude={room.longitude}
                   nearestUniversityIds={room.nearest_university_ids}
+                />
+              </div>
+            )}
+
+            {mapLocation && (
+              <div className="mb-4">
+                <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  <MapPin className="h-4 w-4" /> Location
+                  {mapLocation.isApproximate && (
+                    <span className="text-xs font-normal text-gray-400">(approximate)</span>
+                  )}
+                </p>
+                <RoomMap
+                  latitude={mapLocation.latitude}
+                  longitude={mapLocation.longitude}
+                  title={room.title}
+                  locationName={room.location_name}
                 />
               </div>
             )}

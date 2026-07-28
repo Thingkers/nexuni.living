@@ -40,5 +40,5 @@ export type RoommateProfile = {
 
   profiles?: RoommateProfileOwner | null
   universities?: { name: string; slug: string } | null
-  localities?: { name: string; slug: string } | null
+  localities?: { name: string; slug: string; lat: number | null; lng: number | null } | null
 }

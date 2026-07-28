@@ -164,17 +164,7 @@
     "all": "All",
     "male": "Male",
     "female": "Female",
-    "empty": "No rooms posted yet",
-    "noImage": "No image",
-    "perSeat": "/ seat",
-    "perMonth": "/ month",
-    "availableCount": "{count} available",
-    "occupied": "Currently occupied",
-    "locationMissing": "Location not added",
-    "anyGender": "Any gender",
-    "maleOnly": "Male only",
-    "femaleOnly": "Female only",
-    "directListing": "Direct listing"
+    "empty": "No rooms posted yet"
   },
   "RoomCard": {
     "wifi": "WiFi",

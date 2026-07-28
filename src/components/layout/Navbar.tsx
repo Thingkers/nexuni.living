@@ -14,28 +14,14 @@ import { supabase } from '@/lib/supabase'
 import { setLocaleAction } from '@/features/i18n/actions'
 import type { AppLocale } from '@/i18n/request'
 import BrandWordmark from '@/components/brand/BrandWordmark'
+import { useTheme } from '@/hooks/useTheme'
+import { SunIcon, MoonIcon } from '@/components/icons/ThemeIcons'
 
 type Profile = {
   full_name: string | null
   avatar_url: string | null
   role?: string | null
   verification_status?: string | null
-}
-
-function SunIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m8.66-9h-1M4.34 12h-1m15.07-6.07-.71.71M6.34 17.66l-.71.71m12.02 0-.71-.71M6.34 6.34l-.71-.71M12 5a7 7 0 1 1 0 14A7 7 0 0 1 12 5z" />
-    </svg>
-  )
-}
-
-function MoonIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
-  )
 }
 
 // Moved outside the component so it isn't re-created on every render
@@ -88,16 +74,7 @@ export default function Navbar() {
     return parseInt(localStorage.getItem('my_booking_updates') || '0', 10)
   })
   const [isOwner, setIsOwner] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
-
-  useEffect(() => {
-    const saved = localStorage.getItem('theme')
-    const next = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)
-      ? 'dark'
-      : 'light'
-    document.documentElement.classList.toggle('dark', next === 'dark')
-    queueMicrotask(() => setTheme(next))
-  }, [])
+  const { theme, toggleTheme } = useTheme()
 
   // Close desktop dropdown when clicking outside
   useEffect(() => {
@@ -249,17 +226,6 @@ export default function Navbar() {
       unsubscribeRealtime()
     }
   }, [])
-
-  function toggleTheme() {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
-    localStorage.setItem('theme', next)
-    if (next === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }
 
   function toggleLocale() {
     const next: AppLocale = locale === 'en' ? 'bn' : 'en'

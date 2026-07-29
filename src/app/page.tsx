@@ -15,7 +15,6 @@ import FeaturedRooms from '@/features/rooms/components/FeaturedRooms'
 import HeroSearch from '@/features/search/components/HeroSearch'
 import type { Room } from '@/features/rooms/types/room.types'
 import BrandWordmark from '@/components/brand/BrandWordmark'
-import HomeHeaderAuth from '@/components/layout/HomeHeaderAuth'
 
 // Locale is read from a cookie in the root layout (src/i18n/request.ts),
 // which makes every page sharing that layout dynamic — so this page can no
@@ -76,23 +75,7 @@ export default async function HomePage() {
   return (
     <main className="overflow-hidden bg-[#f3f6f4] text-slate-950 dark:bg-slate-950 dark:text-white">
       <section className="relative isolate overflow-hidden bg-gradient-to-b from-emerald-500 via-teal-600 to-teal-800 text-white">
-        <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(rgba(255,255,255,.6)_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
-
-        <header className="absolute inset-x-3 top-3 z-[500] flex h-[60px] items-center justify-between rounded-[20px] border border-white/15 bg-[#091b19]/88 px-3 shadow-[0_18px_50px_rgba(0,0,0,.38)] backdrop-blur-2xl md:inset-x-5 md:px-4">
-          <Link href="/" aria-label="nexUni.living" className="shrink-0 px-2">
-            <BrandWordmark inverse />
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <span className="hidden items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-[10px] font-semibold text-slate-200 sm:flex">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal-300" />
-              {totalRooms} live
-            </span>
-            <HomeHeaderAuth />
-          </div>
-        </header>
-
-        <div className="page-shell relative z-10 mx-auto flex max-w-2xl flex-col items-center pb-24 pt-32 text-center sm:pb-32 sm:pt-40">
+        <div className="page-shell relative z-10 mx-auto flex max-w-2xl flex-col items-center pb-24 pt-16 text-center sm:pb-32 sm:pt-20">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
             {t('badge')}

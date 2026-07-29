@@ -269,9 +269,6 @@ export default function Navbar() {
 
   const isVerified = profile?.verification_status === 'approved'
 
-  // The homepage owns a map-first floating shell header.
-  if (pathname === '/') return null
-
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90">
       <div className="page-shell flex h-[68px] items-center justify-between">
@@ -282,27 +279,27 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden items-center gap-1 rounded-[18px] border border-slate-200/90 bg-slate-100/90 p-1.5 shadow-[inset_0_2px_5px_rgba(15,23,42,.12),0_8px_20px_rgba(15,23,42,.08)] lg:flex dark:border-slate-700 dark:bg-slate-900">
+        <div className="hidden items-center gap-7 lg:flex">
           {[
-            { href: '/listings', label: t('housing'), tone: 'bg-teal-500' },
-            { href: '/roommates', label: t('roommates'), tone: 'bg-violet-500' },
-            { href: '/books', label: t('books'), preview: true, tone: 'bg-orange-500' },
-            { href: '/services', label: t('services'), preview: true, tone: 'bg-cyan-500' },
-            { href: '/jobs', label: t('jobs'), preview: true, tone: 'bg-indigo-500' },
+            { href: '/listings', label: t('housing'), Icon: LayoutGrid },
+            { href: '/roommates', label: t('roommates'), Icon: Users },
+            { href: '/books', label: t('books'), Icon: BookOpen, preview: true },
+            { href: '/services', label: t('services'), Icon: MapPinned, preview: true },
+            { href: '/jobs', label: t('jobs'), Icon: BriefcaseBusiness, preview: true },
           ].map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`relative flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all active:translate-y-px ${
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
                 pathname.startsWith(link.href)
-                  ? 'border-white bg-white text-slate-950 shadow-[0_4px_9px_rgba(15,23,42,.16),inset_0_1px_0_rgba(255,255,255,.9)] dark:border-slate-700 dark:bg-slate-800 dark:text-white'
-                  : 'border-transparent text-slate-500 shadow-[inset_0_-1px_0_rgba(255,255,255,.55)] hover:-translate-y-0.5 hover:bg-white/80 hover:text-slate-950 hover:shadow-[0_4px_10px_rgba(15,23,42,.12)] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
+                  ? 'text-teal-600 dark:text-teal-400'
+                  : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white'
               }`}
             >
-              <span className={`h-2 w-2 rounded-full ${link.tone} shadow-[0_0_0_3px_rgba(255,255,255,.7),0_2px_5px_rgba(15,23,42,.35)] dark:shadow-[0_0_0_3px_rgba(15,23,42,.7)]`} />
+              <link.Icon className="h-4 w-4" aria-hidden />
               {link.label}
               {link.preview && (
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[7px] font-black uppercase text-slate-500 shadow-[inset_0_1px_2px_rgba(15,23,42,.12)] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                   {t('preview')}
                 </span>
               )}

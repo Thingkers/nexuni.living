@@ -261,8 +261,9 @@ export default function RoomCard({ room }: { room: Room }) {
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {t('seatsOf', { available: room.available_seats, total: room.total_seats })}
               </span>
-              <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
-                {availability.emoji} {tAvailability(availability.labelKey)}
+              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${availability.dot}`} />
+                {tAvailability(availability.labelKey)}
               </span>
             </div>
           ) : (

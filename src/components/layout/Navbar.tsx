@@ -282,7 +282,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden items-center gap-1 rounded-[18px] border border-slate-200/90 bg-slate-100/90 p-1.5 shadow-[inset_0_2px_5px_rgba(15,23,42,.12),0_8px_20px_rgba(15,23,42,.08)] md:flex dark:border-slate-700 dark:bg-slate-900">
+        <div className="hidden items-center gap-1 rounded-[18px] border border-slate-200/90 bg-slate-100/90 p-1.5 shadow-[inset_0_2px_5px_rgba(15,23,42,.12),0_8px_20px_rgba(15,23,42,.08)] lg:flex dark:border-slate-700 dark:bg-slate-900">
           {[
             { href: '/listings', label: t('housing'), tone: 'bg-teal-500' },
             { href: '/roommates', label: t('roommates'), tone: 'bg-violet-500' },
@@ -335,7 +335,7 @@ export default function Navbar() {
           {user && isVerified && (
             <Link
               href="/post-room"
-              className="hidden rounded-full bg-[#071c19] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-teal-400 dark:text-slate-950 md:block"
+              className="hidden rounded-full bg-[#071c19] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-teal-400 dark:text-slate-950 lg:block"
             >
               {t('postRoom')}
             </Link>
@@ -344,7 +344,7 @@ export default function Navbar() {
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen((prev) => !prev)}
-            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-300 md:hidden"
+            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-300 lg:hidden"
             aria-label={t('toggleMenu')}
           >
             {mobileOpen ? (
@@ -365,7 +365,7 @@ export default function Navbar() {
 
           {/* Desktop avatar dropdown */}
           {user ? (
-            <div className="relative hidden md:block" ref={menuRef}>
+            <div className="relative hidden lg:block" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((prev) => !prev)}
                 className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full hover:ring-2 hover:ring-teal-300"
@@ -466,7 +466,7 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <div className="hidden items-center gap-3 md:flex">
+            <div className="hidden items-center gap-3 lg:flex">
               <Link href="/auth/login" className="text-sm font-medium text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white">{t('login')}</Link>
               <Link href="/auth/register" className="rounded-full bg-[#071c19] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-teal-400 dark:text-slate-950">{t('register')}</Link>
             </div>
@@ -476,7 +476,7 @@ export default function Navbar() {
 
       {/* MOBILE MENU */}
       {mobileOpen && (
-        <div className="border-t border-gray-100 dark:border-gray-800 md:hidden">
+        <div className="border-t border-gray-100 dark:border-gray-800 lg:hidden">
           <div className="max-h-[75vh] overflow-y-auto px-4 py-3">
             <div className="flex flex-col gap-1.5">
 

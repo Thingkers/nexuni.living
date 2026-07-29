@@ -7,30 +7,14 @@ import { Search } from 'lucide-react'
 
 import SearchSuggestions from '@/features/search/components/SearchSuggestions'
 
-type Props = {
-  mapMode?: boolean
-}
-
-export default function HeroSearch({ mapMode = false }: Props) {
+export default function HeroSearch() {
   const router = useRouter()
   const t = useTranslations('HeroSearch')
   const [search, setSearch] = useState('')
   const [suggestionsOpen, setSuggestionsOpen] = useState(true)
 
-  function focusMap(value: string) {
-    setSearch(value)
-    setSuggestionsOpen(false)
-    window.dispatchEvent(
-      new CustomEvent('nexuni:map-focus', { detail: { query: value } }),
-    )
-  }
-
   function handleSearch() {
     const value = search.trim()
-    if (mapMode && value) {
-      focusMap(value)
-      return
-    }
     if (value) {
       router.push(`/listings?search=${encodeURIComponent(value)}`)
     } else {
@@ -58,9 +42,7 @@ export default function HeroSearch({ mapMode = false }: Props) {
           <SearchSuggestions
             query={search}
             onSelect={(result) => {
-              if (mapMode) {
-                focusMap(result.kind === 'room' ? result.value : result.name)
-              } else if (result.kind === 'university') {
+              if (result.kind === 'university') {
                 router.push(`/universities/${result.slug}`)
               } else if (result.kind === 'locality') {
                 router.push(`/areas/${result.slug}`)

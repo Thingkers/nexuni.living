@@ -109,7 +109,7 @@ export default async function HomePage() {
           </p>
 
           <div className="mt-8 w-full max-w-xl">
-            <HeroSearch mapMode />
+            <HeroSearch />
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs">

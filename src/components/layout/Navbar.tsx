@@ -369,7 +369,9 @@ export default function Navbar() {
               >
                 <Avatar size={8} avatarUrl={profile?.avatar_url} initials={initials} />
                 {(unreadCount > 0 || pendingBookingCount > 0 || myBookingCount > 0) && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-1 ring-white" />
+                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-1 ring-white dark:ring-slate-950">
+                    {unreadCount + pendingBookingCount + myBookingCount}
+                  </span>
                 )}
               </button>
 

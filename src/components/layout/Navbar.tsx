@@ -17,6 +17,14 @@ import type { AppLocale } from '@/i18n/request'
 import BrandWordmark from '@/components/brand/BrandWordmark'
 import { useTheme } from '@/hooks/useTheme'
 import { SunIcon, MoonIcon } from '@/components/icons/ThemeIcons'
+import type { AdminModuleKey } from '@/config/modules'
+
+const MODULE_ADMIN_ICONS: Record<AdminModuleKey, typeof BookOpen> = {
+  books: BookOpen,
+  services: MapPinned,
+  jobs: BriefcaseBusiness,
+  transport: Bus,
+}
 
 type Profile = {
   full_name: string | null
@@ -63,6 +71,7 @@ export default function Navbar() {
 
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [moduleAdminKeys, setModuleAdminKeys] = useState<AdminModuleKey[]>([])
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -93,7 +102,7 @@ export default function Navbar() {
     // they run in parallel; only the pending-bookings count has to wait for
     // the room ids. (Previously all five calls ran one after another.)
     async function loadUserExtras(uid: string) {
-      const [{ data: profileData }, { count: msgCount }, { data: myRooms }] = await Promise.all([
+      const [{ data: profileData }, { count: msgCount }, { data: myRooms }, { data: moduleAdminRows }] = await Promise.all([
         supabase
           .from('profiles')
           .select('full_name, avatar_url, role, verification_status')
@@ -108,10 +117,15 @@ export default function Navbar() {
           .from('rooms')
           .select('id')
           .eq('owner_id', uid),
+        supabase
+          .from('module_admins')
+          .select('module')
+          .eq('user_id', uid),
       ])
 
       setProfile(profileData)
       setUnreadCount(msgCount ?? 0)
+      setModuleAdminKeys((moduleAdminRows ?? []).map((row) => row.module as AdminModuleKey))
 
       const roomIds = myRooms?.map((r) => r.id) ?? []
       ownedRoomIdsRef.current = roomIds
@@ -212,6 +226,7 @@ export default function Navbar() {
       if (!session) {
         ownedRoomIdsRef.current = []
         setProfile(null)
+        setModuleAdminKeys([])
         setUnreadCount(0)
         setPendingBookingCount(0)
         setIsOwner(false)
@@ -241,6 +256,7 @@ export default function Navbar() {
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
+    setModuleAdminKeys([])
     setUnreadCount(0)
     setPendingBookingCount(0)
     setMenuOpen(false)
@@ -463,6 +479,21 @@ export default function Navbar() {
                     </>
                   )}
 
+                  {profile?.role !== 'admin' && moduleAdminKeys.length > 0 && (
+                    <>
+                      <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
+                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('admin')}</p>
+                      {moduleAdminKeys.map((key) => {
+                        const ModuleIcon = MODULE_ADMIN_ICONS[key]
+                        return (
+                          <Link key={key} href={`/admin/${key}`} className="flex items-center gap-2.5 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
+                            <ModuleIcon className="h-3.5 w-3.5" />{t(key)}
+                          </Link>
+                        )
+                      })}
+                    </>
+                  )}
+
                   <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                   <button onClick={handleLogout} className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800">
                     <LogOut className="h-3.5 w-3.5" />{t('logout')}
@@ -602,6 +633,21 @@ export default function Navbar() {
                       <Link href="/admin/reports" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
                         <Flag className="h-4 w-4 shrink-0" />{t('reportListings')}
                       </Link>
+                    </>
+                  )}
+
+                  {profile?.role !== 'admin' && moduleAdminKeys.length > 0 && (
+                    <>
+                      <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
+                      <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('admin')}</p>
+                      {moduleAdminKeys.map((key) => {
+                        const ModuleIcon = MODULE_ADMIN_ICONS[key]
+                        return (
+                          <Link key={key} href={`/admin/${key}`} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
+                            <ModuleIcon className="h-4 w-4 shrink-0" />{t(key)}
+                          </Link>
+                        )
+                      })}
                     </>
                   )}
 

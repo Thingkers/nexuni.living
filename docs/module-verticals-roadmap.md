@@ -62,32 +62,49 @@ verified directly via SQL. Nothing in the app reads them yet.
 lets a module admin into their own `/admin/<module>` slice; a placeholder
 page exists at each of the four new admin routes.
 
-- [ ] Extend `src/proxy.ts` with a `MODULE_ADMIN_ROUTE_PREFIXES` branch
+- [x] Extend `src/proxy.ts` with a `MODULE_ADMIN_ROUTE_PREFIXES` branch
       inside the existing `isAdmin && user` block — the global-admin and
       public-route branches stay byte-for-byte unchanged.
-- [ ] Extend `src/components/auth/useViewerCapabilities.ts` with a
-      `moduleAdmin: ModuleKey[]` field (reads `module_admins` for the
+- [x] Extend `src/components/auth/useViewerCapabilities.ts` with a
+      `moduleAdmin: AdminModuleKey[]` field (reads `module_admins` for the
       current user).
-- [ ] Create `src/app/admin/layout.tsx` — first shared admin shell in the
+- [x] Create `src/app/admin/layout.tsx` — first shared admin shell in the
       repo; nav shows all sections to `isAdmin`, only the matching
       section(s) to a module admin.
-- [ ] Create `src/app/admin/module-admins/page.tsx` — global-admin-only:
+- [x] Create `src/app/admin/module-admins/page.tsx` — global-admin-only:
       assign/unassign a profile to a module.
-- [ ] Create `src/app/admin/[module]/page.tsx` — validates `module` against
+- [x] Create `src/app/admin/[module]/page.tsx` — validates `module` against
       the four allowed values (404 otherwise); placeholder content for now,
       filled in per-vertical in Sprints 4–7.
-- [ ] Reconcile the existing hardcoded admin links in
+- [x] Reconcile the existing hardcoded admin links in
       `src/components/layout/Navbar.tsx` (desktop + mobile) with the new
       layout/nav — avoid duplicating the same links in two places.
-- [ ] Verify: as a global admin, assign a second test account to `'books'`;
+      *(Kept the existing global-admin block untouched and added a second,
+      parallel conditional block per menu for module-admin-only users,
+      rather than merging both into one shared component — smaller diff,
+      zero risk to the existing admin menu.)*
+- [x] Verify: as a global admin, assign a second test account to `'books'`;
       confirm the row lands in `module_admins`.
-- [ ] Verify: as that second account, `/admin/books` loads, `/admin/services`
+- [x] Verify: as that second account, `/admin/books` loads, `/admin/services`
       redirects to `/dashboard`, `/admin/users` redirects to `/dashboard`.
-- [ ] Verify: as a plain student, all `/admin/*` routes redirect.
-- [ ] Verify: existing global-admin flows (`/admin/users`, `/admin/rooms`,
+- [x] Verify: as a plain student, all `/admin/*` routes redirect.
+- [x] Verify: existing global-admin flows (`/admin/users`, `/admin/rooms`,
       `/admin/reports`) still work unchanged for a `role='admin'` account.
-- [ ] `npm run build` + `npm run lint` clean.
-- [ ] Commit.
+- [x] `npm run build` + `npm run lint` clean.
+- [x] Commit.
+
+> **Verification note:** all four account-type scenarios above were tested
+> live over real HTTP with a real authenticated session — not just SQL
+> simulation. A disposable test account was created through the actual
+> `/auth/register` UI (Playwright), then promoted step-by-step via direct
+> SQL (unassigned student → assigned to `'books'` in `module_admins` →
+> `role='admin'`), re-testing all five `/admin/*` routes at each stage. All
+> results matched the design exactly. The test account, its `module_admins`
+> row, and its `profiles`/`auth.users` rows were fully deleted afterward;
+> one small test image was left behind in the `student-id-cards` bucket
+> because Supabase blocks direct SQL deletion of storage objects
+> (`storage.protect_delete()`) — harmless orphaned file, not worth routing
+> around the safety rail for.
 
 ---
 

@@ -6,7 +6,9 @@ import { Grid2X2, ListFilter, Map as MapIcon, Search, SlidersHorizontal, X } fro
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 
-import DiscoveryCard from '@/features/discovery/components/DiscoveryCard'
+import BookCard from '@/features/discovery/components/BookCard'
+import ServiceCard from '@/features/discovery/components/ServiceCard'
+import JobCard from '@/features/discovery/components/JobCard'
 import type { LocalizedDiscoveryItem } from '@/features/discovery/types'
 import type { MapEntity } from '@/features/map/types'
 import BrandedPreloader from '@/components/ui/BrandedPreloader'
@@ -205,7 +207,11 @@ export default function StaticDiscoveryBrowser({
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {filteredItems.map((item) => <DiscoveryCard key={item.id} item={item} />)}
+          {filteredItems.map((item) => {
+            if (item.kind === 'book') return <BookCard key={item.id} item={item} />
+            if (item.kind === 'service') return <ServiceCard key={item.id} item={item} />
+            return <JobCard key={item.id} item={item} />
+          })}
         </div>
       )}
     </div>

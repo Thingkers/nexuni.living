@@ -116,25 +116,32 @@ small and isolate visual risk from data risk.
 **Goal:** Books/Services/Jobs public pages visually match the room-card
 design language. Zero schema/data change — still reading the static array.
 
-- [ ] Create `src/components/cards/ContentCard.tsx` — generalizes the shell
+- [x] Create `src/components/cards/ContentCard.tsx` — generalizes the shell
       `RoomCard.tsx`/`RoommateCard.tsx` already converged on (rounded-2xl
       card, image carousel with dot indicators + icon-badge fallback, pill
       row, price/status row, slot-based footer).
-- [ ] Create `BookCard`, `ServiceCard`, `JobCard` in
+- [x] Create `BookCard`, `ServiceCard`, `JobCard` in
       `src/features/discovery/components/` as thin wrappers over
       `ContentCard`, fed by the same `LocalizedDiscoveryItem` shape as
       today (no data-shape change yet).
-- [ ] Update `StaticDiscoveryBrowser.tsx` to render the per-kind card
+- [x] Update `StaticDiscoveryBrowser.tsx` to render the per-kind card
       instead of the old `DiscoveryCard`.
-- [ ] Delete `src/features/discovery/components/DiscoveryCard.tsx` and grep
+- [x] Delete `src/features/discovery/components/DiscoveryCard.tsx` and grep
       for any other importer to update.
-- [ ] Verify: `git diff -- src/features/rooms/components/RoomCard.tsx
+- [x] Verify: `git diff -- src/features/rooms/components/RoomCard.tsx
       src/features/roommates/components/RoommateCard.tsx` is empty.
-- [ ] Verify: `/books`, `/services`, `/jobs` render the new card shell in
+- [x] Verify: `/books`, `/services`, `/jobs` render the new card shell in
       light and dark mode; map view toggle still works on all three.
-- [ ] Verify: `/listings` and `/roommates` are unchanged.
-- [ ] `npm run build` + `npm run lint` clean.
-- [ ] Commit.
+- [x] Verify: `/listings` and `/roommates` are unchanged.
+- [x] `npm run build` + `npm run lint` clean.
+- [x] Commit.
+
+> **Verification note:** confirmed via Playwright screenshots (light + dark)
+> on all three pages, plus `/books?view=map` and regression shots of
+> `/listings` and `/roommates` — no console/page errors on any route.
+> `badges` on `ContentCard` renders both "Featured" and "Sample" together
+> (the original `DiscoveryCard` showed both simultaneously, not just one),
+> which is why the prop is a list rather than a single badge.
 
 ---
 

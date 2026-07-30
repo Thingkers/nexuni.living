@@ -9,6 +9,7 @@ import {
   LayoutGrid, BookOpen, BriefcaseBusiness, Bus, MapPinned,
   LayoutDashboard, MessageSquare, Inbox, CalendarCheck, Wallet,
   Plus, LogOut, BarChart2, ShieldCheck, Flag, Building2, List, Users,
+  Hourglass, CheckCircle2,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { setLocaleAction } from '@/features/i18n/actions'
@@ -279,13 +280,18 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden items-center gap-7 lg:flex">
+        <div className="hidden items-center gap-5 lg:flex">
           {[
             { href: '/listings', label: t('housing'), Icon: LayoutGrid },
             { href: '/roommates', label: t('roommates'), Icon: Users },
             { href: '/books', label: t('books'), Icon: BookOpen, preview: true },
             { href: '/services', label: t('services'), Icon: MapPinned, preview: true },
             { href: '/jobs', label: t('jobs'), Icon: BriefcaseBusiness, preview: true },
+            { href: '/transport', label: t('transport'), Icon: Bus, preview: true },
+            // Payments lives under /dashboard, which the proxy gates behind
+            // auth — only show it to logged-in users so guests don't get
+            // bounced straight to the login page.
+            ...(user ? [{ href: '/dashboard/payments', label: t('payments'), Icon: Wallet, preview: true }] : []),
           ].map((link) => (
             <Link
               key={link.href}
@@ -382,7 +388,7 @@ export default function Navbar() {
                     <div className="min-w-0">
                       <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200">{profile?.full_name || user.email}</p>
                       {!isVerified && (
-                        <span className="text-[10px] text-yellow-600">⏳ {t('pending')}</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] text-yellow-600"><Hourglass className="h-2.5 w-2.5" aria-hidden /> {t('pending')}</span>
                       )}
                     </div>
                   </div>
@@ -487,6 +493,7 @@ export default function Navbar() {
                 { href: '/services', Icon: MapPinned, label: t('services'), preview: true },
                 { href: '/jobs', Icon: BriefcaseBusiness, label: t('jobs'), preview: true },
                 { href: '/transport', Icon: Bus, label: t('transport'), preview: true },
+                ...(user ? [{ href: '/dashboard/payments', Icon: Wallet, label: t('payments'), preview: true }] : []),
               ]).map(({ href, Icon, label, preview }) => (
                 <Link
                   key={href}
@@ -513,9 +520,9 @@ export default function Navbar() {
                     <div className="flex min-w-0 flex-col">
                       <span className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">{profile?.full_name || user.email}</span>
                       {!isVerified ? (
-                        <span className="text-[10px] text-yellow-600">⏳ {t('verificationPending')}</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] text-yellow-600"><Hourglass className="h-2.5 w-2.5" aria-hidden /> {t('verificationPending')}</span>
                       ) : (
-                        <span className="text-[10px] text-green-600">✓ {t('verified')}</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] text-green-600"><CheckCircle2 className="h-2.5 w-2.5" aria-hidden /> {t('verified')}</span>
                       )}
                     </div>
                   </div>

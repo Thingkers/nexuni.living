@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { ArrowUp, Send, Hand, User as UserIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useTypingIndicator } from '@/hooks/useTypingIndicator'
 
@@ -243,9 +244,9 @@ export default function ChatPage() {
 
         <Link
           href={'/users/' + otherUserId}
-          className="rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
         >
-          Profile
+          <UserIcon className="h-3.5 w-3.5" aria-hidden /> Profile
         </Link>
       </div>
 
@@ -254,7 +255,7 @@ export default function ChatPage() {
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-teal-50">
-              <span className="text-2xl">👋</span>
+              <Hand className="h-6 w-6 text-teal-500" aria-hidden />
             </div>
             <p className="text-sm font-medium text-gray-700">Say hello to {otherUser?.full_name}!</p>
             <p className="mt-1 text-xs text-gray-400">Start the conversation</p>
@@ -268,7 +269,7 @@ export default function ChatPage() {
                   disabled={loadingOlder}
                   className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs text-gray-500 shadow-sm hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
                 >
-                  {loadingOlder ? 'Loading...' : '↑ Load older messages'}
+                  {loadingOlder ? 'Loading...' : <span className="inline-flex items-center gap-1"><ArrowUp className="h-3.5 w-3.5" aria-hidden /> Load older messages</span>}
                 </button>
               </div>
             )}
@@ -354,10 +355,7 @@ export default function ChatPage() {
             disabled={sending || !content.trim()}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white shadow-sm hover:bg-teal-700 disabled:opacity-40 transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <line x1="22" y1="2" x2="11" y2="13"/>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
+            <Send className="h-4 w-4" aria-hidden />
           </button>
         </div>
       </div>

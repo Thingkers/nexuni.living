@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import { Hourglass, Users, CheckCircle2, XCircle, IdCard, Check, X, Trash2 } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
 
@@ -197,8 +198,8 @@ export default function AdminUsersPage() {
         </div>
 
         {pendingUsers.length > 0 && (
-          <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-            ⏳ {pendingUsers.length} pending
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+            <Hourglass className="h-3.5 w-3.5" aria-hidden /> {pendingUsers.length} pending
           </span>
         )}
       </div>
@@ -213,7 +214,7 @@ export default function AdminUsersPage() {
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
           }`}
         >
-          ⏳ Pending ({pendingUsers.length})
+          <span className="inline-flex items-center gap-1.5"><Hourglass className="h-3.5 w-3.5" aria-hidden /> Pending ({pendingUsers.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('all')}
@@ -223,7 +224,7 @@ export default function AdminUsersPage() {
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
           }`}
         >
-          👥 All Users ({allUsers.length})
+          <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5" aria-hidden /> All Users ({allUsers.length})</span>
         </button>
       </div>
 
@@ -232,7 +233,7 @@ export default function AdminUsersPage() {
         <>
           {pendingUsers.length === 0 ? (
             <div className="rounded-2xl border border-gray-100 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
-              <p className="text-3xl mb-2">✅</p>
+              <CheckCircle2 className="mx-auto mb-2 h-9 w-9 text-green-500" aria-hidden />
               <p className="text-sm text-gray-400">No pending verifications</p>
             </div>
           ) : (
@@ -290,21 +291,21 @@ export default function AdminUsersPage() {
                       disabled={actionLoading === user.id}
                       className="flex-1 rounded-xl bg-green-600 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
                     >
-                      {actionLoading === user.id ? '...' : '✓ Approve'}
+                      {actionLoading === user.id ? '...' : <span className="inline-flex items-center justify-center gap-1.5"><Check className="h-4 w-4" aria-hidden /> Approve</span>}
                     </button>
                     <button
                       onClick={() => rejectUser(user.id)}
                       disabled={actionLoading === user.id}
                       className="flex-1 rounded-xl border border-red-200 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-900/20"
                     >
-                      {actionLoading === user.id ? '...' : '✕ Reject'}
+                      {actionLoading === user.id ? '...' : <span className="inline-flex items-center justify-center gap-1.5"><X className="h-4 w-4" aria-hidden /> Reject</span>}
                     </button>
                     <button
                       onClick={() => deleteUser(user.id)}
                       disabled={actionLoading === user.id}
                       className="rounded-xl bg-red-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                     >
-                      🗑
+                      <Trash2 className="h-4 w-4" aria-hidden />
                     </button>
                   </div>
                 </div>
@@ -332,9 +333,9 @@ export default function AdminUsersPage() {
                           ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                           : 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'
                     }`}>
-                      {user.verification_status === 'approved' ? '✓ Verified'
-                        : user.verification_status === 'rejected' ? '✕ Rejected'
-                        : '⏳ Pending'}
+                      {user.verification_status === 'approved' ? <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" aria-hidden /> Verified</span>
+                        : user.verification_status === 'rejected' ? <span className="inline-flex items-center gap-1"><XCircle className="h-3 w-3" aria-hidden /> Rejected</span>
+                        : <span className="inline-flex items-center gap-1"><Hourglass className="h-3 w-3" aria-hidden /> Pending</span>}
                     </span>
                     {user.role === 'admin' && (
                       <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600 dark:bg-red-900/30 dark:text-red-400">
@@ -353,9 +354,9 @@ export default function AdminUsersPage() {
                   {user.student_id_card_url && (
                     <button
                       onClick={() => setPreviewUrl(user.student_id_card_url!)}
-                      className="rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700"
                     >
-                      🪪 ID Card
+                      <IdCard className="h-3.5 w-3.5" aria-hidden /> ID Card
                     </button>
                   )}
 

@@ -39,6 +39,7 @@ type Booking = {
     phone: string | null
     university: string | null
     gender: string | null
+    avatar_url: string | null
   } | null
 }
 
@@ -84,7 +85,7 @@ export default function BookingRequestsPage() {
         .select(`
           *,
           rooms!inner(id, title, rent, location_name, owner_id, type, available_seats),
-          profiles(id, full_name, email, phone, university, gender)
+          profiles(id, full_name, email, phone, university, gender, avatar_url)
         `)
         .eq('rooms.owner_id', authData.user.id)
         .order('created_at', { ascending: false })
@@ -317,8 +318,12 @@ export default function BookingRequestsPage() {
                   <div className="flex items-center gap-3">
 
                     <Link href={`/users/${booking.profiles?.id}`}>
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-medium text-teal-700 cursor-pointer hover:ring-2 hover:ring-teal-300">
-                        {booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-xs font-medium text-teal-700 cursor-pointer hover:ring-2 hover:ring-teal-300">
+                        {booking.profiles?.avatar_url ? (
+                          <img src={booking.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'
+                        )}
                       </div>
                     </Link>
 
@@ -501,8 +506,12 @@ export default function BookingRequestsPage() {
                       </span>
                     </div>
                     <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-600">
-                        {booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-xs font-medium text-gray-600">
+                        {booking.profiles?.avatar_url ? (
+                          <img src={booking.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-700">{booking.profiles?.full_name || 'User'}</p>

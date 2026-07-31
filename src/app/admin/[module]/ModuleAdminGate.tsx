@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { AdminModuleKey } from '@/config/modules'
 import BooksAdminPanel from '@/features/books/components/BooksAdminPanel'
+import JobsAdminPanel from '@/features/jobs/components/JobsAdminPanel'
 
 const MODULE_LABELS: Record<AdminModuleKey, string> = {
   books: 'Books',
@@ -55,6 +56,8 @@ export default function ModuleAdminGate({ module }: { module: AdminModuleKey }) 
       </h1>
       {module === 'books' ? (
         <BooksAdminPanel />
+      ) : module === 'jobs' ? (
+        <JobsAdminPanel />
       ) : (
         <p className="text-sm text-gray-400">
           Coming soon — this panel will let you manage {MODULE_LABELS[module].toLowerCase()} listings.

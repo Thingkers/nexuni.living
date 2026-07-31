@@ -239,27 +239,73 @@ decision); the Books module admin can edit/archive/delete via `/admin/books`.
 **Goal:** `/jobs` reads real `listings` rows; per §11.1, new jobs require
 Jobs-module-admin approval before going public.
 
-- [ ] Migration: widen `listings.status` check constraint to include
+- [x] Migration: widen `listings.status` check constraint to include
       `'pending'` (confirm the actual constraint name via `\d listings`
       before writing the `drop constraint` — don't assume the default
       name). Add the same module-admin `for all` policy pattern as Sprint 4
       to `listing_job_details`.
-- [ ] Create `src/features/jobs/types.ts` + `lib/mapListingToJobCard.ts`.
-- [ ] Update `src/app/jobs/page.tsx` to fetch active `job` listings only.
-- [ ] Rename `src/app/jobs/[slug]/page.tsx` → `src/app/jobs/[id]/page.tsx`.
-- [ ] Create `src/app/post-job/page.tsx` — inserts as `status='pending'`.
-- [ ] Fill in the Jobs branch of the admin panel — pending-queue
+- [x] Create `src/features/jobs/types.ts` + `lib/mapListingToJobCard.ts`.
+- [x] Update `src/app/jobs/page.tsx` to fetch active `job` listings only.
+- [x] Rename `src/app/jobs/[slug]/page.tsx` → `src/app/jobs/[id]/page.tsx`.
+- [x] Create `src/app/post-job/page.tsx` — inserts as `status='pending'`.
+- [x] Fill in the Jobs branch of the admin panel — pending-queue
       approve (→`active`) / reject (→`archived`) / edit / delete.
-- [ ] Verify: a posted job does not appear on public `/jobs` while
+- [x] Verify: a posted job does not appear on public `/jobs` while
       `pending`.
-- [ ] Verify: the Jobs module admin sees it in the queue, approves it, it
+- [x] Verify: the Jobs module admin sees it in the queue, approves it, it
       now appears on `/jobs`.
-- [ ] Verify: the Books module admin (not Jobs) cannot access the Jobs
+- [x] Verify: the Books module admin (not Jobs) cannot access the Jobs
       queue or approve via direct RLS write.
-- [ ] Regression: re-run Sprint 4's Books checks — the shared `pending`
+- [x] Regression: re-run Sprint 4's Books checks — the shared `pending`
       status addition doesn't change Books' instant-live behavior.
-- [ ] `npm run build` + `npm run lint` clean.
-- [ ] Commit.
+- [x] `npm run build` + `npm run lint` clean.
+- [x] Commit.
+
+> **Implementation notes:**
+> - Confirmed exact constraint name (`listings_status_check`) and the full
+>   `listing_job_details` column set directly against the live DB before
+>   writing the migration, rather than assuming Postgres's default naming.
+>   The existing `"listings admin: module admin full access"` policy from
+>   Sprint 4 is generic (`is_module_admin(listing_type || 's')`), so it
+>   already covered `job` rows — only the `listing_job_details` sibling
+>   policy needed adding.
+> - The base "owner, admin, or active" SELECT policy on `listings` (from
+>   the foundation migration) already hid a `pending` row from everyone but
+>   its owner and an admin, with zero changes — the module-admin bypass
+>   policy from Sprint 4 gave the Jobs module admin visibility into other
+>   users' pending rows for free.
+> - `/jobs/[id]/page.tsx`'s anon query adds an explicit
+>   `.eq('status', 'active')` (Books' equivalent query doesn't have this,
+>   since Books never has a `pending` row) — without it, a pending job's
+>   direct detail URL would still resolve to a real page instead of 404ing.
+> - `/post-job`'s success redirect goes to `/jobs` (the browse page), not
+>   `/jobs/<id>` like Books' post-flow — the new listing is `pending`, so
+>   its own anon-client detail-page fetch would 404 immediately after
+>   posting.
+> - Reused `uploadContentImages('jobs', ...)` and the `content-images`
+>   bucket/policies unchanged — both were already generic across modules.
+> - Also added `/post-job` to `src/proxy.ts`'s `PROTECTED_ROUTES`/matcher,
+>   same gap Sprint 4 found and fixed for `/post-book`.
+> - **Unrelated pre-existing build blocker found and fixed:** `next build`
+>   type-checks the whole repo, and
+>   `src/app/api/ai/extract-room-listing/route.ts:40` failed
+>   (`string | undefined` not narrowed after a `.filter(Boolean)`-derived
+>   `missing` array) — untouched by this sprint (`git log` shows its last
+>   commit was `23a7f69`, the AI room-posting feature). Fixed with a direct
+>   `if (!supabaseUrl || !serviceRoleKey || !anthropicKey)` guard so
+>   TypeScript narrows correctly; behavior (the 503 response body) is
+>   unchanged.
+> - Verified live end-to-end (Playwright + three disposable test accounts —
+>   a verified poster, a Jobs module admin, a Books module admin — all
+>   cleaned up afterward): posted a real job with a photo through the
+>   actual UI, confirmed it landed `pending` and was invisible on public
+>   `/jobs` and 404'd at its own detail URL, confirmed the Jobs module
+>   admin saw it in the pending queue and approving it flipped it to
+>   `active` and made it publicly visible, confirmed the Books module admin
+>   was denied both UI access to `/admin/jobs` (redirected to `/dashboard`)
+>   and a direct RLS write attempt (0 rows affected), and re-ran the Books
+>   posting flow to confirm it's still instant-live (`status='active'`
+>   immediately) after widening the shared `status` constraint.
 
 ---
 

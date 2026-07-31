@@ -153,7 +153,7 @@ design language. Zero schema/data change — still reading the static array.
 book with photos; it's instant-live (no pending gate, per the locked
 decision); the Books module admin can edit/archive/delete via `/admin/books`.
 
-- [ ] Migration: add `listing_book_details.semester text` (only new field
+- [x] Migration: add `listing_book_details.semester text` (only new field
       vs. docs §8.1 not already in the existing table); create the
       `content-images` storage bucket + `storage.objects` RLS policies
       (owner-or-module-admin write, public read) as a proper migration —
@@ -161,39 +161,73 @@ decision); the Books module admin can edit/archive/delete via `/admin/books`.
       `insert into storage.buckets` the same way it applies table DDL
       before relying on it; fall back to documented manual dashboard steps
       if not.
-- [ ] Migration (same file or a second one in this sprint): add a
+- [x] Migration (same file or a second one in this sprint): add a
       `"listings admin: module admin full access"` policy on `listings`
       (`for all using/with check (public.is_module_admin(listing_type || 's'))`),
       **and** extend `listing_book_details`'s existing write policy (or add
       a sibling permissive policy) so a Books module admin can also write
       book details, not just the parent `listings` row.
-- [ ] Create `src/lib/uploadContentImages.ts` — generalizes `post-room`'s
+- [x] Create `src/lib/uploadContentImages.ts` — generalizes `post-room`'s
       `compressImage` → upload → `getPublicUrl` pattern; path
       `${module}/${rowId}/${uuid}.webp` in bucket `content-images`.
-- [ ] Create `src/features/books/types.ts` +
+- [x] Create `src/features/books/types.ts` +
       `lib/mapListingToBookCard.ts`.
-- [ ] Update `src/app/books/page.tsx` to fetch active `book` listings from
+- [x] Update `src/app/books/page.tsx` to fetch active `book` listings from
       Supabase.
-- [ ] Rename `src/app/books/[slug]/page.tsx` → `src/app/books/[id]/page.tsx`,
+- [x] Rename `src/app/books/[slug]/page.tsx` → `src/app/books/[id]/page.tsx`,
       fetch by id, drop `generateStaticParams`.
-- [ ] Create `src/app/post-book/page.tsx` — posting form (title, author,
+- [x] Create `src/app/post-book/page.tsx` — posting form (title, author,
       course code, department, semester, condition, price, negotiable,
       images), inserts as `status='active'`.
-- [ ] Fill in `src/app/admin/[module]/page.tsx`'s books branch (or a
+- [x] Fill in `src/app/admin/[module]/page.tsx`'s books branch (or a
       dedicated `src/app/admin/books/page.tsx` if routing needs a distinct
       layout) — list/edit/archive/delete for the Books module admin.
-- [ ] Verify: post a book with 2 photos; row lands in `listings`
+- [x] Verify: post a book with 2 photos; row lands in `listings`
       (`listing_type='book'`), images in `content-images/books/<id>/...`,
       immediately visible on `/books`.
-- [ ] Verify: a non-owner, non-admin user cannot see an `archived` book;
+- [x] Verify: a non-owner, non-admin user cannot see an `archived` book;
       the owner and the Books module admin can.
-- [ ] Verify: the Books module admin can edit and hard-delete another
+- [x] Verify: the Books module admin can edit and hard-delete another
       student's book listing via `/admin/books`.
-- [ ] Verify: the Jobs/Services/Transport module admin (a different
+- [x] Verify: the Jobs/Services/Transport module admin (a different
       assignment) is denied both UI access to `/admin/books` and a direct
       RLS write attempt.
-- [ ] `npm run build` + `npm run lint` clean.
-- [ ] Commit.
+- [x] `npm run build` + `npm run lint` clean.
+- [x] Commit.
+
+> **Implementation notes:**
+> - Also added `/post-book` to `src/proxy.ts`'s `PROTECTED_ROUTES`/matcher
+>   (it wasn't covered before and would otherwise have let anyone load the
+>   posting form pre-login).
+> - `/books/page.tsx` and `/books/[id]` no longer go through
+>   `DiscoveryCatalogPage`/`StaticDiscoveryBrowser` (those stay static-data
+>   only, for Services/Jobs) — Books now has its own minimal
+>   `BooksBrowser` (search-only, no category/area filters or map view,
+>   since real listings don't carry the static sample data's synthetic
+>   category/area taxonomy). Posting requires `verification_status =
+>   'approved'`, matching the same trust gate `post-room` uses.
+> - Built one shared `BookForm` component reused by both `/post-book`
+>   (create) and the admin panel's inline edit, instead of duplicating a
+>   near-identical form twice.
+> - **Bug found and fixed during verification:** the book detail page's
+>   anon-client query originally requested `profiles(full_name, email)`,
+>   but `public.profiles` only grants the `anon` Postgres role column-level
+>   `SELECT` on `full_name`/`phone`/`avatar_url`/`is_verified`/etc — not
+>   `email` (only `authenticated` has that). Requesting an ungranted column
+>   inside a PostgREST embed fails the *entire* embedded select with
+>   `42501 permission denied`, which silently became a 404 via `notFound()`
+>   rather than a visible error. Fixed by dropping `email` from the
+>   anon-client query (the admin panel's authenticated-client query still
+>   requests it, since `authenticated` has the grant). Worth remembering
+>   for Sprints 5-7: any anon-client query embedding `profiles` must stick
+>   to the anon-granted column set.
+> - Verified live end-to-end (Playwright + a disposable verified test
+>   account, cleaned up afterward): posted a real book with 2 photos
+>   through the actual UI, confirmed DB state, confirmed archived-book
+>   hiding from anon visitors, confirmed a Books module admin (different
+>   account) could edit/archive/delete another student's listing through
+>   `/admin/books`, and confirmed both a UI-level and a direct-RLS-level
+>   denial for a differently-scoped (`'jobs'`) module admin.
 
 ---
 

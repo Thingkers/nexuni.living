@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { supabase } from '@/lib/supabase'
 import type { AdminModuleKey } from '@/config/modules'
+import BooksAdminPanel from '@/features/books/components/BooksAdminPanel'
 
 const MODULE_LABELS: Record<AdminModuleKey, string> = {
   books: 'Books',
@@ -49,12 +50,16 @@ export default function ModuleAdminGate({ module }: { module: AdminModuleKey }) 
 
   return (
     <main className="page-shell py-8">
-      <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+      <h1 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
         {MODULE_LABELS[module]} admin
       </h1>
-      <p className="mt-2 text-sm text-gray-400">
-        Coming soon — this panel will let you manage {MODULE_LABELS[module].toLowerCase()} listings.
-      </p>
+      {module === 'books' ? (
+        <BooksAdminPanel />
+      ) : (
+        <p className="text-sm text-gray-400">
+          Coming soon — this panel will let you manage {MODULE_LABELS[module].toLowerCase()} listings.
+        </p>
+      )}
     </main>
   )
 }

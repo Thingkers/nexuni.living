@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PROTECTED_ROUTES = ['/dashboard', '/post-room', '/inbox', '/profile']
+const PROTECTED_ROUTES = ['/dashboard', '/post-room', '/post-book', '/inbox', '/profile']
 const ADMIN_ROUTES    = ['/admin']
 const AUTH_ROUTES     = ['/auth/login', '/auth/register']
 
@@ -110,6 +110,7 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/post-room/:path*',
+    '/post-book/:path*',
     '/inbox/:path*',
     '/profile/:path*',
     '/admin/:path*',

@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Search, Check, CheckCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type Thread = {
@@ -12,6 +13,8 @@ type Thread = {
   lastMessage: string
   lastTime: string
   unread: number
+  lastMessageFromMe: boolean
+  lastMessageRead: boolean
 }
 
 // Minimal shape we need from the realtime INSERT payload on `messages`
@@ -25,8 +28,15 @@ export default function InboxPage() {
   const [threads, setThreads] = useState<Thread[]>([])
   const [loading, setLoading] = useState(true)
   const [pageError, setPageError] = useState('')
+  const [search, setSearch] = useState('')
 
   const [myId, setMyId] = useState('')
+
+  const filteredThreads = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return threads
+    return threads.filter((t) => t.otherName.toLowerCase().includes(q))
+  }, [threads, search])
 
   async function buildThreads(userId: string) {
     const { data: messages, error } = await supabase
@@ -54,6 +64,8 @@ export default function InboxPage() {
           lastMessage: message.content,
           lastTime: message.created_at,
           unread: !message.is_read && message.receiver_id === userId ? 1 : 0,
+          lastMessageFromMe: message.sender_id === userId,
+          lastMessageRead: !!message.is_read,
         })
       } else {
         const thread = threadMap.get(key)
@@ -123,6 +135,17 @@ export default function InboxPage() {
         {threads.length > 0 && (
           <p className="text-xs text-gray-400">{threads.length} conversation{threads.length > 1 ? 's' : ''}</p>
         )}
+        {threads.length > 0 && (
+          <div className="relative mt-3">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search messages"
+              className="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-4 text-sm outline-none focus:border-teal-400 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+            />
+          </div>
+        )}
       </div>
 
       {threads.length === 0 ? (
@@ -135,9 +158,13 @@ export default function InboxPage() {
           <p className="text-sm font-medium text-gray-700">No messages yet</p>
           <p className="mt-1 text-xs text-gray-400">Start a conversation from a listing</p>
         </div>
+      ) : filteredThreads.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <p className="text-sm text-gray-400">No conversations match &quot;{search}&quot;</p>
+        </div>
       ) : (
         <div className="divide-y divide-gray-50 dark:divide-gray-800">
-          {threads.map((thread) => {
+          {filteredThreads.map((thread) => {
             const initials = thread.otherName[0]?.toUpperCase() || 'U'
             const timeStr = new Date(thread.lastTime).toLocaleDateString('en-US', {
               day: 'numeric', month: 'short',
@@ -175,8 +202,13 @@ export default function InboxPage() {
                       {timeStr}
                     </p>
                   </div>
-                  <p className={`mt-0.5 truncate text-xs ${thread.unread > 0 ? 'font-medium text-gray-700' : 'text-gray-400'}`}>
-                    {thread.lastMessage}
+                  <p className={`mt-0.5 flex items-center gap-1 truncate text-xs ${thread.unread > 0 ? 'font-medium text-gray-700' : 'text-gray-400'}`}>
+                    {thread.lastMessageFromMe && (
+                      thread.lastMessageRead
+                        ? <CheckCheck className="h-3.5 w-3.5 shrink-0 text-teal-500" aria-hidden />
+                        : <Check className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+                    )}
+                    <span className="truncate">{thread.lastMessage}</span>
                   </p>
                 </div>
               </Link>

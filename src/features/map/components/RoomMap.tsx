@@ -2,6 +2,7 @@
 
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { useEffect, useState } from 'react'
+import { Ruler, MapPin, Map as MapIcon, MousePointerClick, Footprints, Bike } from 'lucide-react'
 
 import '@/lib/leaflet/leaflet-icons'
 import { getDistanceKm } from '@/features/map/lib/haversine'
@@ -117,7 +118,9 @@ function DistancePanel({ roomLat, roomLng }: { roomLat: number; roomLng: number 
 
   return (
     <div className="mt-4 rounded-2xl border border-gray-100 bg-white p-4">
-      <p className="mb-3 text-sm font-medium text-gray-700">📏 দূরত্ব হিসাব করুন</p>
+      <p className="mb-3 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+        <Ruler className="h-4 w-4 shrink-0" aria-hidden /> দূরত্ব হিসাব করুন
+      </p>
 
       {!done ? (
         <>
@@ -144,23 +147,23 @@ function DistancePanel({ roomLat, roomLng }: { roomLat: number; roomLng: number 
             <button
               onClick={useGPS}
               disabled={searching}
-              className="flex-1 rounded-xl bg-gray-50 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gray-50 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
             >
-              📍 GPS ব্যবহার করুন
+              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden /> GPS ব্যবহার করুন
             </button>
             <button
               onClick={() => setShowPickMap((p) => !p)}
-              className="flex-1 rounded-xl bg-gray-50 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gray-50 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100"
             >
-              🗺️ Map এ click করুন
+              <MapIcon className="h-3.5 w-3.5 shrink-0" aria-hidden /> Map এ click করুন
             </button>
           </div>
 
           {/* Inline pick map */}
           {showPickMap && (
             <div className="mt-3">
-              <p className="mb-1.5 text-xs text-yellow-600 bg-yellow-50 rounded-lg px-3 py-2">
-                👆 Map এ আপনার অবস্থানে click করুন
+              <p className="mb-1.5 flex items-center gap-1.5 text-xs text-yellow-600 bg-yellow-50 rounded-lg px-3 py-2">
+                <MousePointerClick className="h-3.5 w-3.5 shrink-0" aria-hidden /> Map এ আপনার অবস্থানে click করুন
               </p>
               <div className="h-48 overflow-hidden rounded-xl border border-gray-200">
 
@@ -196,8 +199,9 @@ function DistancePanel({ roomLat, roomLng }: { roomLat: number; roomLng: number 
       ) : (
         <>
           {userLabel && (
-            <p className="mb-3 text-xs text-gray-500">
-              📍 <span className="font-medium">{userLabel}</span> থেকে হিসাব
+            <p className="mb-3 flex items-center gap-1.5 text-xs text-gray-500">
+              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <span className="font-medium">{userLabel}</span> থেকে হিসাব
             </p>
           )}
 
@@ -214,13 +218,17 @@ function DistancePanel({ roomLat, roomLng }: { roomLat: number; roomLng: number 
               <p className="text-lg font-bold text-teal-700">
                 {walkMin === 0 ? '<1' : walkMin} মিনিট
               </p>
-              <p className="mt-0.5 text-xs text-teal-400">🚶 হেঁটে</p>
+              <p className="mt-0.5 flex items-center justify-center gap-1 text-xs text-teal-400">
+                <Footprints className="h-3 w-3 shrink-0" aria-hidden /> হেঁটে
+              </p>
             </div>
             <div className="rounded-xl bg-green-50 p-3">
               <p className="text-lg font-bold text-green-700">
                 {rickshawMin === 0 ? '<1' : rickshawMin} মিনিট
               </p>
-              <p className="mt-0.5 text-xs text-green-400">🛺 রিকশায়</p>
+              <p className="mt-0.5 flex items-center justify-center gap-1 text-xs text-green-400">
+                <Bike className="h-3 w-3 shrink-0" aria-hidden /> রিকশায়
+              </p>
             </div>
           </div>
 

@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import {
+  ClipboardList, Home, Phone, CalendarDays, Clock, MessageCircle,
+  Check, X, Banknote, RotateCw, PartyPopper, Flag, History,
+} from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
 import type { RoomType } from '@/features/rooms/types/room.types'
@@ -35,6 +39,7 @@ type Booking = {
     phone: string | null
     university: string | null
     gender: string | null
+    avatar_url: string | null
   } | null
 }
 
@@ -46,14 +51,14 @@ function isExpired(expiresAt: string | null | undefined): boolean {
   return new Date(expiresAt) < new Date()
 }
 
-const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  pending:   { label: 'Pending',         className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-  confirmed: { label: 'Hold (24h)',      className: 'bg-blue-50 text-blue-700 border-blue-200' },
-  active:    { label: '✅ Active',        className: 'bg-green-50 text-green-700 border-green-200' },
-  cancelled: { label: 'Cancelled',       className: 'bg-red-50 text-red-600 border-red-200' },
-  rejected:  { label: 'Rejected',        className: 'bg-red-50 text-red-600 border-red-200' },
-  expired:   { label: '⏰ Expired',       className: 'bg-gray-100 text-gray-500 border-gray-200' },
-  completed: { label: '🏁 Completed',     className: 'bg-purple-50 text-purple-700 border-purple-200' },
+const STATUS_CONFIG: Record<string, { label: string; className: string; dot: string }> = {
+  pending:   { label: 'Pending',    className: 'bg-yellow-50 text-yellow-700 border-yellow-200', dot: 'bg-yellow-500' },
+  confirmed: { label: 'Hold (24h)', className: 'bg-blue-50 text-blue-700 border-blue-200',       dot: 'bg-blue-500' },
+  active:    { label: 'Active',     className: 'bg-green-50 text-green-700 border-green-200',    dot: 'bg-green-500' },
+  cancelled: { label: 'Cancelled',  className: 'bg-red-50 text-red-600 border-red-200',           dot: 'bg-red-500' },
+  rejected:  { label: 'Rejected',   className: 'bg-red-50 text-red-600 border-red-200',           dot: 'bg-red-500' },
+  expired:   { label: 'Expired',    className: 'bg-gray-100 text-gray-500 border-gray-200',       dot: 'bg-gray-400' },
+  completed: { label: 'Completed',  className: 'bg-purple-50 text-purple-700 border-purple-200',  dot: 'bg-purple-500' },
 }
 
 export default function BookingRequestsPage() {
@@ -80,7 +85,7 @@ export default function BookingRequestsPage() {
         .select(`
           *,
           rooms!inner(id, title, rent, location_name, owner_id, type, available_seats),
-          profiles(id, full_name, email, phone, university, gender)
+          profiles(id, full_name, email, phone, university, gender, avatar_url)
         `)
         .eq('rooms.owner_id', authData.user.id)
         .order('created_at', { ascending: false })
@@ -129,7 +134,7 @@ export default function BookingRequestsPage() {
 
     toast.success(
       action === 'confirmed' ? 'Booking confirmed! 24h hold started.' :
-      action === 'active'    ? '✅ Advance marked received! Booking is now active.' :
+      action === 'active'    ? 'Advance marked received! Booking is now active.' :
       action === 'rejected'  ? 'Booking rejected.' :
       'Booking cancelled.',
     )
@@ -167,7 +172,7 @@ export default function BookingRequestsPage() {
       toast.error(error.message)
     } else {
       setBookings((prev) => prev.map((b) => b.id === bookingId ? { ...b, status: 'completed' } : b))
-      toast.success('🏁 Tenancy ended — room is now open again!')
+      toast.success('Tenancy ended — room is now open again!')
     }
     setActing(null)
   }
@@ -243,20 +248,21 @@ export default function BookingRequestsPage() {
 
       <div className="mb-6 flex flex-wrap gap-2">
         {[
-          { key: 'all',       label: 'All' },
-          { key: 'pending',   label: 'Pending' },
-          { key: 'confirmed', label: 'On Hold' },
-          { key: 'active',    label: '✅ Active' },
+          { key: 'all',       label: 'All',       dot: null },
+          { key: 'pending',   label: 'Pending',   dot: 'bg-yellow-500' },
+          { key: 'confirmed', label: 'On Hold',   dot: 'bg-blue-500' },
+          { key: 'active',    label: 'Active',    dot: 'bg-green-500' },
         ].map((item) => (
           <button
             key={item.key}
             onClick={() => setFilter(item.key as FilterStatus)}
-            className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+            className={`flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm transition-colors ${
               filter === item.key
                 ? 'border-teal-600 bg-teal-600 text-white'
                 : 'border-gray-200 text-gray-500 hover:border-gray-400'
             }`}
           >
+            {item.dot && <span className={`h-1.5 w-1.5 rounded-full ${item.dot}`} />}
             {item.label}
             <span className="ml-1.5 text-xs opacity-70">
               {counts[item.key as FilterStatus]}
@@ -267,7 +273,7 @@ export default function BookingRequestsPage() {
 
       {filteredBookings.length === 0 ? (
         <div className="py-16 text-center text-gray-400">
-          <p className="mb-3 text-4xl">📋</p>
+          <ClipboardList className="mx-auto mb-3 h-9 w-9 text-gray-300 dark:text-gray-600" aria-hidden />
           <p className="text-sm">No active booking requests</p>
         </div>
       ) : (
@@ -288,9 +294,9 @@ export default function BookingRequestsPage() {
                   <div>
                     <Link
                       href={`/listings/${booking.rooms?.id}`}
-                      className="text-sm font-medium text-gray-900 hover:text-teal-600"
+                      className="flex items-center gap-1.5 text-sm font-medium text-gray-900 hover:text-teal-600"
                     >
-                      🏠 {booking.rooms?.title}
+                      <Home className="h-3.5 w-3.5 shrink-0" aria-hidden /> {booking.rooms?.title}
                     </Link>
 
                     <p className="mt-0.5 text-xs text-gray-400">
@@ -300,8 +306,9 @@ export default function BookingRequestsPage() {
                   </div>
 
                   <span
-                    className={`rounded-full border px-2.5 py-1 text-xs font-medium ${status.className}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${status.className}`}
                   >
+                    <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
                     {status.label}
                   </span>
                 </div>
@@ -311,8 +318,12 @@ export default function BookingRequestsPage() {
                   <div className="flex items-center gap-3">
 
                     <Link href={`/users/${booking.profiles?.id}`}>
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-medium text-teal-700 cursor-pointer hover:ring-2 hover:ring-teal-300">
-                        {booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-xs font-medium text-teal-700 cursor-pointer hover:ring-2 hover:ring-teal-300">
+                        {booking.profiles?.avatar_url ? (
+                          <img src={booking.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'
+                        )}
                       </div>
                     </Link>
 
@@ -339,9 +350,9 @@ export default function BookingRequestsPage() {
                     {booking.profiles?.phone && (
                       <a
                         href={`tel:${booking.profiles.phone}`}
-                        className="flex-shrink-0 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-white"
+                        className="flex flex-shrink-0 items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-white"
                       >
-                        📞 Call
+                        <Phone className="h-3.5 w-3.5" aria-hidden /> Call
                       </a>
                     )}
                   </div>
@@ -349,8 +360,9 @@ export default function BookingRequestsPage() {
 
                 <div className="mb-4 flex flex-wrap gap-3 text-xs text-gray-500">
                   {booking.move_in_date && (
-                    <span>
-                      🗓 Move-in:{' '}
+                    <span className="flex items-center gap-1">
+                      <CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      Move-in:{' '}
                       {new Date(booking.move_in_date).toLocaleDateString(
                         'en-US',
                         {
@@ -362,8 +374,9 @@ export default function BookingRequestsPage() {
                     </span>
                   )}
 
-                  <span>
-                    ⏰ Requested:{' '}
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    Requested:{' '}
                     {new Date(booking.created_at).toLocaleDateString('en-US', {
                       day: 'numeric',
                       month: 'long',
@@ -372,8 +385,8 @@ export default function BookingRequestsPage() {
                 </div>
 
                 {booking.message && (
-                  <p className="mb-4 rounded-xl bg-teal-50 px-3 py-2 text-xs italic text-gray-500">
-                    💬 “{booking.message}”
+                  <p className="mb-4 flex items-start gap-1.5 rounded-xl bg-teal-50 px-3 py-2 text-xs italic text-gray-500">
+                    <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden /> “{booking.message}”
                   </p>
                 )}
 
@@ -383,16 +396,16 @@ export default function BookingRequestsPage() {
                     <button
                       disabled={!!isActing}
                       onClick={() => handleAction(booking.id, 'confirmed')}
-                      className="flex-1 rounded-xl bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
                     >
-                      {isActing ? 'Processing...' : '✓ Confirm & Hold 24h'}
+                      {isActing ? 'Processing...' : <><Check className="h-4 w-4" aria-hidden /> Confirm & Hold 24h</>}
                     </button>
                     <button
                       disabled={!!isActing}
                       onClick={() => handleAction(booking.id, 'rejected')}
-                      className="flex-1 rounded-xl border border-red-200 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-red-200 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 disabled:opacity-50"
                     >
-                      {isActing ? 'Processing...' : '✕ Reject'}
+                      {isActing ? 'Processing...' : <><X className="h-4 w-4" aria-hidden /> Reject</>}
                     </button>
                   </div>
                 )}
@@ -400,15 +413,16 @@ export default function BookingRequestsPage() {
                 {/* CONFIRMED (on hold, not expired): Mark Advance Received */}
                 {booking.status === 'confirmed' && !isExpired(booking.expires_at) && (
                   <div className="space-y-2">
-                    <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-xs text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-                      ⏳ Tenant এর কাছ থেকে advance নেওয়ার পর নিচের বাটনে ক্লিক করুন।
+                    <div className="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-2.5 text-xs text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                      <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      Tenant এর কাছ থেকে advance নেওয়ার পর নিচের বাটনে ক্লিক করুন।
                     </div>
                     <button
                       disabled={!!isActing}
                       onClick={() => handleAction(booking.id, 'active')}
-                      className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                      className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                     >
-                      {isActing ? 'Processing...' : '💵 Advance নিয়েছি — Booking Confirm করুন'}
+                      {isActing ? 'Processing...' : <><Banknote className="h-4 w-4" aria-hidden /> Advance নিয়েছি — Booking Confirm করুন</>}
                     </button>
                   </div>
                 )}
@@ -416,15 +430,16 @@ export default function BookingRequestsPage() {
                 {/* CONFIRMED but expired (tenant didn't respond in 24h) */}
                 {booking.status === 'confirmed' && isExpired(booking.expires_at) && (
                   <div className="space-y-2">
-                    <div className="rounded-xl bg-orange-50 px-3 py-2 text-xs text-orange-700">
-                      ⏰ 24h hold expired — tenant did not arrange payment in time.
+                    <div className="flex items-center gap-1.5 rounded-xl bg-orange-50 px-3 py-2 text-xs text-orange-700">
+                      <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      24h hold expired — tenant did not arrange payment in time.
                     </div>
                     <button
                       disabled={!!isActing}
                       onClick={() => reactivateRoom(booking.id, booking.rooms?.id ?? '')}
-                      className="w-full rounded-xl bg-gray-600 py-2.5 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
+                      className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-gray-600 py-2.5 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
                     >
-                      {isActing ? 'Processing...' : '🔄 Re-open Listing'}
+                      {isActing ? 'Processing...' : <><RotateCw className="h-4 w-4" aria-hidden /> Re-open Listing</>}
                     </button>
                   </div>
                 )}
@@ -432,23 +447,25 @@ export default function BookingRequestsPage() {
                 {/* ACTIVE: fully booked, advance received */}
                 {booking.status === 'active' && (
                   <div className="space-y-2">
-                    <div className="rounded-xl bg-green-50 px-3 py-2.5 text-xs text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                      🎉 Booking active — advance received. Room is occupied by this tenant.
+                    <div className="flex items-center gap-1.5 rounded-xl bg-green-50 px-3 py-2.5 text-xs text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                      <PartyPopper className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      Booking active — advance received. Room is occupied by this tenant.
                     </div>
                     <button
                       disabled={!!isActing}
                       onClick={() => endTenancy(booking.id)}
-                      className="w-full rounded-xl border border-purple-200 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 disabled:opacity-50"
+                      className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-purple-200 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 disabled:opacity-50"
                     >
-                      {isActing ? 'Processing...' : '🏁 Tenant চলে গেছে — Tenancy শেষ করুন'}
+                      {isActing ? 'Processing...' : <><Flag className="h-4 w-4" aria-hidden /> Tenant চলে গেছে — Tenancy শেষ করুন</>}
                     </button>
                   </div>
                 )}
 
                 {/* EXPIRED (auto-cancelled by cron) */}
                 {booking.status === 'expired' && (
-                  <div className="rounded-xl bg-gray-100 px-3 py-2 text-xs text-gray-500 dark:bg-gray-700">
-                    ⏰ Automatically expired after 24h. Room has been re-opened.
+                  <div className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-xs text-gray-500 dark:bg-gray-700">
+                    <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    Automatically expired after 24h. Room has been re-opened.
                   </div>
                 )}
               </div>
@@ -464,7 +481,7 @@ export default function BookingRequestsPage() {
             onClick={() => setShowHistory((v) => !v)}
             className="flex w-full items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
           >
-            <span>📜 Past Bookings ({historyBookings.length})</span>
+            <span className="flex items-center gap-1.5"><History className="h-4 w-4" aria-hidden /> Past Bookings ({historyBookings.length})</span>
             <span className="text-lg">{showHistory ? '▲' : '▼'}</span>
           </button>
 
@@ -476,20 +493,25 @@ export default function BookingRequestsPage() {
                   <div key={booking.id} className="rounded-2xl border border-gray-100 p-5 opacity-80">
                     <div className="mb-3 flex items-start justify-between">
                       <div>
-                        <Link href={`/listings/${booking.rooms?.id}`} className="text-sm font-medium text-gray-700 hover:text-teal-600">
-                          🏠 {booking.rooms?.title}
+                        <Link href={`/listings/${booking.rooms?.id}`} className="flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-teal-600">
+                          <Home className="h-3.5 w-3.5 shrink-0" aria-hidden /> {booking.rooms?.title}
                         </Link>
                         <p className="mt-0.5 text-xs text-gray-400">
                           ৳{booking.rooms?.rent}/month · {booking.rooms?.location_name}
                         </p>
                       </div>
-                      <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${status.className}`}>
+                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${status.className}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
                         {status.label}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-600">
-                        {booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-xs font-medium text-gray-600">
+                        {booking.profiles?.avatar_url ? (
+                          <img src={booking.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          booking.profiles?.full_name?.[0]?.toUpperCase() || 'U'
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-700">{booking.profiles?.full_name || 'User'}</p>

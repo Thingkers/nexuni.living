@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 
 import { supabase } from '@/lib/supabase'
+import type { AdminModuleKey } from '@/config/modules'
 
 export type ViewerCapabilities = {
   loading: boolean
@@ -13,6 +14,7 @@ export type ViewerCapabilities = {
   isModerator: boolean
   isAdmin: boolean
   canPost: boolean
+  moduleAdmin: AdminModuleKey[]
 }
 
 const ANONYMOUS: ViewerCapabilities = {
@@ -23,6 +25,7 @@ const ANONYMOUS: ViewerCapabilities = {
   isModerator: false,
   isAdmin: false,
   canPost: false,
+  moduleAdmin: [],
 }
 
 export default function useViewerCapabilities(): ViewerCapabilities {
@@ -38,11 +41,17 @@ export default function useViewerCapabilities(): ViewerCapabilities {
         return
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, verification_status')
-        .eq('id', user.id)
-        .maybeSingle()
+      const [{ data: profile }, { data: moduleRows }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('role, verification_status')
+          .eq('id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('module_admins')
+          .select('module')
+          .eq('user_id', user.id),
+      ])
 
       if (!active) return
       const role = profile?.role ?? 'student'
@@ -55,6 +64,7 @@ export default function useViewerCapabilities(): ViewerCapabilities {
         isModerator: role === 'moderator' || role === 'admin',
         isAdmin: role === 'admin',
         canPost: isVerified,
+        moduleAdmin: (moduleRows ?? []).map((row) => row.module as AdminModuleKey),
       })
     }
 

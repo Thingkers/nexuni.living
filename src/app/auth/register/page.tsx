@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { IdCard, Eye, EyeOff } from 'lucide-react'
 import { compressImage } from '@/lib/compressImage'
 import { supabase } from '@/lib/supabase/'
 import { UniversityCombobox } from '@/features/universities/components/UniversityCombobox'
@@ -164,27 +165,31 @@ export default function RegisterPage() {
   }
 
   const inputClass =
-    'rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500'
+    'rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400'
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10 dark:bg-gray-950">
-      <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <main className="relative min-h-screen overflow-hidden bg-gray-50 px-4 py-10 dark:bg-gray-950">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(20,184,166,.12),transparent_60%)]" />
+
+      <div className="relative mx-auto w-full max-w-md rounded-3xl border border-gray-100 bg-white p-8 shadow-xl shadow-slate-900/5 dark:border-gray-800 dark:bg-gray-800 dark:shadow-none">
 
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center">
-            <Image
-              src="/aiub_logo.png"
-              alt="Logo"
-              width={80}
-              height={80}
-              className="mx-auto"
-            />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Student Register</h1>
+          <Image
+            src="/icon.svg"
+            alt="nexUni.living"
+            width={52}
+            height={52}
+            priority
+            className="mx-auto mb-3 h-[52px] w-[52px]"
+          />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Register</h1>
+          <p className="mt-1 text-sm font-semibold tracking-[-0.02em] text-gray-500 dark:text-gray-400">
+            nexUni.living
+          </p>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-400">
             {error}
           </div>
         )}
@@ -192,7 +197,7 @@ export default function RegisterPage() {
         <div className="flex flex-col gap-4">
 
           <div>
-            <label className="mb-1 block text-xs text-gray-500">Full Name *</label>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Full Name *</label>
             <input
               placeholder="Your full name"
               className={inputClass + ' w-full'}
@@ -202,7 +207,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-500">Email *</label>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Email *</label>
             <input
               type="email"
               placeholder="your@gmail.com"
@@ -213,7 +218,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-500">University</label>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">University</label>
             <UniversityCombobox
               value={form.university_id}
               initialText={form.university}
@@ -225,7 +230,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-500">Student ID *</label>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Student ID *</label>
             <input
               placeholder="e.g. xx-xxxxx-x"
               className={inputClass + ' w-full'}
@@ -235,7 +240,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-500">Phone Number</label>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Phone Number</label>
             <input
               placeholder="01XXXXXXXXX"
               className={inputClass + ' w-full'}
@@ -245,7 +250,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-500">Gender</label>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Gender</label>
             <select
               className={inputClass + ' w-full'}
               value={form.gender}
@@ -258,11 +263,11 @@ export default function RegisterPage() {
 
           {/* ID Card Upload */}
           <div>
-            <label className="mb-1 block text-xs text-gray-500">
-              Student ID Card * <span className="text-gray-400">(photo/scan)</span>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+              Student ID Card * <span className="text-gray-400 dark:text-gray-500">(photo/scan)</span>
             </label>
 
-            <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-5 text-center hover:border-teal-400 hover:bg-teal-50">
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-5 text-center hover:border-teal-400 hover:bg-teal-50 dark:border-gray-600 dark:hover:border-teal-500 dark:hover:bg-teal-900/20">
               <input
                 type="file"
                 accept="image/*"
@@ -275,9 +280,9 @@ export default function RegisterPage() {
                 </div>
               ) : (
                 <>
-                  <span className="text-2xl">🪪</span>
-                  <span className="mt-2 text-sm font-medium text-gray-600">Upload ID Card</span>
-                  <span className="text-xs text-gray-400">JPG or PNG</span>
+                  <IdCard className="h-6 w-6 text-gray-400 dark:text-gray-500" aria-hidden />
+                  <span className="mt-2 text-sm font-medium text-gray-600 dark:text-gray-300">Upload ID Card</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">JPG or PNG</span>
                 </>
               )}
             </label>
@@ -286,7 +291,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => { setIdCardFile(null); setIdCardPreview(null) }}
-                className="mt-1 text-xs text-red-400 hover:text-red-600"
+                className="mt-1 text-xs text-red-400 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
               >
                 Remove
               </button>
@@ -295,7 +300,7 @@ export default function RegisterPage() {
 
           {/* Password */}
           <div>
-            <label className="mb-1 block text-xs text-gray-500">Password *</label>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Password *</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -307,19 +312,9 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                suppressHydrationWarning
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
-                {showPassword ? (
-                  <svg suppressHydrationWarning xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 4C7 4 2.73 7.11 1 12c1.73 4.89 6 8 11 8s9.27-3.11 11-8c-1.73-4.89-6-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
-                    <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                  </svg>
-                ) : (
-                  <svg suppressHydrationWarning xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 4C7 4 2.73 7.11 1 12c1.73 4.89 6 8 11 8s9.27-3.11 11-8c-1.73-4.89-6-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
-                  </svg>
-                )}
+                {showPassword ? <EyeOff className="h-5.5 w-5.5" aria-hidden /> : <Eye className="h-5.5 w-5.5" aria-hidden />}
               </button>
             </div>
 
@@ -349,7 +344,7 @@ export default function RegisterPage() {
 
           {/* Confirm Password */}
           <div>
-            <label className="mb-1 block text-xs text-gray-500">Confirm Password *</label>
+            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Confirm Password *</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -361,24 +356,14 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                suppressHydrationWarning
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
-                {showConfirmPassword ? (
-                  <svg suppressHydrationWarning xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 4C7 4 2.73 7.11 1 12c1.73 4.89 6 8 11 8s9.27-3.11 11-8c-1.73-4.89-6-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
-                    <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                  </svg>
-                ) : (
-                  <svg suppressHydrationWarning xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 4C7 4 2.73 7.11 1 12c1.73 4.89 6 8 11 8s9.27-3.11 11-8c-1.73-4.89-6-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
-                  </svg>
-                )}
+                {showConfirmPassword ? <EyeOff className="h-5.5 w-5.5" aria-hidden /> : <Eye className="h-5.5 w-5.5" aria-hidden />}
               </button>
             </div>
           </div>
 
-          <div className="rounded-xl bg-yellow-50 px-4 py-3 text-xs text-yellow-700">
+          <div className="rounded-xl bg-yellow-50 px-4 py-3 text-xs text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
             After registering, your account will be reviewed by admin. You&apos;ll get access once verified.
           </div>
 
@@ -391,9 +376,9 @@ export default function RegisterPage() {
           </button>
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
           Already have an account?{' '}
-          <Link href="/auth/login" className="font-medium text-teal-600 hover:underline">
+          <Link href="/auth/login" className="font-medium text-teal-600 hover:underline dark:text-teal-400">
             Login
           </Link>
         </p>

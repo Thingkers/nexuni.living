@@ -9,6 +9,7 @@ import {
   LayoutGrid, BookOpen, BriefcaseBusiness, Bus, MapPinned,
   LayoutDashboard, MessageSquare, Inbox, CalendarCheck, Wallet,
   Plus, LogOut, BarChart2, ShieldCheck, Flag, Building2, List, Users,
+  Hourglass, CheckCircle2,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { setLocaleAction } from '@/features/i18n/actions'
@@ -16,6 +17,14 @@ import type { AppLocale } from '@/i18n/request'
 import BrandWordmark from '@/components/brand/BrandWordmark'
 import { useTheme } from '@/hooks/useTheme'
 import { SunIcon, MoonIcon } from '@/components/icons/ThemeIcons'
+import type { AdminModuleKey } from '@/config/modules'
+
+const MODULE_ADMIN_ICONS: Record<AdminModuleKey, typeof BookOpen> = {
+  books: BookOpen,
+  services: MapPinned,
+  jobs: BriefcaseBusiness,
+  transport: Bus,
+}
 
 type Profile = {
   full_name: string | null
@@ -62,6 +71,7 @@ export default function Navbar() {
 
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [moduleAdminKeys, setModuleAdminKeys] = useState<AdminModuleKey[]>([])
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -92,7 +102,7 @@ export default function Navbar() {
     // they run in parallel; only the pending-bookings count has to wait for
     // the room ids. (Previously all five calls ran one after another.)
     async function loadUserExtras(uid: string) {
-      const [{ data: profileData }, { count: msgCount }, { data: myRooms }] = await Promise.all([
+      const [{ data: profileData }, { count: msgCount }, { data: myRooms }, { data: moduleAdminRows }] = await Promise.all([
         supabase
           .from('profiles')
           .select('full_name, avatar_url, role, verification_status')
@@ -107,10 +117,15 @@ export default function Navbar() {
           .from('rooms')
           .select('id')
           .eq('owner_id', uid),
+        supabase
+          .from('module_admins')
+          .select('module')
+          .eq('user_id', uid),
       ])
 
       setProfile(profileData)
       setUnreadCount(msgCount ?? 0)
+      setModuleAdminKeys((moduleAdminRows ?? []).map((row) => row.module as AdminModuleKey))
 
       const roomIds = myRooms?.map((r) => r.id) ?? []
       ownedRoomIdsRef.current = roomIds
@@ -211,6 +226,7 @@ export default function Navbar() {
       if (!session) {
         ownedRoomIdsRef.current = []
         setProfile(null)
+        setModuleAdminKeys([])
         setUnreadCount(0)
         setPendingBookingCount(0)
         setIsOwner(false)
@@ -240,6 +256,7 @@ export default function Navbar() {
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
+    setModuleAdminKeys([])
     setUnreadCount(0)
     setPendingBookingCount(0)
     setMenuOpen(false)
@@ -269,9 +286,6 @@ export default function Navbar() {
 
   const isVerified = profile?.verification_status === 'approved'
 
-  // The homepage owns a map-first floating shell header.
-  if (pathname === '/') return null
-
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90">
       <div className="page-shell flex h-[68px] items-center justify-between">
@@ -282,27 +296,32 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden items-center gap-1 rounded-[18px] border border-slate-200/90 bg-slate-100/90 p-1.5 shadow-[inset_0_2px_5px_rgba(15,23,42,.12),0_8px_20px_rgba(15,23,42,.08)] md:flex dark:border-slate-700 dark:bg-slate-900">
+        <div className="hidden items-center gap-5 lg:flex">
           {[
-            { href: '/listings', label: t('housing'), tone: 'bg-teal-500' },
-            { href: '/roommates', label: t('roommates'), tone: 'bg-violet-500' },
-            { href: '/books', label: t('books'), preview: true, tone: 'bg-orange-500' },
-            { href: '/services', label: t('services'), preview: true, tone: 'bg-cyan-500' },
-            { href: '/jobs', label: t('jobs'), preview: true, tone: 'bg-indigo-500' },
+            { href: '/listings', label: t('housing'), Icon: LayoutGrid },
+            { href: '/roommates', label: t('roommates'), Icon: Users },
+            { href: '/books', label: t('books'), Icon: BookOpen, preview: true },
+            { href: '/services', label: t('services'), Icon: MapPinned, preview: true },
+            { href: '/jobs', label: t('jobs'), Icon: BriefcaseBusiness, preview: true },
+            { href: '/transport', label: t('transport'), Icon: Bus, preview: true },
+            // Payments lives under /dashboard, which the proxy gates behind
+            // auth — only show it to logged-in users so guests don't get
+            // bounced straight to the login page.
+            ...(user ? [{ href: '/dashboard/payments', label: t('payments'), Icon: Wallet, preview: true }] : []),
           ].map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`relative flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all active:translate-y-px ${
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
                 pathname.startsWith(link.href)
-                  ? 'border-white bg-white text-slate-950 shadow-[0_4px_9px_rgba(15,23,42,.16),inset_0_1px_0_rgba(255,255,255,.9)] dark:border-slate-700 dark:bg-slate-800 dark:text-white'
-                  : 'border-transparent text-slate-500 shadow-[inset_0_-1px_0_rgba(255,255,255,.55)] hover:-translate-y-0.5 hover:bg-white/80 hover:text-slate-950 hover:shadow-[0_4px_10px_rgba(15,23,42,.12)] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
+                  ? 'text-teal-600 dark:text-teal-400'
+                  : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white'
               }`}
             >
-              <span className={`h-2 w-2 rounded-full ${link.tone} shadow-[0_0_0_3px_rgba(255,255,255,.7),0_2px_5px_rgba(15,23,42,.35)] dark:shadow-[0_0_0_3px_rgba(15,23,42,.7)]`} />
+              <link.Icon className="h-4 w-4" aria-hidden />
               {link.label}
               {link.preview && (
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[7px] font-black uppercase text-slate-500 shadow-[inset_0_1px_2px_rgba(15,23,42,.12)] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                   {t('preview')}
                 </span>
               )}
@@ -335,7 +354,7 @@ export default function Navbar() {
           {user && isVerified && (
             <Link
               href="/post-room"
-              className="hidden rounded-full bg-[#071c19] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-teal-400 dark:text-slate-950 md:block"
+              className="hidden rounded-full bg-[#071c19] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-teal-400 dark:text-slate-950 lg:block"
             >
               {t('postRoom')}
             </Link>
@@ -344,7 +363,7 @@ export default function Navbar() {
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen((prev) => !prev)}
-            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-300 md:hidden"
+            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-300 lg:hidden"
             aria-label={t('toggleMenu')}
           >
             {mobileOpen ? (
@@ -365,14 +384,16 @@ export default function Navbar() {
 
           {/* Desktop avatar dropdown */}
           {user ? (
-            <div className="relative hidden md:block" ref={menuRef}>
+            <div className="relative hidden lg:block" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((prev) => !prev)}
                 className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full hover:ring-2 hover:ring-teal-300"
               >
                 <Avatar size={8} avatarUrl={profile?.avatar_url} initials={initials} />
                 {(unreadCount > 0 || pendingBookingCount > 0 || myBookingCount > 0) && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-1 ring-white" />
+                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-1 ring-white dark:ring-slate-950">
+                    {unreadCount + pendingBookingCount + myBookingCount}
+                  </span>
                 )}
               </button>
 
@@ -383,7 +404,7 @@ export default function Navbar() {
                     <div className="min-w-0">
                       <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200">{profile?.full_name || user.email}</p>
                       {!isVerified && (
-                        <span className="text-[10px] text-yellow-600">⏳ {t('pending')}</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] text-yellow-600"><Hourglass className="h-2.5 w-2.5" aria-hidden /> {t('pending')}</span>
                       )}
                     </div>
                   </div>
@@ -458,6 +479,21 @@ export default function Navbar() {
                     </>
                   )}
 
+                  {profile?.role !== 'admin' && moduleAdminKeys.length > 0 && (
+                    <>
+                      <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
+                      <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('admin')}</p>
+                      {moduleAdminKeys.map((key) => {
+                        const ModuleIcon = MODULE_ADMIN_ICONS[key]
+                        return (
+                          <Link key={key} href={`/admin/${key}`} className="flex items-center gap-2.5 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
+                            <ModuleIcon className="h-3.5 w-3.5" />{t(key)}
+                          </Link>
+                        )
+                      })}
+                    </>
+                  )}
+
                   <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                   <button onClick={handleLogout} className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800">
                     <LogOut className="h-3.5 w-3.5" />{t('logout')}
@@ -466,7 +502,7 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <div className="hidden items-center gap-3 md:flex">
+            <div className="hidden items-center gap-3 lg:flex">
               <Link href="/auth/login" className="text-sm font-medium text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white">{t('login')}</Link>
               <Link href="/auth/register" className="rounded-full bg-[#071c19] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-teal-400 dark:text-slate-950">{t('register')}</Link>
             </div>
@@ -476,7 +512,7 @@ export default function Navbar() {
 
       {/* MOBILE MENU */}
       {mobileOpen && (
-        <div className="border-t border-gray-100 dark:border-gray-800 md:hidden">
+        <div className="border-t border-gray-100 dark:border-gray-800 lg:hidden">
           <div className="max-h-[75vh] overflow-y-auto px-4 py-3">
             <div className="flex flex-col gap-1.5">
 
@@ -488,6 +524,7 @@ export default function Navbar() {
                 { href: '/services', Icon: MapPinned, label: t('services'), preview: true },
                 { href: '/jobs', Icon: BriefcaseBusiness, label: t('jobs'), preview: true },
                 { href: '/transport', Icon: Bus, label: t('transport'), preview: true },
+                ...(user ? [{ href: '/dashboard/payments', Icon: Wallet, label: t('payments'), preview: true }] : []),
               ]).map(({ href, Icon, label, preview }) => (
                 <Link
                   key={href}
@@ -514,9 +551,9 @@ export default function Navbar() {
                     <div className="flex min-w-0 flex-col">
                       <span className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">{profile?.full_name || user.email}</span>
                       {!isVerified ? (
-                        <span className="text-[10px] text-yellow-600">⏳ {t('verificationPending')}</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] text-yellow-600"><Hourglass className="h-2.5 w-2.5" aria-hidden /> {t('verificationPending')}</span>
                       ) : (
-                        <span className="text-[10px] text-green-600">✓ {t('verified')}</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] text-green-600"><CheckCircle2 className="h-2.5 w-2.5" aria-hidden /> {t('verified')}</span>
                       )}
                     </div>
                   </div>
@@ -596,6 +633,21 @@ export default function Navbar() {
                       <Link href="/admin/reports" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
                         <Flag className="h-4 w-4 shrink-0" />{t('reportListings')}
                       </Link>
+                    </>
+                  )}
+
+                  {profile?.role !== 'admin' && moduleAdminKeys.length > 0 && (
+                    <>
+                      <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
+                      <p className="px-3 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t('admin')}</p>
+                      {moduleAdminKeys.map((key) => {
+                        const ModuleIcon = MODULE_ADMIN_ICONS[key]
+                        return (
+                          <Link key={key} href={`/admin/${key}`} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" onClick={closeMenus}>
+                            <ModuleIcon className="h-4 w-4 shrink-0" />{t(key)}
+                          </Link>
+                        )
+                      })}
                     </>
                   )}
 

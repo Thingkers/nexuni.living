@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { Home, CheckCircle2, Hourglass, Trophy, type LucideIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type Room    = { id: string; title: string }
@@ -83,10 +84,10 @@ export default function AnalyticsPage() {
 
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-        <StatCard title="Total Rooms"        value={String(rooms.length)}        icon="🏠" color="teal" />
-        <StatCard title="Confirmed Bookings" value={String(confirmedBookings)} icon="✅" color="green" />
-        <StatCard title="Pending Requests"   value={String(pendingBookings)}   icon="⏳" color="yellow" />
-        <StatCard title="Top Room"           value={topRoom?.title || 'N/A'}   icon="🏆" color="purple" small />
+        <StatCard title="Total Rooms"        value={String(rooms.length)}        icon={Home} color="teal" />
+        <StatCard title="Confirmed Bookings" value={String(confirmedBookings)} icon={CheckCircle2} color="green" />
+        <StatCard title="Pending Requests"   value={String(pendingBookings)}   icon={Hourglass} color="yellow" />
+        <StatCard title="Top Room"           value={topRoom?.title || 'N/A'}   icon={Trophy} color="purple" small />
       </div>
 
       {/* Bar chart */}
@@ -164,21 +165,21 @@ export default function AnalyticsPage() {
 }
 
 function StatCard({
-  title, value, icon, color, small = false,
+  title, value, icon: Icon, color, small = false,
 }: {
-  title: string; value: string; icon: string; color: string; small?: boolean
+  title: string; value: string; icon: LucideIcon; color: string; small?: boolean
 }) {
   const colorMap: Record<string, string> = {
-    teal:   'bg-teal-50 dark:bg-teal-900/20',
-    green:  'bg-green-50 dark:bg-green-900/20',
-    yellow: 'bg-yellow-50 dark:bg-yellow-900/20',
-    purple: 'bg-purple-50 dark:bg-purple-900/20',
+    teal:   'bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400',
+    green:  'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400',
+    yellow: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400',
+    purple: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400',
   }
 
   return (
     <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-      <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl text-lg ${colorMap[color]}`}>
-        {icon}
+      <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl ${colorMap[color]}`}>
+        <Icon className="h-4.5 w-4.5" aria-hidden />
       </div>
       <p className="text-xs text-gray-400 dark:text-gray-500">{title}</p>
       <h2 className={`mt-1 font-semibold text-gray-900 dark:text-white ${small ? 'truncate text-base' : 'text-2xl'}`}>

@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     !serviceRoleKey && 'SUPABASE_SERVICE_ROLE_KEY',
     !anthropicKey && 'ANTHROPIC_API_KEY',
   ].filter(Boolean)
-  if (missing.length > 0) {
+  if (!supabaseUrl || !serviceRoleKey || !anthropicKey) {
     return Response.json(
       { error: `AI-assisted posting is not configured — missing env var(s): ${missing.join(', ')}` },
       { status: 503 },

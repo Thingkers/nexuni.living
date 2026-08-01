@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Mail, IdCard, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase/'
 
 export default function LoginPage() {
@@ -90,8 +91,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-950">
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gray-50 px-4 dark:bg-gray-950">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(20,184,166,.12),transparent_60%)]" />
+
+      <div className="relative w-full max-w-md rounded-3xl border border-gray-100 bg-white p-8 shadow-xl shadow-slate-900/5 dark:border-gray-800 dark:bg-gray-800 dark:shadow-none">
 
         {/* Header */}
         <div className="mb-6 text-center">
@@ -103,7 +106,7 @@ export default function LoginPage() {
             priority
             className="mx-auto mb-3 h-[52px] w-[52px]"
           />
-          
+
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome Back</h1>
           <p className="mt-1 text-sm font-semibold tracking-[-0.02em] text-gray-500 dark:text-gray-400">
             nexUni.living
@@ -114,28 +117,30 @@ export default function LoginPage() {
         <div className="mb-5 flex rounded-xl border border-gray-200 p-1 dark:border-gray-700">
           <button
             onClick={() => { setLoginType('email'); setError('') }}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-colors ${
               loginType === 'email'
                 ? 'bg-teal-600 text-white'
                 : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             }`}
           >
-            📧 Email
+            <Mail className="h-4 w-4" aria-hidden />
+            Email
           </button>
           <button
             onClick={() => { setLoginType('id'); setError('') }}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-colors ${
               loginType === 'id'
                 ? 'bg-teal-600 text-white'
                 : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             }`}
           >
-            🪪 Student ID
+            <IdCard className="h-4 w-4" aria-hidden />
+            Student ID
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-400">
             {error}
           </div>
         )}
@@ -183,19 +188,9 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                suppressHydrationWarning
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
-                {showPassword ? (
-                  <svg suppressHydrationWarning xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 4C7 4 2.73 7.11 1 12c1.73 4.89 6 8 11 8s9.27-3.11 11-8c-1.73-4.89-6-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
-                    <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                  </svg>
-                ) : (
-                  <svg suppressHydrationWarning xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 4C7 4 2.73 7.11 1 12c1.73 4.89 6 8 11 8s9.27-3.11 11-8c-1.73-4.89-6-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
-                  </svg>
-                )}
+                {showPassword ? <EyeOff className="h-5.5 w-5.5" aria-hidden /> : <Eye className="h-5.5 w-5.5" aria-hidden />}
               </button>
 
             </div>

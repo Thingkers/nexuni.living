@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import {
   ArrowRight,
   Building2,
@@ -7,6 +6,7 @@ import {
   MessageSquare,
   Search,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
@@ -15,7 +15,6 @@ import FeaturedRooms from '@/features/rooms/components/FeaturedRooms'
 import HeroSearch from '@/features/search/components/HeroSearch'
 import type { Room } from '@/features/rooms/types/room.types'
 import BrandWordmark from '@/components/brand/BrandWordmark'
-import HomeHeaderAuth from '@/components/layout/HomeHeaderAuth'
 
 // Locale is read from a cookie in the root layout (src/i18n/request.ts),
 // which makes every page sharing that layout dynamic — so this page can no
@@ -66,8 +65,6 @@ export default async function HomePage() {
     { Icon: Home, title: t('step3Title'), description: t('step3Desc') },
   ]
 
-  const [showcaseBack, showcaseFront] = featuredRooms.filter((room) => room.images?.length)
-
   const POPULAR_SEARCHES = [
     { label: t('chipMess'), href: '/listings?type=mess' },
     { label: t('chipBachelor'), href: '/listings?type=bachelor' },
@@ -77,133 +74,68 @@ export default async function HomePage() {
 
   return (
     <main className="overflow-hidden bg-[#f3f6f4] text-slate-950 dark:bg-slate-950 dark:text-white">
-      <section className="relative h-[calc(100dvh-4rem)] min-h-[720px] max-h-[980px] overflow-hidden bg-[#071c19] text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(45,212,191,.16),transparent_55%),radial-gradient(circle_at_80%_75%,rgba(45,212,191,.10),transparent_50%)]" />
-        <div className="absolute inset-0 opacity-[0.15] [background-image:linear-gradient(rgba(45,212,191,.4)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,.4)_1px,transparent_1px)] [background-size:56px_56px]" />
+      <section className="relative isolate overflow-hidden bg-gradient-to-b from-emerald-500 via-teal-600 to-teal-800 text-white">
+        <div className="page-shell relative z-10 mx-auto flex max-w-2xl flex-col items-center pb-24 pt-16 text-center sm:pb-32 sm:pt-20">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+            {t('badge')}
+          </div>
 
-        <header className="absolute inset-x-3 top-3 z-[500] flex h-[60px] items-center justify-between rounded-[20px] border border-white/15 bg-[#091b19]/88 px-3 shadow-[0_18px_50px_rgba(0,0,0,.38)] backdrop-blur-2xl md:inset-x-5 md:px-4">
-          <Link href="/" aria-label="nexUni.living" className="shrink-0 px-2">
-            <BrandWordmark inverse />
-          </Link>
+          <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-6xl sm:leading-[1.05]">
+            {t('heroTitleLine1')}
+            <br />
+            <span className="text-emerald-100">{t('heroTitleLine2')}</span>
+          </h1>
 
-          <div className="flex items-center gap-2">
-            <span className="hidden items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-[10px] font-semibold text-slate-200 sm:flex">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal-300" />
-              {totalRooms} live
+          <p className="mt-6 max-w-xl text-sm leading-7 text-emerald-50/90 sm:text-base">
+            {t('heroSubtitle')}
+          </p>
+
+          <div className="mt-8 w-full max-w-xl">
+            <HeroSearch />
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs">
+            <span className="mr-1 text-emerald-100/80">{t('popularLabel')}</span>
+            {POPULAR_SEARCHES.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 font-semibold text-white transition hover:bg-white/20"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-emerald-50/90">
+            <span className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" aria-hidden />
+              {totalRooms} {t('trustRoomsListed')}
             </span>
-            <HomeHeaderAuth />
-          </div>
-        </header>
-
-        <div className="absolute left-6 top-1/2 z-[450] hidden w-[calc(100%-3rem)] max-w-[520px] -translate-y-[46%] sm:block lg:left-10">
-          <div className="rounded-[20px] border border-white/15 bg-[#091b19]/86 p-3 shadow-[0_18px_50px_rgba(0,0,0,.38)] backdrop-blur-2xl sm:rounded-[26px] sm:p-7 sm:shadow-[0_24px_80px_rgba(0,0,0,.44)]">
-            <div className="mb-5 hidden items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.18em] text-teal-100 sm:inline-flex">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal-300" />
-              {t('badge')}
-            </div>
-
-            <h1 className="max-w-lg text-2xl font-semibold leading-none tracking-[-0.045em] text-white sm:text-6xl sm:leading-[0.96] sm:tracking-[-0.055em]">
-              {t('heroTitleLine1')}{' '}
-              <span className="text-teal-300">{t('heroTitleLine2')}</span>
-            </h1>
-
-            <p className="mt-5 hidden max-w-md text-sm leading-6 text-slate-300 sm:block sm:text-base">
-              {t('heroSubtitle')}
-            </p>
-
-            <div className="mt-3 sm:mt-6">
-              <HeroSearch mapMode />
-            </div>
-
-            <div className="mt-4 hidden flex-wrap items-center gap-2 text-[10px] sm:flex">
-              <span className="mr-1 text-slate-400">{t('popularLabel')}</span>
-              {POPULAR_SEARCHES.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 font-semibold text-slate-200 transition hover:border-teal-300/50 hover:bg-teal-300/10 hover:text-white"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4" aria-hidden />
+              {t('trustVerifiedOwners')}
+            </span>
+            <span className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" aria-hidden />
+              {t('trustDirectChat')}
+            </span>
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" aria-hidden />
+              {t('trustFree')}
+            </span>
           </div>
         </div>
 
-        {showcaseBack && showcaseFront && (
-          <div className="absolute inset-y-0 right-10 z-[430] hidden items-center xl:flex 2xl:right-20">
-            <div className="relative h-[440px] w-[340px]">
-              <Link
-                href={`/listings/${showcaseBack.id}`}
-                className="group absolute right-0 top-0 block h-[300px] w-[250px] rotate-[5deg] overflow-hidden rounded-[28px] border border-white/15 shadow-[0_30px_80px_rgba(0,0,0,.45)] transition hover:-translate-y-1 hover:rotate-3"
-              >
-                <Image
-                  src={showcaseBack.images![0]}
-                  alt={showcaseBack.title}
-                  fill
-                  sizes="250px"
-                  className="object-cover transition duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-[#071c19]/70 via-transparent to-transparent" />
-              </Link>
-
-              <Link
-                href={`/listings/${showcaseFront.id}`}
-                className="group absolute bottom-0 left-0 block h-[280px] w-[230px] -rotate-6 overflow-hidden rounded-[28px] border-4 border-[#071c19] shadow-[0_30px_80px_rgba(0,0,0,.5)] transition hover:-translate-y-1 hover:-rotate-3"
-              >
-                <Image
-                  src={showcaseFront.images![0]}
-                  alt={showcaseFront.title}
-                  fill
-                  sizes="230px"
-                  className="object-cover transition duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-[#071c19]/80 via-transparent to-transparent" />
-                <span className="absolute bottom-4 left-4 rounded-full border-2 border-white bg-teal-700 px-3 py-1.5 text-xs font-black text-white shadow-xl">
-                  ৳{showcaseFront.rent.toLocaleString('en-US')}/mo
-                </span>
-              </Link>
-
-              <div className="absolute -left-6 top-6 flex items-center gap-2.5 rounded-2xl border border-white/15 bg-[#091b19]/92 px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,.4)] backdrop-blur-xl">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-300 text-slate-950">
-                  <ShieldCheck className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="text-xs font-semibold text-white">{t('trustVerifiedOwners')}</p>
-                  <p className="max-w-[140px] truncate text-[10px] text-slate-400">
-                    {showcaseBack.location_name?.split(',')[0]?.trim()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="absolute inset-x-3 bottom-3 z-[450] grid overflow-hidden rounded-[20px] border border-white/15 bg-[#091b19]/88 shadow-2xl backdrop-blur-2xl sm:grid-cols-3 md:inset-x-5">
-          <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3 sm:border-b-0 sm:border-r">
-            <Building2 className="h-4 w-4 text-teal-300" aria-hidden />
-            <div>
-              <p className="text-xs font-semibold text-white">
-                {totalRooms > 0 ? `${totalRooms} ${t('trustRoomsListed')}` : t('featuredHeading')}
-              </p>
-              <p className="text-[9px] text-slate-400">{t('featuredSubtext')}</p>
-            </div>
-          </div>
-          <div className="hidden items-center gap-3 border-r border-white/10 px-4 py-3 sm:flex">
-            <ShieldCheck className="h-4 w-4 text-teal-300" aria-hidden />
-            <div>
-              <p className="text-xs font-semibold text-white">{t('trustVerifiedOwners')}</p>
-              <p className="text-[9px] text-slate-400">{t('trustFree')}</p>
-            </div>
-          </div>
-          <div className="hidden items-center gap-3 px-4 py-3 sm:flex">
-            <MessageSquare className="h-4 w-4 text-teal-300" aria-hidden />
-            <div>
-              <p className="text-xs font-semibold text-white">{t('trustDirectChat')}</p>
-              <p className="text-[9px] text-slate-400">{t('step2Desc')}</p>
-            </div>
-          </div>
-        </div>
+        <svg
+          className="absolute inset-x-0 bottom-0 z-0 h-14 w-full text-[#f3f6f4] dark:text-slate-950 sm:h-20 md:h-24"
+          viewBox="0 0 1440 120"
+          preserveAspectRatio="none"
+          aria-hidden
+        >
+          <path d="M0,48 C360,120 1080,0 1440,56 L1440,120 L0,120 Z" fill="currentColor" />
+        </svg>
       </section>
 
       <section className="relative overflow-hidden bg-[#f3f6f4] py-20 text-slate-950 dark:bg-slate-950 dark:text-white md:py-28">

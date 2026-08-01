@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Plus, ClipboardList, MessageSquare, CalendarCheck, BarChart2, ShieldCheck,
-  Building2, Flag, BookOpen, BriefcaseBusiness, Bus, MapPinned, Users, Wallet,
+  Building2, Flag, BookOpen, BriefcaseBusiness, Bus, MapPinned, Users, Wallet, User,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -244,6 +244,19 @@ export default function DashboardPage() {
               <div>
                 <p className="font-semibold text-gray-900 dark:text-white">My Bookings</p>
                 <p className="text-xs text-gray-400">Track your booking status</p>
+              </div>
+            </Link>
+
+            <Link
+              href="/profile"
+              className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
+                <User className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white">Profile</p>
+                <p className="text-xs text-gray-400">View and edit your profile</p>
               </div>
             </Link>
 

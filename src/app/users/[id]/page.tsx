@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { Phone, MapPin, MessageCircle, CheckCircle2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type PublicProfile = {
@@ -109,7 +110,9 @@ export default function UserProfilePage() {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-semibold text-gray-900">{profile.full_name}</h1>
             {profile.is_verified && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600 text-xs text-white">✓</span>
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600 text-white">
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+              </span>
             )}
           </div>
           <p className="text-sm text-gray-400">{profile.university || 'University not added'}</p>
@@ -125,8 +128,8 @@ export default function UserProfilePage() {
         {profile.phone && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500">Phone</span>
-            <a href={`tel:${profile.phone}`} className="text-sm font-medium text-teal-600 hover:underline">
-              📞 {profile.phone}
+            <a href={`tel:${profile.phone}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:underline">
+              <Phone className="h-3.5 w-3.5" aria-hidden /> {profile.phone}
             </a>
           </div>
         )}
@@ -143,7 +146,9 @@ export default function UserProfilePage() {
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">Status</span>
           {profile.is_verified ? (
-            <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">✓ Verified</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+              <CheckCircle2 className="h-3 w-3" aria-hidden /> Verified
+            </span>
           ) : (
             <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-600">Pending</span>
           )}
@@ -166,7 +171,7 @@ export default function UserProfilePage() {
                 
                 <div>
                   <p className="text-sm font-medium text-gray-900">{room.title}</p>
-                  <p className="text-xs text-gray-400">📍 {room.location_name} · ৳{room.rent}/month</p>
+                  <p className="inline-flex items-center gap-1 text-xs text-gray-400"><MapPin className="h-3 w-3 shrink-0" aria-hidden /> {room.location_name} · ৳{room.rent}/month</p>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                   room.status === 'open' ? 'bg-green-100 text-green-700'
@@ -185,7 +190,7 @@ export default function UserProfilePage() {
       href={'/inbox/' + profile.id}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3 text-sm font-medium text-white hover:bg-teal-700"
       >
-        💬 Message
+        <MessageCircle className="h-4 w-4" aria-hidden /> Message
       </a>
 
 

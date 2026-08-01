@@ -92,7 +92,9 @@ export default function RoomCard({ room }: { room: Room }) {
   const availableDate = room.available_from
     ? new Date(room.available_from).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : null
-  const isAvailableNow = room.available_from ? new Date(room.available_from) <= new Date() : false
+  // No available_from on record -> nothing to wait for, so treat it as
+  // available now instead of leaving the badge blank on that card.
+  const isAvailableNow = !room.available_from || new Date(room.available_from) <= new Date()
 
   const initials =
     room.profiles?.full_name?.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() ?? 'U'
@@ -125,7 +127,7 @@ export default function RoomCard({ room }: { room: Room }) {
       className={`group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-teal-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-700 ${isBooked ? 'opacity-70' : ''}`}
     >
       {/* ── Image ── */}
-      <div className="relative h-52 overflow-hidden bg-gray-100 dark:bg-gray-700">
+      <div className="relative h-60 overflow-hidden bg-gray-100 dark:bg-gray-700">
         {hasImages ? (
           images.map((src, index) => {
             const upcoming = (activeImage + 1) % images.length
@@ -245,31 +247,33 @@ export default function RoomCard({ room }: { room: Room }) {
           )}
         </div>
 
-        <p className="mb-2 text-xl font-bold text-teal-600 dark:text-teal-400">
-          ৳{room.rent.toLocaleString('en-US')}
-          <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
-            {isSharedRoom(room.type) ? ` ${t('perSeatMonth')}` : ` ${t('perMonth')}`}
-          </span>
-        </p>
-
-        {isSharedRoom(room.type) ? (
-          <div className="mb-3 flex items-center gap-2">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {t('seatsOf', { available: room.available_seats, total: room.total_seats })}
-            </p>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
-              {availability.emoji} {tAvailability(availability.labelKey)}
+        {/* Price (left) + seats/status (right) — same row */}
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <p className="text-xl font-bold text-teal-600 dark:text-teal-400">
+            ৳{room.rent.toLocaleString('en-US')}
+            <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
+              {isSharedRoom(room.type) ? ` ${t('perSeatMonth')}` : ` ${t('perMonth')}`}
             </span>
-          </div>
-        ) : (
-          <div className="mb-3">
-            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
+          </p>
+
+          {isSharedRoom(room.type) ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('seatsOf', { available: room.available_seats, total: room.total_seats })}
+              </span>
+              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${availability.color}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${availability.dot}`} />
+                {tAvailability(availability.labelKey)}
+              </span>
+            </div>
+          ) : (
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
               {tRoomStatus(effectiveStatus)}
             </span>
-          </div>
-        )}
+          )}
+        </div>
 
-        <div className="mb-3 flex flex-wrap gap-1.5">
+        <div className="mb-2 flex flex-wrap gap-1.5">
           {AMENITIES.filter((a) => room[a.key]).map(({ key, Icon, labelKey }) => (
             <span key={key} className="flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-xs text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
               <Icon className="h-3 w-3 shrink-0" /> {t(labelKey)}
@@ -278,23 +282,21 @@ export default function RoomCard({ room }: { room: Room }) {
         </div>
 
         {shortDesc && (
-          <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
+          <p className="mb-2 line-clamp-1 text-xs leading-relaxed text-gray-400 dark:text-gray-500">
             {shortDesc}
           </p>
         )}
 
         {/* Available date + Details button — same row */}
         <div className="mt-1 flex items-center justify-between gap-2">
-          {availableDate ? (
-            <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-              isAvailableNow
-                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                : 'bg-teal-50 text-teal-700 dark:bg-teal-900/20 dark:text-teal-400'
-            }`}>
-              <Calendar className="h-3 w-3 shrink-0" />
-              {isAvailableNow ? t('availableNow') : t('fromDate', { date: availableDate ?? '' })}
-            </div>
-          ) : <span />}
+          <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+            isAvailableNow
+              ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+              : 'bg-teal-50 text-teal-700 dark:bg-teal-900/20 dark:text-teal-400'
+          }`}>
+            <Calendar className="h-3 w-3 shrink-0" />
+            {isAvailableNow ? t('availableNow') : t('fromDate', { date: availableDate ?? '' })}
+          </div>
           <Link
             href={`/listings/${room.id}`}
             className="rounded-xl bg-teal-600 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-teal-700"

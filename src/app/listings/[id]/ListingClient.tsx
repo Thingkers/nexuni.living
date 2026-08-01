@@ -9,7 +9,7 @@ import {
   MapPin, User as UserIcon, Users, Wifi, Zap, Flame, ShowerHead,
   BookOpen, Shirt, FileText, Calendar, Tag, Home,
   Power, ArrowUpDown, Snowflake, Sparkles, ShieldCheck,
-  Droplets, Trees, UtensilsCrossed,
+  Droplets, Trees, UtensilsCrossed, Navigation,
 } from 'lucide-react'
 import ShareButton from '@/features/rooms/components/ShareButton'
 import { supabase } from '@/lib/supabase'
@@ -214,12 +214,22 @@ export default function ListingClient({ id, initialRoom }: { id: string; initial
 
             {mapLocation && (
               <div className="mb-4">
-                <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  <MapPin className="h-4 w-4" /> Location
-                  {mapLocation.isApproximate && (
-                    <span className="text-xs font-normal text-gray-400">(approximate)</span>
-                  )}
-                </p>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    <MapPin className="h-4 w-4" /> Location
+                    {mapLocation.isApproximate && (
+                      <span className="text-xs font-normal text-gray-400">(approximate)</span>
+                    )}
+                  </p>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${mapLocation.latitude},${mapLocation.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 hover:bg-teal-100 dark:bg-teal-900/20 dark:text-teal-400 dark:hover:bg-teal-900/30"
+                  >
+                    <Navigation className="h-3.5 w-3.5 shrink-0" /> Directions
+                  </a>
+                </div>
                 <RoomMap
                   latitude={mapLocation.latitude}
                   longitude={mapLocation.longitude}

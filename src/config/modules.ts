@@ -32,3 +32,9 @@ export const PORTAL_MODULES: readonly PortalModule[] = [
 export function getPortalModule(key: ModuleKey): PortalModule {
   return PORTAL_MODULES.find((module) => module.key === key)!
 }
+
+// Modules assignable to a module-scoped admin (public.module_admins.module
+// check constraint) — narrower than ModuleKey, which also covers
+// non-admin-assignable modules like housing/roommates/campuses/payments.
+export const ADMIN_MODULE_KEYS = ['books', 'services', 'jobs', 'transport'] as const
+export type AdminModuleKey = (typeof ADMIN_MODULE_KEYS)[number]

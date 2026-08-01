@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { Hourglass, ClipboardList, Sparkles, Check, CheckCircle2 } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
 
@@ -150,26 +151,26 @@ export default function AdminReportsPage() {
 
       <div className="mb-5 flex gap-2">
         {[
-          { key: 'pending', label: '⏳ Pending' },
-          { key: 'all',     label: '📋 All' },
+          { key: 'pending', label: 'Pending', Icon: Hourglass },
+          { key: 'all',     label: 'All',     Icon: ClipboardList },
         ].map((tab) => (
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key as 'pending' | 'all')}
-            className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm transition-colors ${
               filter === tab.key
                 ? 'border-teal-600 bg-teal-600 text-white'
                 : 'border-gray-200 text-gray-500 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'
             }`}
           >
-            {tab.label}
+            <tab.Icon className="h-3.5 w-3.5" aria-hidden /> {tab.label}
           </button>
         ))}
       </div>
 
       {filteredReports.length === 0 ? (
         <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-800">
-          <p className="text-4xl mb-2">🧹</p>
+          <Sparkles className="mx-auto mb-2 h-9 w-9 text-teal-400" aria-hidden />
           <p className="text-gray-400">No reports submitted yet</p>
         </div>
       ) : (
@@ -230,9 +231,9 @@ export default function AdminReportsPage() {
                       <button
                         onClick={() => markReviewed(report.id)}
                         disabled={acting === report.id}
-                        className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700"
                       >
-                        {acting === report.id ? '...' : '✓ Mark Reviewed'}
+                        {acting === report.id ? '...' : <><Check className="h-3.5 w-3.5" aria-hidden /> Mark Reviewed</>}
                       </button>
                       <button
                         onClick={() => dismissReport(report.id)}
@@ -265,8 +266,8 @@ export default function AdminReportsPage() {
                     </>
                   )}
                   {report.status !== 'pending' && (
-                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-                      {report.status === 'reviewed' ? '✓ Reviewed' : '— Dismissed'}
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                      {report.status === 'reviewed' ? <><CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> Reviewed</> : '— Dismissed'}
                     </span>
                   )}
                 </div>

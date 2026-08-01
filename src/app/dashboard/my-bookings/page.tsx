@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import {
+  ClipboardList, History, Home, CalendarDays, PartyPopper, Flag, Clock,
+  Wallet, Smartphone, MessageCircle,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import BookingTimeline from '@/features/bookings/components/BookingTimeline'
 import BookingCountdown from '@/features/bookings/components/BookingCountdown'
@@ -35,14 +39,14 @@ type Booking = {
   rooms: BookingRoom | null
 }
 
-const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
-  pending:   { label: 'Pending',        cls: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' },
-  confirmed: { label: 'On Hold (24h)',  cls: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' },
-  active:    { label: '✅ Active',       cls: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' },
-  cancelled: { label: 'Cancelled',      cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
-  rejected:  { label: 'Rejected',       cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
-  expired:   { label: '⏰ Expired',      cls: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400' },
-  completed: { label: '🏁 Completed',   cls: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400' },
+const STATUS_STYLE: Record<string, { label: string; cls: string; dot: string }> = {
+  pending:   { label: 'Pending',       cls: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400', dot: 'bg-yellow-500' },
+  confirmed: { label: 'On Hold (24h)', cls: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',       dot: 'bg-blue-500' },
+  active:    { label: 'Active',       cls: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400',    dot: 'bg-green-500' },
+  cancelled: { label: 'Cancelled',    cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400',            dot: 'bg-red-500' },
+  rejected:  { label: 'Rejected',     cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400',            dot: 'bg-red-500' },
+  expired:   { label: 'Expired',      cls: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',          dot: 'bg-gray-400' },
+  completed: { label: 'Completed',    cls: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400', dot: 'bg-purple-500' },
 }
 
 const ACTIVE_STATUSES = ['pending', 'confirmed', 'active']
@@ -137,20 +141,21 @@ export default function MyBookingsPage() {
       {/* Active status filter tabs */}
       <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
         {[
-          { key: 'all',       label: 'All' },
-          { key: 'pending',   label: '⏳ Pending' },
-          { key: 'confirmed', label: '🔵 On Hold' },
-          { key: 'active',    label: '✅ Active' },
+          { key: 'all',       label: 'All',       dot: null },
+          { key: 'pending',   label: 'Pending',   dot: 'bg-yellow-500' },
+          { key: 'confirmed', label: 'On Hold',   dot: 'bg-blue-500' },
+          { key: 'active',    label: 'Active',    dot: 'bg-green-500' },
         ].map((tab) => (
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key as ActiveFilter)}
-            className={`shrink-0 rounded-full border px-4 py-1.5 text-sm transition-colors ${
+            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm transition-colors ${
               filter === tab.key
                 ? 'border-teal-600 bg-teal-600 text-white'
                 : 'border-gray-200 text-gray-500 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400'
             }`}
           >
+            {tab.dot && <span className={`h-1.5 w-1.5 rounded-full ${tab.dot}`} />}
             {tab.label}
           </button>
         ))}
@@ -159,7 +164,7 @@ export default function MyBookingsPage() {
       {/* Active bookings */}
       {displayedActive.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-16 text-center dark:border-gray-700">
-          <p className="mb-2 text-4xl">📋</p>
+          <ClipboardList className="mb-2 h-9 w-9 text-gray-300 dark:text-gray-600" aria-hidden />
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">No active bookings</p>
           <Link href="/listings" className="mt-3 text-sm text-teal-600 hover:underline">Browse rooms →</Link>
         </div>
@@ -186,7 +191,7 @@ export default function MyBookingsPage() {
             onClick={() => setShowHistory((v) => !v)}
             className="flex w-full items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
           >
-            <span>📜 Past Bookings ({historyBookings.length})</span>
+            <span className="flex items-center gap-1.5"><History className="h-4 w-4" aria-hidden /> Past Bookings ({historyBookings.length})</span>
             <span className="text-lg">{showHistory ? '▲' : '▼'}</span>
           </button>
 
@@ -240,8 +245,8 @@ function BookingCard({
             <img src={roomImage} alt="Room" className="h-full w-full object-cover" />
           </div>
         ) : (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-2xl dark:bg-gray-700">
-            🏠
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-700">
+            <Home className="h-6 w-6 text-gray-400 dark:text-gray-500" aria-hidden />
           </div>
         )}
 
@@ -258,12 +263,14 @@ function BookingCard({
                 ৳{booking.rooms?.rent}/month · {booking.rooms?.location_name}
               </p>
               {booking.move_in_date && (
-                <p className="mt-0.5 text-xs text-gray-400">
-                  🗓 Move-in: {new Date(booking.move_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-400">
+                  <CalendarDays className="h-3 w-3 shrink-0" aria-hidden />
+                  Move-in: {new Date(booking.move_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
               )}
             </div>
-            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.cls}`}>
+            <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${status.cls}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
               {status.label}
             </span>
           </div>
@@ -278,14 +285,18 @@ function BookingCard({
 
       {booking.status === 'active' && (
         <div className="mt-3 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 dark:border-green-800 dark:bg-green-900/20">
-          <p className="text-xs font-semibold text-green-800 dark:text-green-400">🎉 Booking Active — Advance Received!</p>
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-green-800 dark:text-green-400">
+            <PartyPopper className="h-3.5 w-3.5 shrink-0" aria-hidden /> Booking Active — Advance Received!
+          </p>
           <p className="mt-0.5 text-xs text-green-700 dark:text-green-500">Your booking is confirmed and locked. You may now move in.</p>
         </div>
       )}
 
       {booking.status === 'completed' && (
         <div className="mt-3 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2.5 dark:border-purple-800 dark:bg-purple-900/20">
-          <p className="text-xs font-semibold text-purple-800 dark:text-purple-400">🏁 Tenancy Completed</p>
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-purple-800 dark:text-purple-400">
+            <Flag className="h-3.5 w-3.5 shrink-0" aria-hidden /> Tenancy Completed
+          </p>
           <p className="mt-0.5 text-xs text-purple-700 dark:text-purple-500">Your stay has ended. Thank you for using nexUni.living!</p>
           <Link href="/listings" className="mt-1 inline-block text-xs text-teal-600 hover:underline dark:text-teal-400">Find a new room →</Link>
         </div>
@@ -293,7 +304,9 @@ function BookingCard({
 
       {booking.status === 'expired' && (
         <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 dark:border-gray-600 dark:bg-gray-700">
-          <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">⏰ Booking Expired</p>
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300">
+            <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden /> Booking Expired
+          </p>
           <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">The 24h hold passed without advance payment.</p>
           <Link href={`/listings/${booking.rooms?.id}`} className="mt-1 inline-block text-xs text-teal-600 hover:underline dark:text-teal-400">Book again →</Link>
         </div>
@@ -301,11 +314,13 @@ function BookingCard({
 
       {booking.status === 'confirmed' && (hasBkash || hasNagad) && (
         <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-          <p className="mb-2 text-xs font-semibold text-green-800 dark:text-green-400">💸 Send payment to owner</p>
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-green-800 dark:text-green-400">
+            <Wallet className="h-3.5 w-3.5 shrink-0" aria-hidden /> Send payment to owner
+          </p>
           <div className="flex flex-col gap-1.5">
             {hasBkash && (
               <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
-                <span className="text-xs font-medium text-pink-600">📱 bKash</span>
+                <span className="flex items-center gap-1 text-xs font-medium text-pink-600"><Smartphone className="h-3.5 w-3.5" aria-hidden /> bKash</span>
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner?.bkash_number}</span>
                   <button onClick={() => owner?.bkash_number && copyToClipboard(owner.bkash_number, 'bKash number')} className="text-xs text-gray-400 hover:text-pink-600">Copy</button>
@@ -314,7 +329,7 @@ function BookingCard({
             )}
             {hasNagad && (
               <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
-                <span className="text-xs font-medium text-orange-600">📱 Nagad</span>
+                <span className="flex items-center gap-1 text-xs font-medium text-orange-600"><Smartphone className="h-3.5 w-3.5" aria-hidden /> Nagad</span>
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner?.nagad_number}</span>
                   <button onClick={() => owner?.nagad_number && copyToClipboard(owner.nagad_number, 'Nagad number')} className="text-xs text-gray-400 hover:text-orange-600">Copy</button>
@@ -331,8 +346,9 @@ function BookingCard({
       )}
 
       {booking.status === 'confirmed' && !hasBkash && !hasNagad && (
-        <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-          🔵 Room held for 24h — contact the owner to pay advance and confirm.
+        <div className="mt-3 flex items-start gap-1.5 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+          <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+          <span>Room held for 24h — contact the owner to pay advance and confirm.</span>
           {owner?.phone && (
             <a href={`tel:${owner.phone}`} className="ml-1 font-medium underline">{owner.phone}</a>
           )}
@@ -348,7 +364,7 @@ function BookingCard({
             href={`/inbox/${booking.rooms?.profiles?.id ?? ''}`}
             className="mt-2 inline-flex items-center gap-1 text-xs text-teal-600 hover:underline dark:text-teal-400"
           >
-            💬 Message Owner
+            <MessageCircle className="h-3.5 w-3.5" aria-hidden /> Message Owner
           </Link>
         </div>
       )}

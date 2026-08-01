@@ -13,7 +13,7 @@ export function getAvailabilityStatus({
     return {
       labelKey: 'fully_booked' as const,
       color: 'bg-red-100 text-red-600',
-      emoji: '🔴',
+      dot: 'bg-red-500',
     }
   }
 
@@ -24,13 +24,13 @@ export function getAvailabilityStatus({
     return {
       labelKey: 'few_seats_left' as const,
       color: 'bg-yellow-100 text-yellow-700',
-      emoji: '🟡',
+      dot: 'bg-yellow-500',
     }
   }
 
   return {
     labelKey: 'available' as const,
     color: 'bg-green-100 text-green-600',
-    emoji: '🟢',
+    dot: 'bg-green-500',
   }
 }

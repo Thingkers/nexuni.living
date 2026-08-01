@@ -2,9 +2,19 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PROTECTED_ROUTES = ['/dashboard', '/post-room', '/inbox', '/profile']
+const PROTECTED_ROUTES = ['/dashboard', '/post-room', '/post-book', '/post-job', '/inbox', '/profile']
 const ADMIN_ROUTES    = ['/admin']
 const AUTH_ROUTES     = ['/auth/login', '/auth/register']
+
+// Narrow admin routes a module-scoped admin (public.module_admins) may
+// enter even without profiles.role === 'admin'. Every other /admin/* path
+// stays global-admin-only.
+const MODULE_ADMIN_ROUTE_PREFIXES: Record<string, string> = {
+  '/admin/books': 'books',
+  '/admin/services': 'services',
+  '/admin/jobs': 'jobs',
+  '/admin/transport': 'transport',
+}
 
 export async function proxy(req: NextRequest) {
   let res = NextResponse.next({ request: { headers: req.headers } })
@@ -65,7 +75,26 @@ export async function proxy(req: NextRequest) {
       .single()
 
     if (profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', req.url))
+      // Not a global admin — a module-scoped admin may still enter their
+      // own narrow /admin/<module> slice.
+      const moduleEntry = Object.entries(MODULE_ADMIN_ROUTE_PREFIXES)
+        .find(([prefix]) => pathname.startsWith(prefix))
+
+      if (moduleEntry) {
+        const [, moduleKey] = moduleEntry
+        const { data: assignment } = await supabase
+          .from('module_admins')
+          .select('module')
+          .eq('user_id', user.id)
+          .eq('module', moduleKey)
+          .maybeSingle()
+
+        if (!assignment) {
+          return NextResponse.redirect(new URL('/dashboard', req.url))
+        }
+      } else {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+      }
     }
   }
 
@@ -81,6 +110,8 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/post-room/:path*',
+    '/post-book/:path*',
+    '/post-job/:path*',
     '/inbox/:path*',
     '/profile/:path*',
     '/admin/:path*',

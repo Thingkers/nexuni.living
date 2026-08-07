@@ -61,6 +61,32 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })
   }
 
+  // Remove the uploaded identity document before the profile row goes, while
+  // the folder name (the user id) is still meaningful. This route used to
+  // delete only the profile and the auth user, which is why the audit found
+  // 25 objects in student-id-cards against 6 surviving profiles — 19 people
+  // had deleted their account and their ID card was still stored, and (until
+  // supabase/migrations/20260806123000_private_student_id_cards_bucket.sql)
+  // still publicly served. Once the account is gone there is no verification
+  // left to perform, so there is no reason to keep the document.
+  //
+  // Best-effort: a storage failure must not leave a half-deleted account
+  // behind, so it is logged and the deletion continues. The pre-existing
+  // orphans are cleaned up by
+  // supabase/migrations/20260806125000_purge_orphaned_student_id_cards.sql.
+  for (const bucket of ['student-id-cards', 'avatars'] as const) {
+    try {
+      const { data: objects } = await supabaseAdmin.storage.from(bucket).list(userId)
+      if (objects && objects.length > 0) {
+        await supabaseAdmin.storage
+          .from(bucket)
+          .remove(objects.map((object) => `${userId}/${object.name}`))
+      }
+    } catch (storageError) {
+      console.error(`[delete-user] failed to clear ${bucket} for ${userId}`, storageError)
+    }
+  }
+
   await supabaseAdmin.from('profiles').delete().eq('id', userId)
 
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)

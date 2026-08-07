@@ -19,7 +19,7 @@
 -- Sprint 11 (Jobs) in docs/playbook.md. See docs/listings-architecture.md
 -- for the full design note.
 
-create table public.listings (
+create table if not exists public.listings (
   id uuid primary key default gen_random_uuid(),
   listing_type text not null check (listing_type in ('book', 'job')),
   owner_id uuid not null references public.profiles(id) on delete cascade,
@@ -37,7 +37,7 @@ create table public.listings (
   updated_at timestamptz not null default now()
 );
 
-create table public.listing_book_details (
+create table if not exists public.listing_book_details (
   listing_id uuid primary key references public.listings(id) on delete cascade,
   author text,
   course_code text,
@@ -46,7 +46,7 @@ create table public.listing_book_details (
   negotiable boolean not null default false
 );
 
-create table public.listing_job_details (
+create table if not exists public.listing_job_details (
   listing_id uuid primary key references public.listings(id) on delete cascade,
   employer text not null,
   job_type text check (job_type in ('part_time', 'internship')),
@@ -58,13 +58,13 @@ create table public.listing_job_details (
 
 -- Mirrors roommate_profiles_active_created_at_idx's partial-index pattern:
 -- the public board only ever queries status = 'active'.
-create index listings_active_created_at_idx
+create index if not exists listings_active_created_at_idx
   on public.listings (listing_type, created_at desc)
   where status = 'active';
 
-create index listings_owner_id_idx on public.listings (owner_id);
-create index listings_locality_id_idx on public.listings (locality_id);
-create index listings_university_id_idx on public.listings (university_id);
+create index if not exists listings_owner_id_idx on public.listings (owner_id);
+create index if not exists listings_locality_id_idx on public.listings (locality_id);
+create index if not exists listings_university_id_idx on public.listings (university_id);
 
 alter table public.listings enable row level security;
 alter table public.listing_book_details enable row level security;
@@ -75,6 +75,8 @@ alter table public.listing_job_details enable row level security;
 -- `rooms` had to be fixed after getting this wrong: Postgres OR-combines
 -- every permissive policy on a table, so redundant policies can silently
 -- widen an otherwise-correct restrictive one.
+drop policy if exists "listings read: owner, admin, or active" on public.listings;
+
 create policy "listings read: owner, admin, or active" on public.listings
 for select
 using (
@@ -83,9 +85,13 @@ using (
   or status = 'active'
 );
 
+drop policy if exists "listings insert: own row" on public.listings;
+
 create policy "listings insert: own row" on public.listings
 for insert
 with check (auth.uid() = owner_id);
+
+drop policy if exists "listings update: owner or admin" on public.listings;
 
 create policy "listings update: owner or admin" on public.listings
 for update
@@ -93,6 +99,8 @@ using (
   auth.uid() = owner_id
   or exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
 );
+
+drop policy if exists "listings delete: owner or admin" on public.listings;
 
 create policy "listings delete: owner or admin" on public.listings
 for delete
@@ -104,6 +112,8 @@ using (
 -- Detail tables proxy the same owner/admin/active visibility through their
 -- parent listing -- the same join-through-parent pattern bookings' RLS
 -- already uses against rooms.owner_id.
+drop policy if exists "listing_book_details read: via parent listing" on public.listing_book_details;
+
 create policy "listing_book_details read: via parent listing" on public.listing_book_details
 for select
 using (
@@ -117,6 +127,8 @@ using (
       )
   )
 );
+
+drop policy if exists "listing_book_details write: owner or admin" on public.listing_book_details;
 
 create policy "listing_book_details write: owner or admin" on public.listing_book_details
 for all
@@ -141,6 +153,8 @@ with check (
   )
 );
 
+drop policy if exists "listing_job_details read: via parent listing" on public.listing_job_details;
+
 create policy "listing_job_details read: via parent listing" on public.listing_job_details
 for select
 using (
@@ -154,6 +168,8 @@ using (
       )
   )
 );
+
+drop policy if exists "listing_job_details write: owner or admin" on public.listing_job_details;
 
 create policy "listing_job_details write: owner or admin" on public.listing_job_details
 for all

@@ -26,6 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     ? [
         { href: '/admin/users', label: 'Users' },
         { href: '/admin/rooms', label: 'Rooms' },
+        { href: '/admin/roommates', label: 'Roommates' },
         { href: '/admin/reports', label: 'Reports' },
         { href: '/admin/module-admins', label: 'Module Admins' },
         { href: '/dashboard/analytics', label: 'Analytics' },

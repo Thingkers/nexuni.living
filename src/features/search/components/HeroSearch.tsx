@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Search } from 'lucide-react'
+import { ArrowRight, Search } from 'lucide-react'
 
 import SearchSuggestions from '@/features/search/components/SearchSuggestions'
 
@@ -23,13 +23,13 @@ export default function HeroSearch() {
   }
 
   return (
-    <div className="relative mx-auto flex max-w-xl overflow-visible rounded-2xl bg-white p-1.5 shadow-xl shadow-teal-950/25 ring-1 ring-black/5 transition-shadow focus-within:shadow-2xl focus-within:shadow-teal-950/30">
+    <div className="relative mx-auto flex max-w-xl items-center overflow-visible rounded-full bg-white p-1.5 pl-5 shadow-xl shadow-teal-950/25 ring-1 ring-black/5 transition-shadow focus-within:shadow-2xl focus-within:shadow-teal-950/30">
+      <Search className="pointer-events-none h-4 w-4 shrink-0 text-gray-400" />
       <div className="relative flex-1">
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           placeholder={t('placeholder')}
-          className="w-full rounded-xl bg-transparent py-3 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 outline-none"
+          className="w-full bg-transparent py-3 pl-3 pr-4 text-sm text-gray-900 placeholder-gray-400 outline-none"
           value={search}
           onFocus={() => setSuggestionsOpen(true)}
           onChange={(e) => {
@@ -56,9 +56,10 @@ export default function HeroSearch() {
       </div>
       <button
         onClick={handleSearch}
-        className="rounded-xl bg-teal-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+        aria-label={t('search')}
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white shadow-sm transition hover:bg-teal-700"
       >
-        {t('search')}
+        <ArrowRight className="h-4 w-4" aria-hidden />
       </button>
     </div>
   )

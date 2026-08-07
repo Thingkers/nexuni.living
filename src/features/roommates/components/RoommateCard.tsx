@@ -25,7 +25,7 @@ export default function RoommateCard({ profile, matchScore }: RoommateCardProps)
       className="group block overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-teal-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-700"
     >
       <div className="mb-3 flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-sm font-semibold text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-base font-semibold text-teal-700 ring-2 ring-teal-50 dark:bg-teal-900/30 dark:text-teal-400 dark:ring-teal-900/40">
           {profile.profiles?.avatar_url
             ? // eslint-disable-next-line @next/next/no-img-element
               <img src={profile.profiles.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />

@@ -175,12 +175,12 @@ export default function RegisterPage() {
 
         <div className="mb-6 text-center">
           <Image
-            src="/icon.svg"
+            src="/icon.jpeg"
             alt="nexUni.living"
             width={52}
             height={52}
             priority
-            className="mx-auto mb-3 h-[52px] w-[52px]"
+            className="mx-auto mb-3 h-[52px] w-[52px] object-contain"
           />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Register</h1>
           <p className="mt-1 text-sm font-semibold tracking-[-0.02em] text-gray-500 dark:text-gray-400">

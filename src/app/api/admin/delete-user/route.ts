@@ -8,9 +8,16 @@ const schema = z.object({
 })
 
 export async function DELETE(req: NextRequest) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      { error: 'Server is not configured for admin actions (missing SUPABASE_SERVICE_ROLE_KEY).' },
+      { status: 500 },
+    )
+  }
+
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
   )
 
   const authHeader = req.headers.get('authorization') ?? ''

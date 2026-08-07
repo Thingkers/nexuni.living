@@ -38,11 +38,12 @@ export default function ModuleAdminsPage() {
   const [actionUserId, setActionUserId] = useState<string | null>(null)
 
   async function loadAssignments() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('module_admins')
-      .select('user_id, module, profiles(full_name, email)')
+      .select('user_id, module, profiles!user_id(full_name, email)')
       .order('module')
 
+    if (error) console.error('load module_admins failed:', error.message)
     setAssignments((data ?? []) as unknown as Assignment[])
   }
 

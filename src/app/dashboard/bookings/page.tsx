@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import {
   ClipboardList, Home, Phone, CalendarDays, Clock, MessageCircle,
-  Check, X, Banknote, RotateCw, PartyPopper, Flag, History,
+  Check, X, Banknote, RotateCw, PartyPopper, History,
 } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
@@ -155,25 +155,6 @@ export default function BookingRequestsPage() {
       }
     }
 
-    setActing(null)
-  }
-
-  async function endTenancy(bookingId: string) {
-    setActing(bookingId)
-
-    // Atomically completes the booking and restores the held seats /
-    // reopens the room in one transaction.
-    const { error } = await supabase.rpc('set_booking_status', {
-      p_booking_id: bookingId,
-      p_status: 'completed',
-    })
-
-    if (error) {
-      toast.error(error.message)
-    } else {
-      setBookings((prev) => prev.map((b) => b.id === bookingId ? { ...b, status: 'completed' } : b))
-      toast.success('Tenancy ended — room is now open again!')
-    }
     setActing(null)
   }
 
@@ -446,18 +427,9 @@ export default function BookingRequestsPage() {
 
                 {/* ACTIVE: fully booked, advance received */}
                 {booking.status === 'active' && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1.5 rounded-xl bg-green-50 px-3 py-2.5 text-xs text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                      <PartyPopper className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      Booking active — advance received. Room is occupied by this tenant.
-                    </div>
-                    <button
-                      disabled={!!isActing}
-                      onClick={() => endTenancy(booking.id)}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-purple-200 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 disabled:opacity-50"
-                    >
-                      {isActing ? 'Processing...' : <><Flag className="h-4 w-4" aria-hidden /> Tenant চলে গেছে — Tenancy শেষ করুন</>}
-                    </button>
+                  <div className="flex items-center gap-1.5 rounded-xl bg-green-50 px-3 py-2.5 text-xs text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                    <PartyPopper className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    Booking active — advance received. Room is occupied by this tenant. Tenant চলে গেলে My Rooms (Profile) থেকে room reopen করুন।
                   </div>
                 )}
 

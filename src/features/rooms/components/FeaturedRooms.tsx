@@ -80,7 +80,7 @@ export default function FeaturedRooms({ initialRooms }: { initialRooms: Room[] }
           <p className="text-sm text-slate-500 dark:text-slate-400">{t('empty')}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {rooms.map((room) => (
             <RoomCard key={room.id} room={room} />
           ))}

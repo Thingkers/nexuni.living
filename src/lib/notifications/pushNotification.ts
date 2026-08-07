@@ -13,6 +13,6 @@ export function pushNotification({
 
   new Notification(title, {
     body,
-    icon: '/favicon.ico',
+    icon: '/icon-512.png',
   })
 }

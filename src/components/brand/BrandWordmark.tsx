@@ -16,8 +16,8 @@ export default function BrandWordmark({
       } ${inverse ? 'text-white' : 'text-[#071c19] dark:text-white'} ${className}`}
       aria-label="nexUni"
     >
-      <span>nex</span>
-      <span className="text-teal-400">Uni</span>
+      <span>Students</span>
+      <span className="text-teal-400">Living</span>
     </span>
   )
 }

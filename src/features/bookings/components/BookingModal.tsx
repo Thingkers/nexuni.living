@@ -157,7 +157,7 @@ export default function BookingModal({ room, userId, onClose, onSuccess }: Props
 
           {/* Price breakdown */}
           <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-            <p className="mb-2 text-xs font-semibold text-gray-600 dark:text-gray-400">💰 Price Breakdown</p>
+            <p className="mb-2 text-xs font-semibold text-gray-600 dark:text-gray-400">৳ Price Breakdown</p>
             <div className="flex flex-col gap-1 text-sm">
               {shared ? (
                 <div className="flex justify-between">

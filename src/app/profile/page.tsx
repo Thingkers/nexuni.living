@@ -11,6 +11,15 @@ import { UniversityCombobox } from '@/features/universities/components/Universit
 
 type Tab = 'info' | 'rooms'
 
+type ActiveTenant = { bookingId: string; seats: number | null; tenantName: string }
+
+type RawActiveBooking = {
+  id: string
+  room_id: string
+  seats: number | null
+  profiles: { full_name: string | null } | { full_name: string | null }[] | null
+}
+
 // Editable text fields on the profile form — typed as a const tuple so
 // `field.key` narrows to a literal keyof Profile instead of a bare string,
 // which lets us index `profile[field.key]` safely without `any`. Full
@@ -40,6 +49,9 @@ function ProfilePageContent() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [activeTenants, setActiveTenants] = useState<Record<string, ActiveTenant[]>>({})
+  const [expandedRoomId, setExpandedRoomId] = useState<string | null>(null)
+  const [endingBookingId, setEndingBookingId] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadProfileData() {
@@ -77,6 +89,24 @@ function ProfilePageContent() {
       setProfile(typedProfile)
       setIsVerified(typedProfile.verification_status === 'approved')
       setMyRooms((roomData ?? []) as Room[])
+
+      const roomIds = (roomData ?? []).map((r) => r.id)
+      if (roomIds.length > 0) {
+        const { data: bookingData } = await supabase
+          .from('bookings')
+          .select('id, room_id, seats, profiles(full_name)')
+          .in('room_id', roomIds)
+          .eq('status', 'active')
+
+        const byRoom: Record<string, ActiveTenant[]> = {}
+        for (const b of (bookingData ?? []) as RawActiveBooking[]) {
+          const tenantProfile = Array.isArray(b.profiles) ? b.profiles[0] ?? null : b.profiles
+          const entry: ActiveTenant = { bookingId: b.id, seats: b.seats, tenantName: tenantProfile?.full_name ?? 'Tenant' }
+          byRoom[b.room_id] = [...(byRoom[b.room_id] ?? []), entry]
+        }
+        setActiveTenants(byRoom)
+      }
+
       setLoading(false)
     }
 
@@ -150,6 +180,37 @@ function ProfilePageContent() {
     if (error) { toast.error(error.message); return }
     setMyRooms((prev) => prev.map((r) => r.id === room.id ? { ...r, status: nextStatus } : r))
     toast.success(`Room marked as ${nextStatus}`)
+  }
+
+  async function endTenancyFor(bookingId: string, roomId: string) {
+    setEndingBookingId(bookingId)
+
+    // Atomically completes the booking and restores the held seats /
+    // reopens the room in one transaction (same RPC the Booking Requests
+    // page used to call directly).
+    const { error } = await supabase.rpc('set_booking_status', {
+      p_booking_id: bookingId,
+      p_status: 'completed',
+    })
+
+    if (error) {
+      toast.error(error.message)
+      setEndingBookingId(null)
+      return
+    }
+
+    setActiveTenants((prev) => ({
+      ...prev,
+      [roomId]: (prev[roomId] ?? []).filter((t) => t.bookingId !== bookingId),
+    }))
+
+    const { data: freshRoom } = await supabase.from('rooms').select('status').eq('id', roomId).single()
+    if (freshRoom) {
+      setMyRooms((prev) => prev.map((r) => r.id === roomId ? { ...r, status: freshRoom.status } : r))
+    }
+
+    toast.success('Tenancy শেষ — room reopened!')
+    setEndingBookingId(null)
   }
 
   async function deleteRoom(id: string) {
@@ -385,39 +446,83 @@ function ProfilePageContent() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {myRooms.map((room) => (
-                <div key={room.id} className="flex items-center justify-between rounded-2xl border border-gray-100 p-4 hover:border-gray-200">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900">{room.title}</p>
-                    <p className="mt-0.5 text-xs text-gray-400">৳{room.rent}/month · {room.location_name}</p>
+              {myRooms.map((room) => {
+                const tenants = activeTenants[room.id] ?? []
+                return (
+                <div key={room.id} className="rounded-2xl border border-gray-100 p-4 hover:border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-gray-900">{room.title}</p>
+                      <p className="mt-0.5 text-xs text-gray-400">৳{room.rent}/month · {room.location_name}</p>
+                    </div>
+                    <div className="ml-3 flex shrink-0 flex-wrap items-center gap-2">
+                      {tenants.length > 0 ? (
+                        <span
+                          title="This room has active tenant(s) — reopen below when they leave"
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                            room.status === 'partial' ? 'bg-yellow-50 text-yellow-700' : 'bg-red-50 text-red-600'
+                          }`}
+                        >
+                          {room.status === 'partial' ? '🟡 Partial' : '🔴 Booked'}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => toggleRoomStatus(room)}
+                          disabled={togglingId === room.id}
+                          title="Toggle open/closed"
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
+                            room.status === 'open' ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                            : room.status === 'partial' ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
+                            : room.status === 'booked' ? 'bg-red-50 text-red-600'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {togglingId === room.id ? '...' : room.status === 'open' ? '🟢 Open' : room.status === 'partial' ? '🟡 Partial' : room.status === 'booked' ? '🔴 Booked' : '⛔ Closed'}
+                        </button>
+                      )}
+                      <Link href={`/listings/${room.id}`} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">View</Link>
+                      <Link href={`/listings/${room.id}/edit`} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">Edit</Link>
+                      {confirmDeleteId === room.id ? (
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => deleteRoom(room.id)} disabled={deleting} className="text-xs font-medium text-red-500 hover:text-red-700 disabled:opacity-50">{deleting ? '...' : 'Sure?'}</button>
+                          <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-gray-400 hover:text-gray-600">No</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setConfirmDeleteId(room.id)} className="px-2 text-xs text-red-400 hover:text-red-600">Delete</button>
+                      )}
+                    </div>
                   </div>
-                  <div className="ml-3 flex shrink-0 flex-wrap items-center gap-2">
-                    <button
-                      onClick={() => toggleRoomStatus(room)}
-                      disabled={togglingId === room.id}
-                      title="Toggle open/closed"
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
-                        room.status === 'open' ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                        : room.status === 'partial' ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
-                        : room.status === 'booked' ? 'bg-red-50 text-red-600'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {togglingId === room.id ? '...' : room.status === 'open' ? '🟢 Open' : room.status === 'partial' ? '🟡 Partial' : room.status === 'booked' ? '🔴 Booked' : '⛔ Closed'}
-                    </button>
-                    <Link href={`/listings/${room.id}`} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">View</Link>
-                    <Link href={`/listings/${room.id}/edit`} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">Edit</Link>
-                    {confirmDeleteId === room.id ? (
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => deleteRoom(room.id)} disabled={deleting} className="text-xs font-medium text-red-500 hover:text-red-700 disabled:opacity-50">{deleting ? '...' : 'Sure?'}</button>
-                        <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-gray-400 hover:text-gray-600">No</button>
-                      </div>
-                    ) : (
-                      <button onClick={() => setConfirmDeleteId(room.id)} className="px-2 text-xs text-red-400 hover:text-red-600">Delete</button>
-                    )}
-                  </div>
+
+                  {tenants.length > 0 && (
+                    <div className="mt-3 rounded-xl border border-gray-100 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+                      <button
+                        onClick={() => setExpandedRoomId((prev) => prev === room.id ? null : room.id)}
+                        className="flex w-full items-center justify-between text-xs font-medium text-gray-600 dark:text-gray-300"
+                      >
+                        🚪 Active tenant{tenants.length > 1 ? 's' : ''} ({tenants.length})
+                        <span>{expandedRoomId === room.id ? '▲' : '▼'}</span>
+                      </button>
+                      {expandedRoomId === room.id && (
+                        <div className="mt-2 flex flex-col gap-1.5">
+                          {tenants.map((t) => (
+                            <div key={t.bookingId} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-xs dark:bg-gray-800">
+                              <span className="text-gray-700 dark:text-gray-300">{t.tenantName}</span>
+                              <button
+                                onClick={() => endTenancyFor(t.bookingId, room.id)}
+                                disabled={endingBookingId === t.bookingId}
+                                className="font-medium text-purple-600 hover:text-purple-800 disabled:opacity-50 dark:text-purple-400"
+                              >
+                                {endingBookingId === t.bookingId ? '...' : 'চলে গেছে — Reopen'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

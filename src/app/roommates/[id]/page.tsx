@@ -97,42 +97,44 @@ export default function RoommateDetailPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6 flex items-center gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-xl font-semibold text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
-          {profile.profiles?.avatar_url
-            ? // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
-            : initials}
-        </div>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{profile.profiles?.full_name || 'Student'}</h1>
-          {profile.universities && (
-            <p className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-              <GraduationCap className="h-3.5 w-3.5 shrink-0" />
-              {profile.universities.name}
-            </p>
+      <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div className="mb-5 flex items-center gap-4">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-100 text-2xl font-semibold text-teal-700 ring-2 ring-teal-50 dark:bg-teal-900/30 dark:text-teal-400 dark:ring-teal-900/40">
+            {profile.profiles?.avatar_url
+              ? // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
+              : initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{profile.profiles?.full_name || 'Student'}</h1>
+            {profile.universities && (
+              <p className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+                <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+                {profile.universities.name}
+              </p>
+            )}
+          </div>
+          {matchScore != null && (
+            <div className="shrink-0 text-right">
+              <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{matchScore}%</p>
+              <p className="text-[10px] text-gray-400">match</p>
+            </div>
           )}
         </div>
-        {matchScore != null && (
-          <div className="shrink-0 text-right">
-            <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{matchScore}%</p>
-            <p className="text-[10px] text-gray-400">match</p>
-          </div>
-        )}
-      </div>
 
-      <div className="mb-6 flex flex-wrap gap-2">
-        {profile.localities && (
-          <span className="flex items-center gap-1 rounded-full bg-teal-50 px-3 py-1 text-sm text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
-            <MapPin className="h-3.5 w-3.5" /> {profile.localities.name}
-          </span>
-        )}
-        {profile.budget_min != null && profile.budget_max != null && (
-          <span className="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-            <Wallet className="h-3.5 w-3.5" />
-            ৳{profile.budget_min.toLocaleString('en-US')}–৳{profile.budget_max.toLocaleString('en-US')}
-          </span>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {profile.localities && (
+            <span className="flex items-center gap-1 rounded-full bg-teal-50 px-3 py-1 text-sm text-teal-700 dark:bg-teal-900/30 dark:text-teal-400">
+              <MapPin className="h-3.5 w-3.5" /> {profile.localities.name}
+            </span>
+          )}
+          {profile.budget_min != null && profile.budget_max != null && (
+            <span className="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+              <Wallet className="h-3.5 w-3.5" />
+              ৳{profile.budget_min.toLocaleString('en-US')}–৳{profile.budget_max.toLocaleString('en-US')}
+            </span>
+          )}
+        </div>
       </div>
 
       {profile.localities?.lat != null && profile.localities?.lng != null && (

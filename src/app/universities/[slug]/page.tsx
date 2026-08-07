@@ -197,7 +197,7 @@ export default async function UniversityPage({ params }: Props) {
               No listings found near this campus yet.
             </p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {rooms.map((room) => (
                 <RoomCard key={room.id} room={room} />
               ))}

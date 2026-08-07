@@ -339,6 +339,18 @@ export default function DashboardPage() {
               </div>
             </Link>
             <Link
+              href="/admin/roommates"
+              className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
+                <Users className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white">Admin Roommates</p>
+                <p className="text-xs text-gray-400">Manage roommate profiles</p>
+              </div>
+            </Link>
+            <Link
               href="/admin/reports"
               className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
             >

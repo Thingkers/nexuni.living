@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Home, MapPin } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { Room } from '@/features/rooms/types/room.types'
 import { isSharedRoom, ROOM_TYPE_LABELS } from '@/features/rooms/types/room.types'
@@ -89,20 +90,27 @@ export default function SimilarRooms({ currentRoomId, type, locationName, gender
           const shared = isSharedRoom(room.type)
           const statusColor = room.status === 'open' ? 'bg-green-500' : room.status === 'partial' ? 'bg-yellow-400' : 'bg-red-500'
 
+          const statusLabel = room.status === 'open' ? 'Open' : room.status === 'partial' ? 'Filling' : 'Closed'
+
           return (
             <Link
               key={room.id}
               href={`/listings/${room.id}`}
-              className="group overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+              className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-teal-100 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-teal-700"
             >
               {/* Image */}
               <div className="relative h-28 overflow-hidden bg-gray-100 dark:bg-gray-700 sm:h-32">
                 {img ? (
-                  <Image src={img} alt={room.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                  <Image src={img} alt={room.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-3xl">🏠</div>
+                  <div className="flex h-full items-center justify-center bg-teal-50 text-teal-300 dark:bg-teal-900/20 dark:text-teal-700">
+                    <Home className="h-8 w-8" strokeWidth={1.5} aria-hidden />
+                  </div>
                 )}
-                <span className={`absolute left-2 top-2 h-2 w-2 rounded-full ${statusColor}`} />
+                <span className={`absolute left-2 top-2 flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[9px] font-semibold text-white backdrop-blur-sm`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${statusColor}`} />
+                  {statusLabel}
+                </span>
               </div>
 
               {/* Info */}
@@ -110,8 +118,9 @@ export default function SimilarRooms({ currentRoomId, type, locationName, gender
                 <h3 className="mb-1 line-clamp-1 text-xs font-semibold text-gray-900 dark:text-white">
                   {room.title}
                 </h3>
-                <p className="mb-1 line-clamp-1 text-[10px] text-gray-400 dark:text-gray-500">
-                  📍 {room.location_name || '—'}
+                <p className="mb-1.5 flex items-center gap-1 line-clamp-1 text-[10px] text-gray-400 dark:text-gray-500">
+                  <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+                  {room.location_name || '—'}
                 </p>
                 <p className="text-sm font-bold text-teal-600 dark:text-teal-400">
                   ৳{room.rent.toLocaleString('en-US')}

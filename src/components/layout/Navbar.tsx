@@ -291,12 +291,12 @@ export default function Navbar() {
       <div className="page-shell flex h-[68px] items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" aria-label={t('brand')} onClick={closeMenus}>
+        <Link href="/" aria-label={t('brand')} onClick={closeMenus} className="shrink-0">
           <BrandWordmark compact />
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden items-center gap-5 lg:flex">
+        <div className="hidden min-w-0 items-center gap-3 overflow-x-auto xl:gap-5 lg:flex">
           {[
             { href: '/listings', label: t('housing'), Icon: LayoutGrid },
             { href: '/roommates', label: t('roommates'), Icon: Users },
@@ -312,16 +312,16 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap text-sm font-medium transition-colors ${
                 pathname.startsWith(link.href)
                   ? 'text-teal-600 dark:text-teal-400'
                   : 'text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white'
               }`}
             >
-              <link.Icon className="h-4 w-4" aria-hidden />
+              <link.Icon className="h-4 w-4 shrink-0" aria-hidden />
               {link.label}
               {link.preview && (
-                <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                <span className="hidden rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400 xl:inline">
                   {t('preview')}
                 </span>
               )}
@@ -330,7 +330,7 @@ export default function Navbar() {
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
 
           {/* Theme toggle */}
           <button

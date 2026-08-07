@@ -34,7 +34,8 @@ export const metadata: Metadata = {
   description: BRAND.description,
   manifest: '/manifest.json',
   icons: {
-    icon: '/icon.svg',
+    icon: '/icon-512.png',
+    apple: '/icon-512.png',
   },
   // iOS reads these metadata fields in addition to manifest.json.
   appleWebApp: {

@@ -25,6 +25,10 @@ const LocationPicker = dynamic(
 
 type LandmarkItem = { name: string; time: string }
 
+// Off for now per product decision — keep the paste-to-fill UI, handler, and
+// API route intact so it's a one-line flip to re-enable later.
+const AI_EXTRACT_ENABLED = false
+
 const INITIAL_FORM = {
   title: '',
   type: 'mess',
@@ -312,7 +316,7 @@ export default function PostRoomPage() {
 
           {/* Paste-to-fill — only while the form is still empty, so it
               doesn't get in the way of someone editing an already-filled form. */}
-          {!form.title && (
+          {AI_EXTRACT_ENABLED && !form.title && (
             <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4 dark:border-teal-800 dark:bg-teal-900/20">
               <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-teal-700 dark:text-teal-400">
                 <Sparkle className="h-3.5 w-3.5" /> Fill from your post
@@ -335,7 +339,7 @@ export default function PostRoomPage() {
             </div>
           )}
 
-          {aiFilled && (
+          {AI_EXTRACT_ENABLED && aiFilled && (
             <div className="flex items-start justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-900/20 dark:text-amber-300">
               <span>✨ Filled in from your text — please check everything below before posting.</span>
               <button type="button" onClick={() => setAiFilled(false)} className="shrink-0 font-semibold hover:underline">Dismiss</button>
@@ -514,8 +518,9 @@ export default function PostRoomPage() {
               </div>
             )}
             {form.latitude && form.longitude && (
-              <p className="mt-1.5 text-xs text-gray-400">
-                📍 {form.latitude.toFixed(5)}, {form.longitude.toFixed(5)}
+              <p className="mt-1.5 flex items-center gap-1 text-xs text-gray-400">
+                <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+                {form.latitude.toFixed(5)}, {form.longitude.toFixed(5)}
                 <button type="button" onClick={() => { updateField('latitude', null); updateField('longitude', null) }}
                   className="ml-2 text-red-400 hover:text-red-600">Remove</button>
               </p>

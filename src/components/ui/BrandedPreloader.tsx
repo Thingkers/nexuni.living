@@ -23,7 +23,7 @@ export default function BrandedPreloader({
           <span className="nexuni-preloader-line nexuni-preloader-line-one" />
           <span className="nexuni-preloader-line nexuni-preloader-line-two" />
           <span className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-white/70 bg-white shadow-[0_16px_45px_rgba(7,28,25,.24),inset_0_1px_0_white] dark:border-slate-700 dark:bg-slate-900">
-            <Image src="/icon.svg" alt="" width={54} height={54} priority className="h-[54px] w-[54px]" />
+            <Image src="/icon.jpeg" alt="" width={54} height={54} priority className="h-[54px] w-[54px] object-contain" />
           </span>
         </div>
         <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">

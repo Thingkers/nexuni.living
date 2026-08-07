@@ -12,10 +12,16 @@ const schema = z.object({
 })
 
 export async function PATCH(req: NextRequest) {
-  const resend = new Resend(process.env.RESEND_API_KEY)
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      { error: 'Server is not configured for admin actions (missing SUPABASE_SERVICE_ROLE_KEY).' },
+      { status: 500 },
+    )
+  }
+
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
   )
 
   const authHeader = req.headers.get('authorization') ?? ''
@@ -94,9 +100,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   // Send verification email (best-effort — don't fail the action if email fails)
-  if ((action === 'approve' || action === 'reject') && target.email) {
+  if ((action === 'approve' || action === 'reject') && target.email && process.env.RESEND_API_KEY) {
     const isApproved = action === 'approve'
     try {
+      const resend = new Resend(process.env.RESEND_API_KEY)
       await resend.emails.send({
         from: process.env.EMAIL_FROM ?? `${BRAND.emailFromName} <onboarding@resend.dev>`,
         to: target.email,

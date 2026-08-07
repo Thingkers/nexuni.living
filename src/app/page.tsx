@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import {
   ArrowRight,
@@ -74,9 +75,20 @@ export default async function HomePage() {
 
   return (
     <main className="overflow-hidden bg-[#f3f6f4] text-slate-950 dark:bg-slate-950 dark:text-white">
-      <section className="relative isolate overflow-hidden bg-gradient-to-b from-emerald-500 via-teal-600 to-teal-800 text-white">
-        <div className="page-shell relative z-10 mx-auto flex max-w-2xl flex-col items-center pb-24 pt-16 text-center sm:pb-32 sm:pt-20">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm">
+      <section className="relative isolate overflow-hidden text-white">
+        <Image
+          src="/student-hero.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/75 via-teal-950/40 via-40% to-transparent" />
+
+        <div className="page-shell relative z-10 flex max-w-lg flex-col items-start pb-24 pt-16 text-left sm:pb-32 sm:pt-20 [text-shadow:0_2px_16px_rgba(0,0,0,0.55)]">
+
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
             {t('badge')}
           </div>
@@ -87,44 +99,27 @@ export default async function HomePage() {
             <span className="text-emerald-100">{t('heroTitleLine2')}</span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-sm leading-7 text-emerald-50/90 sm:text-base">
-            {t('heroSubtitle')}
-          </p>
-
-          <div className="mt-8 w-full max-w-xl">
-            <HeroSearch />
-          </div>
-
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs">
-            <span className="mr-1 text-emerald-100/80">{t('popularLabel')}</span>
-            {POPULAR_SEARCHES.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 font-semibold text-white transition hover:bg-white/20"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-emerald-50/90">
-            <span className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" aria-hidden />
+          <div className="mt-6 flex flex-wrap items-center justify-start gap-2.5">
+            <span className="flex items-center gap-1.5 rounded-full border border-white/30 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
+              <Building2 className="h-3.5 w-3.5" aria-hidden />
               {totalRooms} {t('trustRoomsListed')}
             </span>
-            <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" aria-hidden />
+            <span className="flex items-center gap-1.5 rounded-full border border-white/30 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
               {t('trustVerifiedOwners')}
             </span>
-            <span className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" aria-hidden />
+            <span className="flex items-center gap-1.5 rounded-full border border-white/30 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
+              <MessageSquare className="h-3.5 w-3.5" aria-hidden />
               {t('trustDirectChat')}
             </span>
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" aria-hidden />
+            <span className="flex items-center gap-1.5 rounded-full border border-white/30 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden />
               {t('trustFree')}
             </span>
+          </div>
+
+          <div className="mt-8 w-full max-w-md">
+            <HeroSearch />
           </div>
         </div>
 
@@ -134,12 +129,11 @@ export default async function HomePage() {
           preserveAspectRatio="none"
           aria-hidden
         >
-          <path d="M0,48 C360,120 1080,0 1440,56 L1440,120 L0,120 Z" fill="currentColor" />
+          <path d="M0,64 C240,100 480,100 720,64 C960,28 1200,28 1440,64 L1440,120 L0,120 Z" fill="currentColor" />
         </svg>
       </section>
 
       <section className="relative overflow-hidden bg-[#f3f6f4] py-20 text-slate-950 dark:bg-slate-950 dark:text-white md:py-28">
-        <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(45,212,191,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,.12)_1px,transparent_1px)] [background-size:48px_48px]" />
         <div className="page-shell relative">
           <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
@@ -199,51 +193,47 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="page-shell bg-[#eef3f1] py-12 dark:bg-slate-950 md:py-16">
-        <div className="grid overflow-hidden rounded-[36px] bg-[#071c19] text-white shadow-[0_30px_90px_rgba(7,28,25,.25)] lg:grid-cols-[1.1fr_.9fr]">
-          <div className="p-8 md:p-14 lg:p-16">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-300">{t('ownerEyebrow')}</p>
-            <h2 className="mt-5 max-w-2xl text-4xl font-semibold tracking-[-0.05em] md:text-6xl">{t('ctaHeading')}</h2>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300">{t('ctaSubtext')}</p>
-            <Link
-              href="/auth/register"
-              className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-teal-300 px-6 py-3.5 text-sm font-bold text-slate-950 transition hover:bg-teal-200"
-            >
-              {t('ctaButton')}
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
+      <footer className="border-t border-slate-200 bg-teal-900 pt-16 text-slate-300 dark:border-slate-800">
+        <div className="page-shell grid gap-10 pb-12 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <BrandWordmark inverse compact />
+            <p className="mt-4 max-w-xs text-sm leading-6 text-slate-400">{t('footerTagline')}</p>
           </div>
-          <div className="relative min-h-80 overflow-hidden bg-teal-400 p-8 text-slate-950 md:p-12">
-            <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(7,28,25,.35)_1px,transparent_1px),linear-gradient(90deg,rgba(7,28,25,.35)_1px,transparent_1px)] [background-size:38px_38px]" />
-            <div className="relative ml-auto flex h-full max-w-md flex-col justify-end">
-              <div className="rounded-[28px] border border-slate-950/10 bg-white/90 p-6 shadow-2xl backdrop-blur-xl">
-                <div className="flex items-center justify-between">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#071c19] text-teal-300">
-                    <Building2 className="h-5 w-5" />
-                  </span>
-                  <span className="flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1.5 text-[10px] font-bold text-teal-800">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-teal-500" />
-                    {t('ownerReady')}
-                  </span>
-                </div>
-                <p className="mt-8 text-2xl font-semibold tracking-[-0.04em]">{t('ownerCardTitle')}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{t('ownerCardText')}</p>
-              </div>
-            </div>
+
+          <div>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-teal-400">{t('footerDiscoverHeading')}</p>
+            <ul className="space-y-3 text-sm">
+              <li><Link href="/listings" className="hover:text-white">{t('footerBrowseRooms')}</Link></li>
+              <li><Link href="/roommates" className="hover:text-white">{t('footerRoommates')}</Link></li>
+              <li><Link href="/books" className="hover:text-white">{t('footerBooks')}</Link></li>
+              <li><Link href="/jobs" className="hover:text-white">{t('footerJobs')}</Link></li>
+              <li><Link href="/transport" className="hover:text-white">{t('footerTransport')}</Link></li>
+              <li><Link href="/services" className="hover:text-white">{t('footerServices')}</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-teal-400">{t('footerOwnersHeading')}</p>
+            <ul className="space-y-3 text-sm">
+              <li><Link href="/post-room" className="hover:text-white">{t('footerPostRoom')}</Link></li>
+              <li><Link href="/auth/register" className="hover:text-white">{t('footerRegister')}</Link></li>
+              <li><Link href="/dashboard" className="hover:text-white">{t('footerDashboard')}</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-teal-400">{t('footerSupportHeading')}</p>
+            <ul className="space-y-3 text-sm">
+              <li><Link href="/terms" className="hover:text-white">{t('footerTerms')}</Link></li>
+              <li><Link href="/privacy" className="hover:text-white">{t('footerPrivacy')}</Link></li>
+            </ul>
           </div>
         </div>
-      </section>
 
-      <footer className="page-shell pb-10 pt-4">
-        <div className="flex flex-col items-center justify-between gap-5 border-t border-slate-300 pt-8 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400 sm:flex-row">
-          <BrandWordmark compact />
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link href="/listings" className="hover:text-slate-950 dark:hover:text-white">{t('footerBrowseRooms')}</Link>
-            <Link href="/auth/register" className="hover:text-slate-950 dark:hover:text-white">{t('footerPostRoom')}</Link>
-            <Link href="/terms" className="hover:text-slate-950 dark:hover:text-white">{t('footerTerms')}</Link>
-            <Link href="/privacy" className="hover:text-slate-950 dark:hover:text-white">{t('footerPrivacy')}</Link>
+        <div className="border-t border-white/10">
+          <div className="page-shell flex flex-col items-center justify-between gap-4 py-6 text-xs text-slate-400 sm:flex-row">
+            <p>{t('footerCopyright', { year: new Date().getFullYear() })}</p>
           </div>
-          <p>{t('footerCopyright', { year: new Date().getFullYear() })}</p>
         </div>
       </footer>
     </main>

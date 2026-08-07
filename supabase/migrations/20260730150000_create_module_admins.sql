@@ -18,7 +18,7 @@
 -- No application code reads or writes this table yet -- that starts in
 -- Sprint 2 (docs/module-verticals-roadmap.md).
 
-create table public.module_admins (
+create table if not exists public.module_admins (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   module text not null check (module in ('books', 'services', 'jobs', 'transport')),
@@ -27,13 +27,15 @@ create table public.module_admins (
   unique (user_id, module)
 );
 
-create index module_admins_user_id_idx on public.module_admins (user_id);
+create index if not exists module_admins_user_id_idx on public.module_admins (user_id);
 
 alter table public.module_admins enable row level security;
 
 -- One combined SELECT policy -- see
 -- 20260702160000_remove_redundant_rooms_visibility_policies.sql for why
 -- stacked permissive policies are avoided in this codebase.
+drop policy if exists "module_admins read: self or admin" on public.module_admins;
+
 create policy "module_admins read: self or admin" on public.module_admins
 for select
 using (
@@ -42,6 +44,8 @@ using (
 );
 
 -- Only a global admin may create/change/remove module-admin assignments.
+drop policy if exists "module_admins write: admin only" on public.module_admins;
+
 create policy "module_admins write: admin only" on public.module_admins
 for all
 using (exists (select 1 from public.profiles where id = auth.uid() and role = 'admin'))

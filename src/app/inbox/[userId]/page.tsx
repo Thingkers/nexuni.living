@@ -13,7 +13,6 @@ type ChatProfile = {
   full_name: string | null
   university: string | null
   avatar_url: string | null
-  email?: string | null
 }
 
 type Message = {
@@ -83,7 +82,7 @@ export default function ChatPage() {
 
       const [{ data: profileData }, { data: otherProfileData }] = await Promise.all([
         supabase.from('profiles').select('id, full_name, university, avatar_url').eq('id', currentUserId).single(),
-        supabase.from('profiles').select('id, full_name, university, avatar_url, email').eq('id', otherUserId).single(),
+        supabase.from('profiles').select('id, full_name, university, avatar_url').eq('id', otherUserId).single(),
       ])
 
       setProfile(profileData)
@@ -165,8 +164,15 @@ export default function ChatPage() {
       is_read: false,
     })
 
+    // `email` is no longer selectable here — it was revoked from
+    // `authenticated` in supabase/migrations/20260806122000_relock_
+    // authenticated_sensitive_columns.sql, and leaving it in the select above
+    // would have failed the whole query and broken the chat. It was never
+    // needed: /api/send-email resolves the recipient's address from the
+    // database itself and ignores anything the client sends, precisely so
+    // this route can't be pointed at an arbitrary address.
     const ONE_HOUR = 60 * 60 * 1000
-    if (!error && otherUser?.email && Date.now() - lastEmailSentRef.current > ONE_HOUR) {
+    if (!error && Date.now() - lastEmailSentRef.current > ONE_HOUR) {
       lastEmailSentRef.current = Date.now()
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.access_token) {

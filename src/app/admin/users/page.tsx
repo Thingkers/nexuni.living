@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { toast } from 'sonner'
@@ -34,6 +34,37 @@ export default function AdminUsersPage() {
   const [activeTab, setActiveTab]   = useState<'pending' | 'all'>('pending')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  // userId -> short-lived signed URL. The student-id-cards bucket is private
+  // (supabase/migrations/20260806123000_private_student_id_cards_bucket.sql),
+  // so profiles.student_id_card_url is no longer something that can be put in
+  // an <img src>; it is a storage path that only /api/admin/student-id-card
+  // can turn into a readable URL, and only for an admin.
+  const [idCardUrls, setIdCardUrls] = useState<Record<string, string>>({})
+
+  // One batched call per page of users rather than one per card, so opening
+  // the pending queue costs a single request no matter how many cards it
+  // shows. Signed URLs expire (5 min), so this runs again for each page as
+  // it loads rather than once for the whole session.
+  const loadIdCardUrls = useCallback(async (batch: UserProfile[]) => {
+    const userIds = batch.filter((u) => u.student_id_card_url).map((u) => u.id)
+    if (userIds.length === 0) return
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.access_token) return
+
+    const res = await fetch('/api/admin/student-id-card', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ userIds }),
+    })
+
+    if (!res.ok) return
+    const { urls } = await res.json() as { urls: Record<string, string> }
+    setIdCardUrls((prev) => ({ ...prev, ...urls }))
+  }, [])
 
   useEffect(() => {
   async function loadUsers() {
@@ -55,10 +86,11 @@ export default function AdminUsersPage() {
     setUsers(result)
     setHasMore(result.length === PAGE_SIZE)
     setLoading(false)
+    await loadIdCardUrls(result)
   }
 
   loadUsers()
-}, [router])
+}, [router, loadIdCardUrls])
 
   async function loadMore() {
     setLoadingMore(true)
@@ -72,6 +104,7 @@ export default function AdminUsersPage() {
     setHasMore(result.length === PAGE_SIZE)
     setPage(nextPage)
     setLoadingMore(false)
+    await loadIdCardUrls(result)
   }
 
   async function adminAction(
@@ -179,6 +212,9 @@ export default function AdminUsersPage() {
               alt="Student ID Card"
               width={600}
               height={400}
+              // See the thumbnail above: keep identity documents out of the
+              // Next image optimizer's cache.
+              unoptimized
               className="h-auto w-full rounded-xl object-contain"
             />
             <button
@@ -259,16 +295,23 @@ export default function AdminUsersPage() {
                   </div>
 
                   {/* ID Card */}
-                  {user.student_id_card_url ? (
+                  {idCardUrls[user.id] ? (
                     <button
-                      onClick={() => setPreviewUrl(user.student_id_card_url!)}
+                      onClick={() => setPreviewUrl(idCardUrls[user.id])}
                       className="mb-4 w-full overflow-hidden rounded-xl border border-gray-200 hover:border-teal-400 dark:border-gray-700"
                     >
                       <div className="relative h-36 w-full bg-gray-50 dark:bg-gray-700">
                         <Image
-                          src={user.student_id_card_url}
+                          src={idCardUrls[user.id]}
                           alt="ID Card"
                           fill
+                          // unoptimized so the card is fetched straight from
+                          // Supabase by the browser. Routing it through the
+                          // Next image optimizer would write a copy of an
+                          // identity document into the optimizer's own cache,
+                          // outside the access controls this sprint just put
+                          // around the bucket.
+                          unoptimized
                           className="object-contain"
                         />
                         <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 hover:opacity-100 transition-opacity bg-black/20">
@@ -280,7 +323,7 @@ export default function AdminUsersPage() {
                     </button>
                   ) : (
                     <div className="mb-4 flex h-24 items-center justify-center rounded-xl border border-dashed border-gray-200 text-xs text-gray-400 dark:border-gray-700">
-                      No ID card uploaded
+                      {user.student_id_card_url ? 'Loading ID card…' : 'No ID card uploaded'}
                     </div>
                   )}
 
@@ -351,9 +394,9 @@ export default function AdminUsersPage() {
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2">
-                  {user.student_id_card_url && (
+                  {idCardUrls[user.id] && (
                     <button
-                      onClick={() => setPreviewUrl(user.student_id_card_url!)}
+                      onClick={() => setPreviewUrl(idCardUrls[user.id])}
                       className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700"
                     >
                       <IdCard className="h-3.5 w-3.5" aria-hidden /> ID Card

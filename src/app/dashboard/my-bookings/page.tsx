@@ -12,11 +12,23 @@ import { supabase } from '@/lib/supabase'
 import BookingTimeline from '@/features/bookings/components/BookingTimeline'
 import BookingCountdown from '@/features/bookings/components/BookingCountdown'
 
+// Shape returned by the get_booking_payment_details() RPC. Only reachable
+// for a booking the caller is the tenant of, and only once it is confirmed
+// or active — see
+// supabase/migrations/20260806122000_relock_authenticated_sensitive_columns.sql.
 type BookingOwner = {
   full_name: string | null
   phone: string | null
   bkash_number: string | null
   nagad_number: string | null
+}
+
+// What the bookings join can still select. bkash_number / nagad_number are
+// no longer readable through `profiles` by a signed-in user at all.
+type BookingRoomOwner = {
+  id?: string
+  full_name: string | null
+  phone: string | null
 }
 
 type BookingRoom = {
@@ -26,7 +38,7 @@ type BookingRoom = {
   location_name: string | null
   images: string[] | null
   type: string
-  profiles: (BookingOwner & { id?: string }) | null
+  profiles: BookingRoomOwner | null
 }
 
 type Booking = {
@@ -57,6 +69,9 @@ type ActiveFilter = 'all' | 'pending' | 'confirmed' | 'active'
 export default function MyBookingsPage() {
   const router = useRouter()
   const [bookings, setBookings] = useState<Booking[]>([])
+  // bookingId -> owner payout details, fetched separately per booking via a
+  // permission-checked RPC rather than joined into the list query.
+  const [paymentDetails, setPaymentDetails] = useState<Record<string, BookingOwner>>({})
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<ActiveFilter>('all')
   const [showHistory, setShowHistory] = useState(false)
@@ -68,20 +83,48 @@ export default function MyBookingsPage() {
       const { data: authData } = await supabase.auth.getUser()
       if (!authData.user) { router.push('/auth/login'); return }
 
+      // bkash_number / nagad_number are no longer selectable here: they were
+      // revoked from `authenticated` in
+      // supabase/migrations/20260806122000_relock_authenticated_sensitive_columns.sql,
+      // because this join handed every user the whole platform's mobile-money
+      // numbers. It also returned them for pending, rejected and cancelled
+      // bookings, so filing a request you never honoured was enough to read
+      // an owner's bKash number.
       const { data } = await supabase
         .from('bookings')
         .select(`
           *,
           rooms(
             id, title, rent, location_name, images, type,
-            profiles(full_name, phone, bkash_number, nagad_number)
+            profiles(full_name, phone)
           )
         `)
         .eq('user_id', authData.user.id)
         .order('created_at', { ascending: false })
 
-      setBookings((data as unknown as Booking[]) ?? [])
+      const loaded = (data as unknown as Booking[]) ?? []
+      setBookings(loaded)
       setLoading(false)
+
+      // Payment details come from a SECURITY DEFINER function that re-checks
+      // both conditions server-side (caller is this booking's tenant, and the
+      // booking is confirmed or active). Only asking for the bookings that
+      // can qualify keeps this to the handful the user is actually paying for.
+      const payable = loaded.filter((b) => b.status === 'confirmed' || b.status === 'active')
+      if (payable.length === 0) return
+
+      const results = await Promise.all(
+        payable.map(async (booking) => {
+          const { data: details } = await supabase
+            .rpc('get_booking_payment_details', { p_booking_id: booking.id })
+            .maybeSingle()
+          return [booking.id, details as BookingOwner | null] as const
+        }),
+      )
+
+      setPaymentDetails(
+        Object.fromEntries(results.filter(([, details]) => details !== null)) as Record<string, BookingOwner>,
+      )
     }
 
     load()
@@ -174,6 +217,7 @@ export default function MyBookingsPage() {
             <BookingCard
               key={booking.id}
               booking={booking}
+              payment={paymentDetails[booking.id]}
               confirmCancel={confirmCancel}
               cancelling={cancelling}
               setConfirmCancel={setConfirmCancel}
@@ -201,6 +245,7 @@ export default function MyBookingsPage() {
                 <BookingCard
                   key={booking.id}
                   booking={booking}
+                  payment={paymentDetails[booking.id]}
                   confirmCancel={confirmCancel}
                   cancelling={cancelling}
                   setConfirmCancel={setConfirmCancel}
@@ -218,6 +263,7 @@ export default function MyBookingsPage() {
 
 function BookingCard({
   booking,
+  payment,
   confirmCancel,
   cancelling,
   setConfirmCancel,
@@ -225,6 +271,7 @@ function BookingCard({
   copyToClipboard,
 }: {
   booking: Booking
+  payment: BookingOwner | undefined
   confirmCancel: string | null
   cancelling: string | null
   setConfirmCancel: (id: string | null) => void
@@ -233,8 +280,8 @@ function BookingCard({
 }) {
   const status = STATUS_STYLE[booking.status] ?? STATUS_STYLE.pending
   const owner = booking.rooms?.profiles
-  const hasBkash = owner?.bkash_number
-  const hasNagad = owner?.nagad_number
+  const hasBkash = payment?.bkash_number
+  const hasNagad = payment?.nagad_number
   const roomImage = booking.rooms?.images?.[0]
 
   return (
@@ -322,8 +369,8 @@ function BookingCard({
               <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
                 <span className="flex items-center gap-1 text-xs font-medium text-pink-600"><Smartphone className="h-3.5 w-3.5" aria-hidden /> bKash</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner?.bkash_number}</span>
-                  <button onClick={() => owner?.bkash_number && copyToClipboard(owner.bkash_number, 'bKash number')} className="text-xs text-gray-400 hover:text-pink-600">Copy</button>
+                  <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{payment?.bkash_number}</span>
+                  <button onClick={() => payment?.bkash_number && copyToClipboard(payment.bkash_number, 'bKash number')} className="text-xs text-gray-400 hover:text-pink-600">Copy</button>
                 </div>
               </div>
             )}
@@ -331,8 +378,8 @@ function BookingCard({
               <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
                 <span className="flex items-center gap-1 text-xs font-medium text-orange-600"><Smartphone className="h-3.5 w-3.5" aria-hidden /> Nagad</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{owner?.nagad_number}</span>
-                  <button onClick={() => owner?.nagad_number && copyToClipboard(owner.nagad_number, 'Nagad number')} className="text-xs text-gray-400 hover:text-orange-600">Copy</button>
+                  <span className="font-mono text-sm font-bold text-gray-800 dark:text-gray-200">{payment?.nagad_number}</span>
+                  <button onClick={() => payment?.nagad_number && copyToClipboard(payment.nagad_number, 'Nagad number')} className="text-xs text-gray-400 hover:text-orange-600">Copy</button>
                 </div>
               </div>
             )}

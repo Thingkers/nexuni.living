@@ -62,23 +62,28 @@ export default function RegisterPage() {
     setIdCardPreview(URL.createObjectURL(compressed))
   }
 
+  // Returns the storage path, not a URL. The bucket is private as of
+  // supabase/migrations/20260806123000_private_student_id_cards_bucket.sql,
+  // so there is no public URL to hand out any more — admins read the card
+  // through a short-lived signed URL minted by /api/admin/student-id-card.
+  //
+  // The filename is random rather than the old fixed `id-card.<ext>`: with a
+  // constant name, knowing a user's uuid (anon-readable from /rest/v1/profiles)
+  // was enough to construct the exact object path. That mattered when the
+  // bucket was public and it still removes a guessable identifier now.
+  // compressImage() always re-encodes to webp, so the extension is fixed.
   async function uploadIdCard(userId: string): Promise<string | null> {
     if (!idCardFile) return null
 
-    const ext = idCardFile.name.split('.').pop()
-    const path = `${userId}/id-card.${ext}`
+    const path = `${userId}/${crypto.randomUUID()}.webp`
 
     const { error } = await supabase.storage
       .from('student-id-cards')
-      .upload(path, idCardFile, { upsert: true })
+      .upload(path, idCardFile, { contentType: 'image/webp' })
 
     if (error) throw new Error(error.message)
 
-    const { data } = supabase.storage
-      .from('student-id-cards')
-      .getPublicUrl(path)
-
-    return data.publicUrl
+    return path
   }
 
   async function handleRegister() {
@@ -129,9 +134,9 @@ export default function RegisterPage() {
       return
     }
 
-    let idCardUrl: string | null = null
+    let idCardPath: string | null = null
     try {
-      idCardUrl = await uploadIdCard(data.user.id)
+      idCardPath = await uploadIdCard(data.user.id)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error'
       setError('ID card upload failed: ' + message)
@@ -139,6 +144,13 @@ export default function RegisterPage() {
       return
     }
 
+    // role / verification_status / is_verified are deliberately NOT sent.
+    // They are set by the guard_profiles_privileged_fields_insert trigger
+    // (supabase/migrations/20260806120000_guard_profile_privileged_fields_on_insert.sql),
+    // and `authenticated` no longer holds an INSERT grant on those columns —
+    // sending them would now fail the request outright. Previously the client
+    // supplied them, which is what made it possible to self-assign
+    // role: 'admin' by calling the REST API directly.
     const { error: profileError } = await supabase.from('profiles').insert({
       id: data.user.id,
       full_name: form.full_name,
@@ -148,10 +160,7 @@ export default function RegisterPage() {
       university: form.university || null,
       university_id: form.university_id,
       student_id: form.student_id,
-      student_id_card_url: idCardUrl,
-      role: 'student',
-      verification_status: 'pending',
-      is_verified: false,
+      student_id_card_url: idCardPath,
     })
 
     setLoading(false)

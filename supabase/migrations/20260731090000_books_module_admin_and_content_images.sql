@@ -38,12 +38,16 @@
 --    undocumented in any migration), this bucket ships through a tracked
 --    migration so its existence and policies are reviewable in git.
 
-alter table public.listing_book_details add column semester text;
+alter table public.listing_book_details add column if not exists semester text;
+
+drop policy if exists "listings admin: module admin full access" on public.listings;
 
 create policy "listings admin: module admin full access" on public.listings
 for all
 using (public.is_module_admin(listing_type || 's'))
 with check (public.is_module_admin(listing_type || 's'));
+
+drop policy if exists "listing_book_details admin: module admin full access" on public.listing_book_details;
 
 create policy "listing_book_details admin: module admin full access" on public.listing_book_details
 for all
@@ -66,9 +70,13 @@ insert into storage.buckets (id, name, public)
 values ('content-images', 'content-images', true)
 on conflict (id) do nothing;
 
+drop policy if exists "content-images read: public" on storage.objects;
+
 create policy "content-images read: public" on storage.objects
 for select
 using (bucket_id = 'content-images');
+
+drop policy if exists "content-images write: owner or module admin" on storage.objects;
 
 create policy "content-images write: owner or module admin" on storage.objects
 for all

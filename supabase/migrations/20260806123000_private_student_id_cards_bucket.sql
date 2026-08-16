@@ -79,6 +79,8 @@ drop policy if exists "Allow users to read own id cards" on storage.objects;
 -- `${userId}/...` convention the register page already writes, and the same
 -- storage.foldername() idiom the avatars policies and the content-images
 -- policy from 20260731090000 use.
+drop policy if exists "student-id-cards insert: own folder only" on storage.objects;
+
 create policy "student-id-cards insert: own folder only" on storage.objects
 for insert
 to authenticated
@@ -90,6 +92,8 @@ with check (
 -- Owner or global admin. Admin is included so a signed-in admin can still
 -- reach the object directly if the signed-URL route is ever unavailable;
 -- normal admin review goes through the route.
+drop policy if exists "student-id-cards read: owner or admin" on storage.objects;
+
 create policy "student-id-cards read: owner or admin" on storage.objects
 for select
 to authenticated

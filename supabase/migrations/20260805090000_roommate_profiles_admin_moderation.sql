@@ -11,7 +11,8 @@
 -- policy (same one-permissive-policy convention this table's own SELECT
 -- policy and roommate_profile_reports already use, instead of stacking a
 -- second permissive policy on top), and add a new admin-only DELETE policy.
-drop policy "roommate_profiles update: own row" on public.roommate_profiles;
+drop policy if exists "roommate_profiles update: own row" on public.roommate_profiles;
+drop policy if exists "roommate_profiles update: own row or admin" on public.roommate_profiles;
 
 create policy "roommate_profiles update: own row or admin" on public.roommate_profiles
 for update
@@ -23,6 +24,8 @@ with check (
   auth.uid() = user_id
   or exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
 );
+
+drop policy if exists "roommate_profiles delete: admin only" on public.roommate_profiles;
 
 create policy "roommate_profiles delete: admin only" on public.roommate_profiles
 for delete

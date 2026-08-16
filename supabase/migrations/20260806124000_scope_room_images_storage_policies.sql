@@ -57,6 +57,8 @@ drop policy if exists "Public image read 1ied7ze_0" on storage.objects;
 -- photos — `rooms` RLS already lets an admin delete the listing row itself
 -- ("owner or admin can delete rooms"), so this only makes the storage side
 -- match a permission they already have.
+drop policy if exists "room-images write: room owner or admin" on storage.objects;
+
 create policy "room-images write: room owner or admin" on storage.objects
 for all
 to authenticated

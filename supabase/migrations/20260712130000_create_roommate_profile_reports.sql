@@ -11,7 +11,7 @@
 -- Fix: roommate_profile_reports, mirroring reports' inferred shape
 -- (reporter_id, reason, details, status, created_at, one report per
 -- reporter per target).
-create table public.roommate_profile_reports (
+create table if not exists public.roommate_profile_reports (
   id uuid primary key default gen_random_uuid(),
   roommate_profile_id uuid not null references public.roommate_profiles(id) on delete cascade,
   reporter_id uuid not null references public.profiles(id) on delete cascade,
@@ -24,12 +24,16 @@ create table public.roommate_profile_reports (
 
 alter table public.roommate_profile_reports enable row level security;
 
+drop policy if exists "roommate_profile_reports insert: own reporter_id only" on public.roommate_profile_reports;
+
 create policy "roommate_profile_reports insert: own reporter_id only" on public.roommate_profile_reports
 for insert
 with check (auth.uid() = reporter_id);
 
 -- One combined policy (own-or-admin), not two stacked ones -- same
 -- OR-footgun reasoning as roommate_profiles' SELECT policy.
+drop policy if exists "roommate_profile_reports read: own or admin" on public.roommate_profile_reports;
+
 create policy "roommate_profile_reports read: own or admin" on public.roommate_profile_reports
 for select
 using (
@@ -40,6 +44,8 @@ using (
 -- Admin-only UPDATE is required, not optional: this app's report
 -- moderation (src/app/admin/reports/page.tsx) is plain client-side calls
 -- gated entirely by RLS, not a service-role route.
+drop policy if exists "roommate_profile_reports update: admin only" on public.roommate_profile_reports;
+
 create policy "roommate_profile_reports update: admin only" on public.roommate_profile_reports
 for update
 using (exists (select 1 from public.profiles where id = auth.uid() and role = 'admin'))

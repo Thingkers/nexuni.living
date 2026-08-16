@@ -24,9 +24,11 @@
 --    owner/admin/active-read and owner/admin-write policies for
 --    `listing_job_details` already exist from the foundation migration.
 
-alter table public.listings drop constraint listings_status_check;
+alter table public.listings drop constraint if exists listings_status_check;
 alter table public.listings add constraint listings_status_check
   check (status in ('active', 'archived', 'pending'));
+
+drop policy if exists "listing_job_details admin: module admin full access" on public.listing_job_details;
 
 create policy "listing_job_details admin: module admin full access" on public.listing_job_details
 for all

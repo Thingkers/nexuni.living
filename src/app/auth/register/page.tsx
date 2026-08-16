@@ -123,9 +123,28 @@ export default function RegisterPage() {
       return
     }
 
+    // The metadata below is what public.handle_new_user() reads to build the
+    // profile row server-side
+    // (supabase/migrations/20260807103000_handle_new_user_profile_trigger.sql).
+    // Sending it here is what will let email confirmation be switched on later
+    // without the profile depending on the browser holding a session.
+    //
+    // student_id and student_id_card_url are deliberately NOT sent as metadata:
+    // student_id is UNIQUE, and a duplicate raised inside the trigger would be
+    // swallowed and leave no profile at all. Both are written by the upsert
+    // below instead, where a 23505 is visible and can be explained to the user.
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
+      options: {
+        data: {
+          full_name: form.full_name,
+          phone: form.phone,
+          gender: form.gender,
+          university: form.university || null,
+          university_id: form.university_id,
+        },
+      },
     })
 
     if (signUpError || !data.user) {
@@ -144,29 +163,46 @@ export default function RegisterPage() {
       return
     }
 
-    // role / verification_status / is_verified are deliberately NOT sent.
-    // They are set by the guard_profiles_privileged_fields_insert trigger
+    // upsert, not insert: handle_new_user() has already created this row from
+    // the sign-up metadata, so a plain insert would now fail with a duplicate
+    // key. Upserting also keeps the old behaviour as a fallback — if the
+    // trigger ever swallows an error and writes nothing, this still creates the
+    // profile exactly as it did before the trigger existed.
+    //
+    // role / verification_status / is_verified are deliberately NOT sent. They
+    // are set by the guard_profiles_privileged_fields_insert trigger
     // (supabase/migrations/20260806120000_guard_profile_privileged_fields_on_insert.sql),
     // and `authenticated` no longer holds an INSERT grant on those columns —
-    // sending them would now fail the request outright. Previously the client
+    // sending them would fail the request outright. Previously the client
     // supplied them, which is what made it possible to self-assign
     // role: 'admin' by calling the REST API directly.
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: data.user.id,
-      full_name: form.full_name,
-      email: form.email,
-      phone: form.phone,
-      gender: form.gender,
-      university: form.university || null,
-      university_id: form.university_id,
-      student_id: form.student_id,
-      student_id_card_url: idCardPath,
-    })
+    const { error: profileError } = await supabase.from('profiles').upsert(
+      {
+        id: data.user.id,
+        full_name: form.full_name,
+        email: form.email,
+        phone: form.phone,
+        gender: form.gender,
+        university: form.university || null,
+        university_id: form.university_id,
+        student_id: form.student_id,
+        student_id_card_url: idCardPath,
+      },
+      { onConflict: 'id' },
+    )
 
     setLoading(false)
 
     if (profileError) {
-      setError(profileError.message)
+      // profiles carries UNIQUE (student_id). The pre-flight check above cannot
+      // catch a duplicate — it selects a column `anon` holds no grant on, so it
+      // gets 403 and silently passes — which makes this the point where the
+      // collision actually surfaces.
+      setError(
+        profileError.code === '23505'
+          ? 'This Student ID is already registered.'
+          : profileError.message,
+      )
       return
     }
 

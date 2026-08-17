@@ -163,12 +163,6 @@ export default function RegisterPage() {
       return
     }
 
-    // upsert, not insert: handle_new_user() has already created this row from
-    // the sign-up metadata, so a plain insert would now fail with a duplicate
-    // key. Upserting also keeps the old behaviour as a fallback — if the
-    // trigger ever swallows an error and writes nothing, this still creates the
-    // profile exactly as it did before the trigger existed.
-    //
     // role / verification_status / is_verified are deliberately NOT sent. They
     // are set by the guard_profiles_privileged_fields_insert trigger
     // (supabase/migrations/20260806120000_guard_profile_privileged_fields_on_insert.sql),
@@ -176,20 +170,48 @@ export default function RegisterPage() {
     // sending them would fail the request outright. Previously the client
     // supplied them, which is what made it possible to self-assign
     // role: 'admin' by calling the REST API directly.
-    const { error: profileError } = await supabase.from('profiles').upsert(
-      {
-        id: data.user.id,
-        full_name: form.full_name,
-        email: form.email,
-        phone: form.phone,
-        gender: form.gender,
-        university: form.university || null,
-        university_id: form.university_id,
-        student_id: form.student_id,
-        student_id_card_url: idCardPath,
-      },
-      { onConflict: 'id' },
-    )
+    const profilePayload = {
+      full_name: form.full_name,
+      email: form.email,
+      phone: form.phone,
+      gender: form.gender,
+      university: form.university || null,
+      university_id: form.university_id,
+      student_id: form.student_id,
+      student_id_card_url: idCardPath,
+    }
+
+    // UPDATE, not upsert. handle_new_user()
+    // (supabase/migrations/20260807103000_handle_new_user_profile_trigger.sql)
+    // has already created this row from the sign-up metadata, so all that is
+    // left is the two fields the trigger deliberately skips.
+    //
+    // It must not be an upsert: PostgreSQL requires TABLE-level privileges for
+    // `INSERT ... ON CONFLICT DO UPDATE`, and Sprint 0 replaced `authenticated`'s
+    // table-level INSERT and SELECT on profiles with column-level grants
+    // (20260806120000, 20260806122000). Verified on the live database —
+    // has_table_privilege('authenticated','profiles','INSERT') is false while
+    // has_column_privilege(...,'id','INSERT') is true. An upsert therefore fails
+    // with "permission denied for table profiles" no matter which columns it
+    // names. A plain UPDATE is unaffected: table-level UPDATE is still granted.
+    const { data: updatedRows, error: updateError } = await supabase
+      .from('profiles')
+      .update(profilePayload)
+      .eq('id', data.user.id)
+      .select('id')
+
+    let profileError = updateError
+
+    // Fallback for the one case the trigger cannot cover: it swallows its own
+    // errors by design, so a bad metadata value leaves no row and the UPDATE
+    // above matches nothing. Inserting here restores exactly the pre-trigger
+    // behaviour rather than stranding the account without a profile.
+    if (!profileError && (updatedRows?.length ?? 0) === 0) {
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({ id: data.user.id, ...profilePayload })
+      profileError = insertError
+    }
 
     setLoading(false)
 

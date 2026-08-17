@@ -11,9 +11,11 @@ import {
 
 import { supabase } from '@/lib/supabase'
 
+// No email: it was selected but never rendered, and embedding it fails the
+// whole request now that Sprint 0 revoked the column (see
+// src/lib/adminContacts.ts). Dropping it is the entire fix for this page.
 type RoomOwner = {
   full_name: string | null
-  email: string | null
 }
 
 type AdminRoom = {
@@ -92,7 +94,7 @@ export default function AdminRoomsPage() {
 
       const { data } = await supabase
         .from('rooms')
-        .select('id, title, rent, location_name, status, type, gender_type, created_at, profiles(full_name, email)')
+        .select('id, title, rent, location_name, status, type, gender_type, created_at, profiles(full_name)')
         .order('created_at', { ascending: false })
 
       const clean = ((data ?? []) as unknown as RawAdminRoom[]).map((item) => ({

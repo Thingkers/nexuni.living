@@ -25,7 +25,7 @@ export default function JobsAdminPanel() {
   async function fetchJobs(): Promise<JobListing[]> {
     const { data } = await supabase
       .from('listings')
-      .select('id, title, description, price, status, images, owner_id, university_id, created_at, listing_job_details(employer, job_type, salary_min, salary_max, apply_method, apply_value), universities(name), profiles(full_name, email)')
+      .select('id, title, description, price, status, images, owner_id, university_id, created_at, listing_job_details(employer, job_type, salary_min, salary_max, apply_method, apply_value), universities(name), profiles(full_name)')
       .eq('listing_type', 'job')
       .order('created_at', { ascending: false })
 

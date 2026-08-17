@@ -22,5 +22,8 @@ export type JobListing = {
   created_at: string
   listing_job_details: JobListingDetails | null
   universities: { name: string } | null
-  profiles?: { full_name: string | null; email: string | null } | null
+  // full_name only: `email` was selected but never rendered, and embedding a
+  // column `authenticated` cannot read fails the entire PostgREST request —
+  // see src/lib/adminContacts.ts.
+  profiles?: { full_name: string | null } | null
 }

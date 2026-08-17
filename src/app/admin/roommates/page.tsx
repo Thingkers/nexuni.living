@@ -9,16 +9,17 @@ import {
 } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
+import { fetchUserContacts, type UserContact } from '@/lib/adminContacts'
 
 type RoommateOwner = {
   full_name: string | null
-  email: string | null
 }
 
 type NamedRef = { name: string | null }
 
 type AdminRoommate = {
   id: string
+  user_id: string
   status: string
   bio: string | null
   gender: string | null
@@ -63,6 +64,8 @@ export default function AdminRoommatesPage() {
   const router = useRouter()
 
   const [profiles, setProfiles]   = useState<AdminRoommate[]>([])
+  // Owner emails cannot come from the embed — see src/lib/adminContacts.ts.
+  const [contacts, setContacts]   = useState<Record<string, UserContact>>({})
   const [loading, setLoading]     = useState(true)
   const [activeTab, setActiveTab] = useState('all')
   const [search, setSearch]       = useState('')
@@ -81,7 +84,7 @@ export default function AdminRoommatesPage() {
 
       const { data, error } = await supabase
         .from('roommate_profiles')
-        .select('id, status, bio, gender, age, budget_min, budget_max, created_at, profiles(full_name, email), universities!university_id(name), localities(name)')
+        .select('id, user_id, status, bio, gender, age, budget_min, budget_max, created_at, profiles(full_name), universities!university_id(name), localities(name)')
         .order('created_at', { ascending: false })
 
       if (error) console.error('admin roommates load failed:', error.message)
@@ -94,6 +97,7 @@ export default function AdminRoommatesPage() {
       })) as AdminRoommate[]
 
       setProfiles(clean)
+      setContacts(await fetchUserContacts(clean.map((p) => p.user_id)))
       setLoading(false)
     }
     loadRoommates()
@@ -106,12 +110,12 @@ export default function AdminRoommatesPage() {
       list = list.filter(
         (p) =>
           (p.profiles?.full_name ?? '').toLowerCase().includes(q) ||
-          (p.profiles?.email ?? '').toLowerCase().includes(q) ||
+          (contacts[p.user_id]?.email ?? '').toLowerCase().includes(q) ||
           (p.bio ?? '').toLowerCase().includes(q),
       )
     }
     return list
-  }, [profiles, activeTab, search])
+  }, [profiles, activeTab, search, contacts])
 
   const stats = useMemo(() => ({
     total:  profiles.length,
@@ -245,7 +249,7 @@ export default function AdminRoommatesPage() {
                     </div>
 
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-                      <span className="flex items-center gap-1">{profile.profiles?.email ?? '—'}</span>
+                      <span className="flex items-center gap-1">{contacts[profile.user_id]?.email ?? '—'}</span>
                       {profile.universities?.name && (
                         <span className="flex items-center gap-1">
                           <GraduationCap className="h-3 w-3 shrink-0" />

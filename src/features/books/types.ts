@@ -21,5 +21,8 @@ export type BookListing = {
   created_at: string
   listing_book_details: BookListingDetails | null
   universities: { name: string } | null
-  profiles?: { full_name: string | null; email: string | null } | null
+  // full_name only: `email` was selected but never rendered, and embedding a
+  // column `authenticated` cannot read fails the entire PostgREST request —
+  // see src/lib/adminContacts.ts.
+  profiles?: { full_name: string | null } | null
 }

@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { UserPlus, X } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
+import { fetchUserContacts, type UserContact } from '@/lib/adminContacts'
 import { ADMIN_MODULE_KEYS, type AdminModuleKey } from '@/config/modules'
 
 const MODULE_LABELS: Record<AdminModuleKey, string> = {
@@ -18,7 +19,8 @@ const MODULE_LABELS: Record<AdminModuleKey, string> = {
 type Assignment = {
   user_id: string
   module: AdminModuleKey
-  profiles: { full_name: string | null; email: string | null } | null
+  // full_name only — see src/lib/adminContacts.ts for why email cannot be embedded.
+  profiles: { full_name: string | null } | null
 }
 
 type SearchResult = {
@@ -32,6 +34,7 @@ export default function ModuleAdminsPage() {
 
   const [loading, setLoading] = useState(true)
   const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [contacts, setContacts] = useState<Record<string, UserContact>>({})
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [searching, setSearching] = useState(false)
@@ -40,11 +43,14 @@ export default function ModuleAdminsPage() {
   async function loadAssignments() {
     const { data, error } = await supabase
       .from('module_admins')
-      .select('user_id, module, profiles!user_id(full_name, email)')
+      .select('user_id, module, profiles!user_id(full_name)')
       .order('module')
 
     if (error) console.error('load module_admins failed:', error.message)
-    setAssignments((data ?? []) as unknown as Assignment[])
+
+    const rows = (data ?? []) as unknown as Assignment[]
+    setAssignments(rows)
+    setContacts(await fetchUserContacts(rows.map((a) => a.user_id)))
   }
 
   useEffect(() => {
@@ -67,18 +73,43 @@ export default function ModuleAdminsPage() {
     init()
   }, [router])
 
+  // Searched through admin_list_profiles() rather than the table. Sprint 0
+  // revoked `email` from `authenticated` (20260806122000), which broke this
+  // twice over: the select named the column, and the .or() filtered on it.
+  // admin_list_profiles is SECURITY DEFINER with its own `admin only` guard, so
+  // it still sees every column — and this page is already admin-only.
+  //
+  // Filtering client-side is the trade-off. It is correct for this user base
+  // and keeps search-by-email working exactly as before; if the platform grows
+  // past a few hundred accounts this needs a server-side search argument
+  // instead of a raised limit.
   async function search() {
     const q = query.trim()
     if (!q) { setResults([]); return }
 
     setSearching(true)
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, email')
-      .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`)
-      .limit(10)
+    const { data, error } = await supabase.rpc('admin_list_profiles', {
+      p_limit: 500,
+      p_offset: 0,
+    })
 
-    setResults((data ?? []) as SearchResult[])
+    if (error) {
+      toast.error('Search failed: ' + error.message)
+      setResults([])
+      setSearching(false)
+      return
+    }
+
+    const needle = q.toLowerCase()
+    const matches = ((data ?? []) as SearchResult[])
+      .filter(
+        (profile) =>
+          (profile.full_name ?? '').toLowerCase().includes(needle) ||
+          (profile.email ?? '').toLowerCase().includes(needle),
+      )
+      .slice(0, 10)
+
+    setResults(matches)
     setSearching(false)
   }
 
@@ -208,7 +239,7 @@ export default function ModuleAdminsPage() {
                     <div key={a.user_id} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2 dark:border-gray-700">
                       <div>
                         <p className="text-sm text-gray-900 dark:text-white">{a.profiles?.full_name || 'Unknown'}</p>
-                        <p className="text-xs text-gray-400">{a.profiles?.email}</p>
+                        <p className="text-xs text-gray-400">{contacts[a.user_id]?.email}</p>
                       </div>
                       <button
                         onClick={() => unassign(a.user_id, module)}

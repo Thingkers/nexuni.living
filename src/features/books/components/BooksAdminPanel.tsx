@@ -18,7 +18,7 @@ export default function BooksAdminPanel() {
   async function fetchBooks(): Promise<BookListing[]> {
     const { data } = await supabase
       .from('listings')
-      .select('id, title, description, price, status, images, owner_id, university_id, created_at, listing_book_details(author, course_code, department, semester, condition, negotiable), universities(name), profiles(full_name, email)')
+      .select('id, title, description, price, status, images, owner_id, university_id, created_at, listing_book_details(author, course_code, department, semester, condition, negotiable), universities(name), profiles(full_name)')
       .eq('listing_type', 'book')
       .order('created_at', { ascending: false })
 

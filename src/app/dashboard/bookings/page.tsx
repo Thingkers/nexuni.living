@@ -32,10 +32,14 @@ type Booking = {
     available_seats: number | null
     total_seats: number | null
   } | null
+  // No email. `authenticated` lost SELECT on profiles.email in Sprint 0
+  // (supabase/migrations/20260806122000), and PostgREST fails the WHOLE request
+  // when one embedded column is denied — so naming it here was taking the
+  // entire bookings list down with it. Nothing rendered it; it only gated the
+  // notification call below, which resolves the address server-side anyway.
   profiles: {
     id: string
     full_name: string | null
-    email: string | null
     phone: string | null
     university: string | null
     gender: string | null
@@ -85,7 +89,7 @@ export default function BookingRequestsPage() {
         .select(`
           *,
           rooms!inner(id, title, rent, location_name, owner_id, type, available_seats),
-          profiles(id, full_name, email, phone, university, gender, avatar_url)
+          profiles(id, full_name, phone, university, gender, avatar_url)
         `)
         .eq('rooms.owner_id', authData.user.id)
         .order('created_at', { ascending: false })
@@ -107,8 +111,6 @@ export default function BookingRequestsPage() {
     action: 'confirmed' | 'cancelled' | 'rejected' | 'active',
   ) {
     setActing(bookingId)
-
-    const booking = bookings.find((b) => b.id === bookingId)
 
     // set_booking_status updates the booking AND the room's seat count in a
     // single locked transaction — the old client-side read-modify-write let
@@ -141,7 +143,7 @@ export default function BookingRequestsPage() {
 
     // Notify tenant via email — server resolves the tenant's address and
     // renders the template itself, and verifies the caller owns the room.
-    if (booking?.profiles?.email && (action === 'confirmed' || action === 'rejected')) {
+    if (action === 'confirmed' || action === 'rejected') {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.access_token) {
         fetch('/api/send-email', {

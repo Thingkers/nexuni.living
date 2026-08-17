@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Hourglass, ClipboardList, Sparkles, Check, CheckCircle2 } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
+import { fetchUserContacts, type UserContact } from '@/lib/adminContacts'
 
 type Report = {
   id: string
@@ -14,21 +15,24 @@ type Report = {
   details: string | null
   status: string
   created_at: string
+  reporter_id: string
 
   rooms: {
     id: string
     title: string
   } | null
 
+  // full_name only — the reporter's email arrives separately, because
+  // embedding it fails the whole request (see src/lib/adminContacts.ts).
   profiles: {
     full_name: string | null
-    email: string | null
   } | null
 }
 
 export default function AdminReportsPage() {
   const router = useRouter()
   const [reports, setReports] = useState<Report[]>([])
+  const [contacts, setContacts] = useState<Record<string, UserContact>>({})
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<{ reportId: string; roomId: string } | null>(null)
@@ -56,15 +60,18 @@ export default function AdminReportsPage() {
           details,
           status,
           created_at,
+          reporter_id,
           rooms (id, title),
-          profiles!reporter_id (full_name, email)
+          profiles!reporter_id (full_name)
         `)
         .order('created_at', { ascending: false })
 
       if (error) {
         toast.error('Failed to load reports: ' + error.message)
       } else if (data) {
-        setReports(data as unknown as Report[])
+        const rows = data as unknown as Report[]
+        setReports(rows)
+        setContacts(await fetchUserContacts(rows.map((r) => r.reporter_id)))
       }
 
       setLoading(false)
@@ -222,7 +229,7 @@ export default function AdminReportsPage() {
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {report.profiles?.full_name || 'Unknown User'}
                   </p>
-                  <p className="text-xs text-gray-400">{report.profiles?.email}</p>
+                  <p className="text-xs text-gray-400">{contacts[report.reporter_id]?.email}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
